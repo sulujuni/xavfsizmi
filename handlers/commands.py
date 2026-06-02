@@ -20,7 +20,15 @@ from database import (
 from languages import t, gt
 from admin import is_admin
 
-REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡"]
+REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
+
+
+async def react_to_message(message):
+    """Give a random reaction to any user message."""
+    try:
+        await message.set_reaction([ReactionTypeEmoji(emoji=random.choice(REACTIONS))])
+    except TelegramError:
+        pass
 
 
 # ─── /start ──────────────────────────────────────────────────────────────────
@@ -29,10 +37,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     lang = get_user_lang(user.id)
 
-    try:
-        await update.message.set_reaction([ReactionTypeEmoji(emoji=random.choice(REACTIONS))])
-    except TelegramError:
-        pass
+    await react_to_message(update.message)
 
     # Start arguments (Referral or Phishing test)
     if context.args:
@@ -54,11 +59,15 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 warning_text = (
                     "🚨 *DIQQAT! Siz fishing tuzog'iga tushdingiz!*\n\n"
                     "Xavotir olmang, bu shunchaki do'stingiz tomonidan yuborilgan "
-                    "*SafeLink Bot* xavfsizlik testi edi. "
+                    "*Xavfsizmi? Bot* xavfsizlik testi edi. "
                     "Lekin real hayotda bu haqiqiy skamer bo'lishi va barcha "
                     "parollaringizni o'g'irlashi mumkin edi!\n\n"
-                    "🛡 Internetda doim hushyor bo'ling va shubhali havolalarni "
-                    "doim bizning bot orqali tekshiring."
+                    "🛡 *Qanday himoyalanish kerak:*\n"
+                    "• Notanish havolalarni hech qachon bosmang\n"
+                    "• Shubhali linkni avval @XavfsizmiBot orqali tekshiring\n"
+                    "• 2-bosqichli autentifikatsiyani yoqing\n"
+                    "• Parollarni har 3 oyda yangilang\n\n"
+                    "💡 Siz ham do'stlaringizni sinab ko'ring: /phish"
                 )
                 await update.message.reply_text(warning_text, parse_mode="Markdown")
 
@@ -66,7 +75,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     creator_lang = get_user_lang(creator_id)
                     await context.bot.send_message(
                         chat_id=creator_id,
-                        text=t(creator_lang, "phish_alert"),
+                        text=t(creator_lang, "phish_alert", name=user.first_name),
                         parse_mode="Markdown"
                     )
                 except Exception:
@@ -98,6 +107,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── /language ────────────────────────────────────────────────────────────────
 
 async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     is_group = update.effective_chat.type in ["group", "supergroup"]
     if is_group:
         user_id = update.effective_user.id
@@ -146,6 +157,8 @@ async def group_language_callback(update: Update, context: ContextTypes.DEFAULT_
 # ─── /history ─────────────────────────────────────────────────────────────────
 
 async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     user_id = update.effective_user.id
     lang = get_user_lang(user_id)
     history = get_history(user_id)
@@ -163,6 +176,8 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── /feedback ────────────────────────────────────────────────────────────────
 
 async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     user = update.effective_user
     lang = get_user_lang(user.id)
 
@@ -187,6 +202,8 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── /report ──────────────────────────────────────────────────────────────────
 
 async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     user = update.effective_user
     lang = get_user_lang(user.id)
 
@@ -213,6 +230,8 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── /stats ───────────────────────────────────────────────────────────────────
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     if update.effective_user.id != ADMIN_ID:
         return
     from database import get_stats
@@ -232,6 +251,8 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── /referral ────────────────────────────────────────────────────────────────
 
 async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
     user = update.effective_user
     lang = get_user_lang(user.id)
     count = get_referral_count(user.id)
@@ -242,13 +263,66 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-# ─── /phish ───────────────────────────────────────────────────────────────────
+# ─── /phish (UPGRADED — realistic phishing simulation) ───────────────────────
+
+PHISH_TEMPLATES = [
+    {
+        "type": "bank",
+        "uz": "🏦 *Diqqat!* Sizning kartangizdan 1,500,000 so'm yechilmoqda. Bekor qilish uchun bosing: {link}",
+        "ru": "🏦 *Внимание!* С вашей карты списывается 1,500,000 сум. Для отмены нажмите: {link}",
+        "en": "🏦 *Alert!* $150 is being withdrawn from your card. Cancel here: {link}",
+    },
+    {
+        "type": "prize",
+        "uz": "🎁 *Tabriklaymiz!* Siz 5,000,000 so'm yutdingiz! Sovg'angizni olish uchun: {link}",
+        "ru": "🎁 *Поздравляем!* Вы выиграли 5,000,000 сум! Получить приз: {link}",
+        "en": "🎁 *Congratulations!* You won $500! Claim your prize: {link}",
+    },
+    {
+        "type": "account",
+        "uz": "⚠️ Sizning Telegram akkauntingiz bloklanmoqda! Tasdiqlash: {link}",
+        "ru": "⚠️ Ваш аккаунт Telegram будет заблокирован! Подтвердите: {link}",
+        "en": "⚠️ Your Telegram account is being suspended! Verify now: {link}",
+    },
+    {
+        "type": "delivery",
+        "uz": "📦 Sizga jo'natma keldi! Kuzatish raqami: #UZ7839. Ma'lumot: {link}",
+        "ru": "📦 У вас посылка! Номер отслеживания: #RU7839. Подробнее: {link}",
+        "en": "📦 You have a package! Tracking: #EN7839. Details: {link}",
+    },
+    {
+        "type": "password",
+        "uz": "🔒 Kimdir akkauntingizga kirmoqchi! Parolni tiklash: {link}",
+        "ru": "🔒 Кто-то пытается войти в ваш аккаунт! Сбросить пароль: {link}",
+        "en": "🔒 Someone is trying to access your account! Reset password: {link}",
+    },
+]
+
 
 async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Upgraded /phish — generates a realistic-looking phishing message template
+    that the user can forward to friends to test their awareness.
+    """
+    await react_to_message(update.message)
+
     user = update.effective_user
     lang = get_user_lang(user.id)
-    test_link = f"https://t.me/{context.bot.username}?start=phish_{user.id}"
-    await update.message.reply_text(
-        text=t(lang, "phish_created", link=test_link),
-        parse_mode="Markdown",
+    bot_link = f"https://t.me/{context.bot.username}?start=phish_{user.id}"
+
+    # Pick a random phishing template
+    template = random.choice(PHISH_TEMPLATES)
+    phish_message = template.get(lang, template["uz"]).format(link=bot_link)
+
+    response = (
+        f"🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
+        f"Quyidagi xabarni do'stingizga yuboring (nusxa oling):\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"{phish_message}\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
+        f"Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
+        f"🔄 Boshqa shablon olish uchun yana /phish bosing."
     )
+
+    await update.message.reply_text(response, parse_mode="Markdown")

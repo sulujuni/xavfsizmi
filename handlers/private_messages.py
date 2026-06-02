@@ -3,13 +3,18 @@ Private message handlers:
 - handle_private_message (URL scanning)
 - handle_apk (APK file scanning)
 - handle_photo (QR code scanning)
+
+All checks (URL, APK, QR) share the same daily limit for non-premium users.
+Bot reacts to every message with a random emoji.
 """
 import re
 import logging
 import asyncio
+import random
 
 from telegram import (
     Update,
+    ReactionTypeEmoji,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
@@ -31,6 +36,34 @@ from apk_checker import scan_apk
 from qr_checker import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
+REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
+
+
+# ─── Helper: react to every message ──────────────────────────────────────────
+
+async def react_to_message(message):
+    """Give a random reaction to any user message."""
+    try:
+        await message.set_reaction([ReactionTypeEmoji(emoji=random.choice(REACTIONS))])
+    except TelegramError:
+        pass
+
+
+# ─── Helper: check daily limit (shared for URL, APK, QR) ─────────────────────
+
+def check_and_consume_limit(user_id: int) -> bool:
+    """
+    Returns True if the user can proceed (premium or under limit).
+    Returns False if limit is reached.
+    Automatically increments the counter if allowed.
+    """
+    if is_premium(user_id):
+        return True
+    checks = get_user_checks(user_id)
+    if checks >= DAILY_FREE_LIMIT:
+        return False
+    increment_user_checks(user_id)
+    return True
 
 
 # ─── Subscription check helper ───────────────────────────────────────────────
@@ -75,6 +108,9 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     lang = get_user_lang(user.id)
     text = update.message.text or ""
 
+    # React to every message
+    await react_to_message(update.message)
+
     # Check mandatory subscription
     if not await is_user_subscribed(context.application, user.id):
         keyboard = [
@@ -99,13 +135,10 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 
     url = url_match.group(0)
 
-    # Daily limit check for non-premium users
-    if not is_premium(user.id):
-        checks = get_user_checks(user.id)
-        if checks >= DAILY_FREE_LIMIT:
-            await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
-            return
-        increment_user_checks(user.id)
+    # Daily limit check (shared across URL/APK/QR)
+    if not check_and_consume_limit(user.id):
+        await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
+        return
 
     status_msg = await update.message.reply_text(t(lang, "checking"))
 
@@ -155,6 +188,12 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_user_lang(user_id)
     doc = update.message.document
 
+    if not (doc.file_name or "").lower().endswith(".apk"):
+        return
+
+    # React to every message
+    await react_to_message(update.message)
+
     # Rate limiting
     limited, seconds = is_rate_limited(user_id)
     if limited:
@@ -162,7 +201,9 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     update_rate_limit(user_id)
 
-    if not (doc.file_name or "").lower().endswith(".apk"):
+    # Daily limit check (shared across URL/APK/QR)
+    if not check_and_consume_limit(user_id):
+        await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
         return
 
     # Max size check (32 MB)
@@ -216,11 +257,20 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     lang = get_user_lang(user_id)
 
+    # React to every message
+    await react_to_message(update.message)
+
+    # Rate limiting
     limited, seconds = is_rate_limited(user_id)
     if limited:
         await update.message.reply_text(t(lang, "rate_limited", seconds=seconds))
         return
     update_rate_limit(user_id)
+
+    # Daily limit check (shared across URL/APK/QR)
+    if not check_and_consume_limit(user_id):
+        await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
+        return
 
     photo = update.message.photo[-1]
     try:
@@ -243,6 +293,9 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         vt_res = await check_virustotal(url)
         gsb_res = await check_google_safe_browsing(url)
         is_dangerous = gsb_res.get("dangerous", False) or vt_res.get("malicious", 0) > 0
+
+        status_str = "🔴 Malicious" if is_dangerous else "🟢 Clean"
+        add_to_history(user_id, url, status_str)
 
         report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n`{url}`\n\n"
         report += f"Holati: {'🚨 ZARARLI/FISHING' if is_dangerous else '✅ TOZA'}\n"

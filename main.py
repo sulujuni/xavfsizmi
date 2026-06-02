@@ -11,6 +11,8 @@ from telegram.ext import (
     PreCheckoutQueryHandler,
     MessageHandler,
     ConversationHandler,
+    BusinessConnectionHandler,
+    BusinessMessagesHandler,
     filters,
 )
 
@@ -50,6 +52,9 @@ from handlers import (
     handle_group_message,
     handle_group_apk,
     handle_group_photo,
+    # Secretary mode (Business Connection)
+    handle_business_connection,
+    handle_business_message,
 )
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────
@@ -144,6 +149,10 @@ def main():
     app.add_handler(PreCheckoutQueryHandler(pre_checkout))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, payment_success))
 
+    # ── Secretary Mode (Business Connection) ──────────────────────────────────
+    app.add_handler(BusinessConnectionHandler(handle_business_connection))
+    app.add_handler(BusinessMessagesHandler(handle_business_message))
+
     # ── Private Message Handlers (Documents, Photos, Text) ────────────────────
     app.add_handler(MessageHandler(
         filters.Document.ALL & filters.ChatType.PRIVATE, handle_apk
@@ -170,7 +179,11 @@ def main():
     ))
 
     print("🚀 Xavfsizmi? Bot muvaffaqiyatli ishga tushdi!")
-    app.run_polling()
+    app.run_polling(allowed_updates=[
+        "message", "callback_query", "pre_checkout_query",
+        "business_connection", "business_message",
+        "edited_business_message",
+    ])
 
 
 if __name__ == "__main__":

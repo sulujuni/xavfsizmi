@@ -268,33 +268,33 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 PHISH_TEMPLATES = [
     {
         "type": "bank",
-        "uz": "🏦 *Diqqat!* Sizning kartangizdan 1,500,000 so'm yechilmoqda. Bekor qilish uchun bosing: {link}",
-        "ru": "🏦 *Внимание!* С вашей карты списывается 1,500,000 сум. Для отмены нажмите: {link}",
-        "en": "🏦 *Alert!* $150 is being withdrawn from your card. Cancel here: {link}",
+        "uz": "🏦 Diqqat! Sizning kartangizdan 1,500,000 so'm yechilmoqda. Bekor qilish uchun bosing:",
+        "ru": "🏦 Внимание! С вашей карты списывается 1,500,000 сум. Для отмены нажмите:",
+        "en": "🏦 Alert! $150 is being withdrawn from your card. Cancel here:",
     },
     {
         "type": "prize",
-        "uz": "🎁 *Tabriklaymiz!* Siz 5,000,000 so'm yutdingiz! Sovg'angizni olish uchun: {link}",
-        "ru": "🎁 *Поздравляем!* Вы выиграли 5,000,000 сум! Получить приз: {link}",
-        "en": "🎁 *Congratulations!* You won $500! Claim your prize: {link}",
+        "uz": "🎁 Tabriklaymiz! Siz 5,000,000 so'm yutdingiz! Sovg'angizni olish uchun:",
+        "ru": "🎁 Поздравляем! Вы выиграли 5,000,000 сум! Получить приз:",
+        "en": "🎁 Congratulations! You won $500! Claim your prize:",
     },
     {
         "type": "account",
-        "uz": "⚠️ Sizning Telegram akkauntingiz bloklanmoqda! Tasdiqlash: {link}",
-        "ru": "⚠️ Ваш аккаунт Telegram будет заблокирован! Подтвердите: {link}",
-        "en": "⚠️ Your Telegram account is being suspended! Verify now: {link}",
+        "uz": "⚠️ Sizning Telegram akkauntingiz bloklanmoqda! Tasdiqlash:",
+        "ru": "⚠️ Ваш аккаунт Telegram будет заблокирован! Подтвердите:",
+        "en": "⚠️ Your Telegram account is being suspended! Verify now:",
     },
     {
         "type": "delivery",
-        "uz": "📦 Sizga jo'natma keldi! Kuzatish raqami: #UZ7839. Ma'lumot: {link}",
-        "ru": "📦 У вас посылка! Номер отслеживания: #RU7839. Подробнее: {link}",
-        "en": "📦 You have a package! Tracking: #EN7839. Details: {link}",
+        "uz": "📦 Sizga jo'natma keldi! Kuzatish raqami: UZ7839. Ma'lumot:",
+        "ru": "📦 У вас посылка! Номер отслеживания: RU7839. Подробнее:",
+        "en": "📦 You have a package! Tracking: EN7839. Details:",
     },
     {
         "type": "password",
-        "uz": "🔒 Kimdir akkauntingizga kirmoqchi! Parolni tiklash: {link}",
-        "ru": "🔒 Кто-то пытается войти в ваш аккаунт! Сбросить пароль: {link}",
-        "en": "🔒 Someone is trying to access your account! Reset password: {link}",
+        "uz": "🔒 Kimdir akkauntingizga kirmoqchi! Parolni tiklash:",
+        "ru": "🔒 Кто-то пытается войти в ваш аккаунт! Сбросить пароль:",
+        "en": "🔒 Someone is trying to access your account! Reset password:",
     },
 ]
 
@@ -312,17 +312,18 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Pick a random phishing template
     template = random.choice(PHISH_TEMPLATES)
-    phish_message = template.get(lang, template["uz"]).format(link=bot_link)
+    phish_text = template.get(lang, template["uz"])
 
     response = (
-        "🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
-        "Quyidagi xabarni do'stingizga yuboring (nusxa oling):\n\n"
-        "━━━━━━━━━━━━━━━━\n"
-        f"{phish_message}\n"
-        "━━━━━━━━━━━━━━━━\n\n"
-        "📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
-        "Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
-        "🔄 Boshqa shablon olish uchun yana /phish bosing."
+        f"🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
+        f"Quyidagi xabarni do'stingizga yuboring:\n\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"{phish_text}\n"
+        f"{bot_link}\n\n"
+        f"━━━━━━━━━━━━━━━━\n\n"
+        f"📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
+        f"Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
+        f"🔄 Boshqa shablon: /phish"
     )
 
     await update.message.reply_text(

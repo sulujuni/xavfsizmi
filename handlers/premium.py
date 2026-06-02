@@ -44,11 +44,20 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "⚡ *SafeLink Premium obunasi!*\n\n"
         "Premium afzalliklari:\n"
-        "• Cheksiz havolalarni tekshirish\n"
+        "• Cheksiz havolalarni tekshirish (URL + APK + QR)\n"
         "• To'liq /breach leak ma'lumotlar bazasidan foydalanish\n"
         "• Reklamasiz va yuqori tezlikdagi tahlil\n\n"
-        "To'lov usulini tanlang:",
+        "💳 *To'lov usulini tanlang:*\n"
+        "Quyidagi tugmalardan birini bosing:\n",
         reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown",
+    )
+    # Send promo code info as a follow-up
+    await update.message.reply_text(
+        "🎟 *Promokodingiz bormi?*\n\n"
+        "Agar sizda promokod bo'lsa, uni quyidagicha faollashtiring:\n"
+        "👉 `/promo KODINGIZ`\n\n"
+        "Misol: `/promo FREE30`",
         parse_mode="Markdown",
     )
 

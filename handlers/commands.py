@@ -315,14 +315,16 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phish_message = template.get(lang, template["uz"]).format(link=bot_link)
 
     response = (
-        f"🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
-        f"Quyidagi xabarni do'stingizga yuboring (nusxa oling):\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
+        "🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
+        "Quyidagi xabarni do'stingizga yuboring (nusxa oling):\n\n"
+        "━━━━━━━━━━━━━━━━\n"
         f"{phish_message}\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
-        f"Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
-        f"🔄 Boshqa shablon olish uchun yana /phish bosing."
+        "━━━━━━━━━━━━━━━━\n\n"
+        "📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
+        "Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
+        "🔄 Boshqa shablon olish uchun yana /phish bosing."
     )
 
-    await update.message.reply_text(response, parse_mode="Markdown")
+    await update.message.reply_text(
+        response, parse_mode="Markdown", disable_web_page_preview=True
+    )

@@ -70,6 +70,9 @@ def check_and_consume_limit(user_id: int) -> bool:
 
 async def is_user_subscribed(application: Application, user_id: int) -> bool:
     """Check if user is subscribed to the required channel."""
+    # If no channel configured, skip the check
+    if not REQUIRED_CHANNEL_ID or REQUIRED_CHANNEL_ID == 0:
+        return True
     try:
         member = await application.bot.get_chat_member(
             chat_id=REQUIRED_CHANNEL_ID, user_id=user_id

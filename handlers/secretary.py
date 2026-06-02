@@ -101,9 +101,11 @@ async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_
     Only scans incoming messages (from other users TO our connected user).
     Stays silent if safe, alerts if dangerous.
     """
-    message = update.business_message
-    if not message:
+    # TypeHandler receives ALL updates — only process business messages
+    if not hasattr(update, 'business_message') or not update.business_message:
         return
+
+    message = update.business_message
 
     # We only care about messages FROM others (not sent by the connected user)
     # The business_connection_id tells us which user connected the bot

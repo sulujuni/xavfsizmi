@@ -3,7 +3,7 @@ Xavfsizmi? Bot — Main Entry Point
 All handler logic is split into the handlers/ package.
 """
 import logging
-from telegram import MenuButtonCommands, BotCommand, BotCommandScopeChat
+from telegram import MenuButtonCommands, BotCommand, BotCommandScopeChat, Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -12,7 +12,7 @@ from telegram.ext import (
     MessageHandler,
     ConversationHandler,
     BusinessConnectionHandler,
-    BusinessMessagesHandler,
+    TypeHandler,
     filters,
 )
 
@@ -151,7 +151,7 @@ def main():
 
     # ── Secretary Mode (Business Connection) ──────────────────────────────────
     app.add_handler(BusinessConnectionHandler(handle_business_connection))
-    app.add_handler(BusinessMessagesHandler(handle_business_message))
+    app.add_handler(TypeHandler(type=Update, callback=handle_business_message))
 
     # ── Private Message Handlers (Documents, Photos, Text) ────────────────────
     app.add_handler(MessageHandler(

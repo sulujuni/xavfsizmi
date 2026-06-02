@@ -406,3 +406,17 @@ TEXTS["en"]["phish_alert"] = (
     "They clicked your phishing test link. They need cybersecurity training!"
 )
 
+
+
+# ─── MISSING KEYS: dangerous_deleted, dangerous_no_permission, phish_usage ───
+
+TEXTS["uz"]["dangerous_deleted"] = "🚨 *Xavfli havola o'chirildi!*\n👤 {mention} yuborgan `{url}` havolasi xavfli deb topildi ({engines} ta antivirus).\n❌ Xabar o'chirildi."
+TEXTS["ru"]["dangerous_deleted"] = "🚨 *Опасная ссылка удалена!*\n👤 Ссылка `{url}` от {mention} признана опасной ({engines} антивирусов).\n❌ Сообщение удалено."
+TEXTS["en"]["dangerous_deleted"] = "🚨 *Dangerous link deleted!*\n👤 Link `{url}` sent by {mention} was flagged as malicious ({engines} engines).\n❌ Message removed."
+
+TEXTS["uz"]["dangerous_no_permission"] = "⚠️ {mention} yuborgan `{url}` havolasi xavfli! Lekin botda o'chirish huquqi yo'q. Admin, iltimos xabarni o'chiring!"
+TEXTS["ru"]["dangerous_no_permission"] = "⚠️ Ссылка `{url}` от {mention} опасна! Но у бота нет прав на удаление. Админ, удалите сообщение!"
+TEXTS["en"]["dangerous_no_permission"] = "⚠️ Link `{url}` from {mention} is dangerous! But bot lacks delete permission. Admin, please remove the message!"
+
+TEXTS["uz"]["phish_usage"] = "⌨️ *Fishing simulyatoridan foydalanish:* `/phish` buyrug'ini yozing va do'stlaringizni sinab ko'ring."
+TEXTS["en"]["phish_usage"] = "⌨️ *Phishing simulator usage:* Type `/phish` to generate a test message for your friends."

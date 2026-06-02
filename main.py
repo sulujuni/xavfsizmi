@@ -151,7 +151,8 @@ def main():
 
     # ── Secretary Mode (Business Connection) ──────────────────────────────────
     app.add_handler(BusinessConnectionHandler(handle_business_connection))
-    app.add_handler(TypeHandler(type=Update, callback=handle_business_message))
+    # TypeHandler in group=-1 so it doesn't block other handlers
+    app.add_handler(TypeHandler(type=Update, callback=handle_business_message), group=-1)
 
     # ── Private Message Handlers (Documents, Photos, Text) ────────────────────
     app.add_handler(MessageHandler(

@@ -275,22 +275,67 @@ TEXTS = {
 }
 
 def t(lang: str, key: str, **kwargs) -> str:
-    """Helper function to fetch localized messages safely"""
-    lang_dict = TEXTS.get(lang, TEXTS["en"])
-    text_template = lang_dict.get(key, TEXTS["en"].get(key, f"[{key}]"))
-    return text_template.format(**kwargs)
+    """Helper function to fetch localized messages safely for private chats."""
+    lang_dict = TEXTS.get(lang, TEXTS["uz"])
+    text_template = lang_dict.get(key, TEXTS["uz"].get(key, f"[{key}]"))
+    try:
+        return text_template.format(**kwargs)
+    except (KeyError, IndexError):
+        return text_template
 
-def gt(chat_id, key, **kwargs):
-    return t("uz", key, **kwargs)
 
-def at(key, **kwargs):
-    return t("uz", key, **kwargs)
+def gt(lang: str, key: str, **kwargs) -> str:
+    """Group text — same as t() but used for group messages to clarify context."""
+    return t(lang, key, **kwargs)
 
-def pt(key, **kwargs):
-    return t("uz", key, **kwargs)
 
-def nf(key, **kwargs):
-    return t("uz", key, **kwargs)
+def at(lang: str, key: str, **kwargs) -> str:
+    """APK/Auto text — localized messages for APK and auto-scan results in groups."""
+    return t(lang, key, **kwargs)
+
+
+def pt(lang: str, key: str, **kwargs) -> str:
+    """Premium text — localized messages for payment/premium related actions."""
+    return t(lang, key, **kwargs)
+
+
+def nf(lang: str, key: str, **kwargs) -> str:
+    """Notification text — localized messages for notifications."""
+    return t(lang, key, **kwargs)
+
+
+# ─── GROUP APK/QR SCAN TEXT KEYS ─────────────────────────────────────────────
+
+for _lang in ["uz", "ru", "en"]:
+    if "scanning" not in TEXTS[_lang]:
+        TEXTS["uz"]["scanning"] = "🔍 *APK fayl tahlil qilinmoqda...*"
+        TEXTS["ru"]["scanning"] = "🔍 *Анализ APK файла...*"
+        TEXTS["en"]["scanning"] = "🔍 *Scanning APK file...*"
+
+    if "too_large" not in TEXTS[_lang]:
+        TEXTS["uz"]["too_large"] = "❌ APK fayl hajmi juda katta. Maksimal limit 32 MB."
+        TEXTS["ru"]["too_large"] = "❌ Файл слишком большой. Максимальный размер — 32 МБ."
+        TEXTS["en"]["too_large"] = "❌ File too large. Maximum size is 32 MB."
+
+    if "timeout" not in TEXTS[_lang]:
+        TEXTS["uz"]["timeout"] = "⏳ VirusTotal javob bermadi. Keyinroq urinib ko'ring."
+        TEXTS["ru"]["timeout"] = "⏳ VirusTotal не ответил. Попробуйте позже."
+        TEXTS["en"]["timeout"] = "⏳ VirusTotal timed out. Try again later."
+
+    if "error" not in TEXTS[_lang]:
+        TEXTS["uz"]["error"] = "❌ Tekshirishda xatolik yuz berdi."
+        TEXTS["ru"]["error"] = "❌ Произошла ошибка при проверке."
+        TEXTS["en"]["error"] = "❌ An error occurred during scanning."
+
+    if "suspicious" not in TEXTS[_lang]:
+        TEXTS["uz"]["suspicious"] = "⚠️ *Shubhali APK!*\n📱 Fayl: `{name}`\nShubhali: `{sus}/{total}`"
+        TEXTS["ru"]["suspicious"] = "⚠️ *Подозрительный APK!*\n📱 Файл: `{name}`\nПодозрительный: `{sus}/{total}`"
+        TEXTS["en"]["suspicious"] = "⚠️ *Suspicious APK!*\n📱 File: `{name}`\nSuspicious: `{sus}/{total}`"
+
+    if "safe" not in TEXTS[_lang]:
+        TEXTS["uz"]["safe"] = "✅ *Xavfsiz APK!*\n📱 Fayl: `{name}`\n{total} ta dvigatel tekshirdi — xavf topilmadi."
+        TEXTS["ru"]["safe"] = "✅ *Безопасный APK!*\n📱 Файл: `{name}`\n{total} антивирусов проверили — угроз нет."
+        TEXTS["en"]["safe"] = "✅ *Safe APK!*\n📱 File: `{name}`\n{total} engines checked — no threats found."
 
 
 # ─── FIX: PHISH KEYS & SECRETARY INFO IN START ───────────────────────────────

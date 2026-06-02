@@ -101,7 +101,18 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 pass
 
     welcome_text = t(lang, "start", name=user.full_name, limit=DAILY_FREE_LIMIT)
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")
+    keyboard = [
+        [
+            InlineKeyboardButton("🇺🇿 O'zbekcha", callback_data="lang_uz"),
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+            InlineKeyboardButton("🇺🇸 English", callback_data="lang_en"),
+        ]
+    ]
+    await update.message.reply_text(
+        welcome_text,
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
 
 
 # ─── /language ────────────────────────────────────────────────────────────────
@@ -315,7 +326,7 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     phish_text = template.get(lang, template["uz"])
 
     response = (
-        f"🎣 *Fishing Simulyatsiya Yaratildi!*\n\n"
+        f"🎣 Fishing Simulyatsiya Yaratildi!\n\n"
         f"Quyidagi xabarni do'stingizga yuboring:\n\n"
         f"━━━━━━━━━━━━━━━━\n\n"
         f"{phish_text}\n"
@@ -327,5 +338,5 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     await update.message.reply_text(
-        response, parse_mode="Markdown", disable_web_page_preview=True
+        response, disable_web_page_preview=True
     )

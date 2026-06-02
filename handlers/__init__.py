@@ -44,3 +44,8 @@ from .group_messages import (
     handle_group_apk,
     handle_group_photo,
 )
+
+from .secretary import (
+    handle_business_connection,
+    handle_business_message,
+)

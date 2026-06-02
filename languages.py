@@ -8,17 +8,27 @@ TEXTS = {
         "start": (
             "👋 Salom, {name}! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
             "🛡 Men sizga internetdagi xavflardan himoyalanishga yordam beraman.\n\n"
-            "💬 *Iltimos, botdan to'liq foydalanish uchun quyidagi tugma orqali o'z tilingizni tanlang!*\n\n"
             "━━━━━━━━━━━━━━━━\n"
             "⚙️ *MEN NIMALAR QILA OLAMAN?*\n\n"
             "🔗 *Havolalarni tekshirish*\n"
             "└ Istalgan URL yoki linkni yuboring → Ko'p qatlamli xavfsizlik tahlili\n\n"
             "📱 *APK fayllarni tekshirish*\n"
-            "└ Istalgan 32MB dan oshmaydigan .APK faylni yuboring → xavfsizmi tekshiradi\n\n"
+            "└ .APK faylni yuboring (maks 32MB) → VirusTotal orqali skanerlash\n\n"
             "📸 *QR kodlarni tekshirish*\n"
             "└ QR kod rasmini yuboring → ichidagi URL xavfsizligini aniqlaydi\n\n"
-            "🔐 *Email Breach*\n"
-            "└ /breach email@mail.com → Ma'lumotlar sizib chiqqanini tekshirish\n"
+            "🔐 *Email Breach* (Premium/Referral)\n"
+            "└ /breach → Email sizib chiqqanini tekshirish\n\n"
+            "🎣 *Fishing Simulyator*\n"
+            "└ /phish → Do'stlaringizni xavfsizlik bo'yicha sinab ko'ring\n\n"
+            "🤖 *Secretary Rejimi* ⭐\n"
+            "└ Telegram Business orqali botni ulang → Shaxsiy chatlardagi\n"
+            "  kiruvchi xabarlarni avtomatik skanerlaydi. Xavfli bo'lsa —\n"
+            "  ogohlantiradi, xavfsiz bo'lsa — jim turadi.\n"
+            "└ Yoqish: Telegram Settings → Business → Chatbots → Bu bot\n\n"
+            "━━━━━━━━━━━━━━━━\n"
+            "📊 *Kunlik limit:* {limit} ta bepul tekshiruv (URL + APK + QR)\n"
+            "⭐ Cheksiz foydalanish → /premium\n"
+            "🌐 Tilni o'zgartirish → /language"
         ),
         "checking": "🔄 Tekshirilmoqda...",
         "gsb_safe": "✅ *Google Safe Browsing:* Toza\n",
@@ -96,17 +106,27 @@ TEXTS = {
         "start": (
             "👋 Привет, {name}! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
             "🛡 Я помогу вам защититься от угроз в интернете.\n\n"
-            "💬 *Пожалуйста, выберите язык с помощью кнопок ниже для полной настройки интерфейса!*\n\n"
             "━━━━━━━━━━━━━━━━\n"
             "⚙️ *ЧТО Я УМЕЮ?*\n\n"
             "🔗 *Проверка ссылок*\n"
             "└ Отправьте любой URL → Многоуровневый анализ безопасности\n\n"
             "📱 *Проверка APK файлов*\n"
-            "└ Любой .APK файл до 32MB → Проверка на вирусы\n\n"
+            "└ Отправьте .APK файл (макс 32MB) → Сканирование через VirusTotal\n\n"
             "📸 *Сканирование QR-кодов*\n"
-            "└ Отправьте фото QR-кода → Проверим ссылку внутри него\n\n"
-            "🔐 *Утечки Email*\n"
-            "└ /breach email@mail.com → Проверка компрометации данных\n"
+            "└ Отправьте фото QR-кода → Проверим ссылку внутри\n\n"
+            "🔐 *Утечки Email* (Премиум/Реферал)\n"
+            "└ /breach → Проверка утечки данных\n\n"
+            "🎣 *Симулятор Фишинга*\n"
+            "└ /phish → Проверьте бдительность ваших друзей\n\n"
+            "🤖 *Режим Секретаря* ⭐\n"
+            "└ Подключите бота через Telegram Business → Автоматическое\n"
+            "  сканирование входящих сообщений. Опасно — предупредит,\n"
+            "  безопасно — молчит.\n"
+            "└ Включить: Telegram Settings → Business → Chatbots → Этот бот\n\n"
+            "━━━━━━━━━━━━━━━━\n"
+            "📊 *Дневной лимит:* {limit} бесплатных проверок (URL + APK + QR)\n"
+            "⭐ Безлимит → /premium\n"
+            "🌐 Сменить язык → /language"
         ),
         "checking": "🔄 Проверяется...",
         "gsb_safe": "✅ *Google Safe Browsing:* Чисто\n",
@@ -191,17 +211,26 @@ TEXTS = {
         "start": (
             "👋 Hello, {name}! Welcome to *Xavfsizmi? Bot*!\n\n"
             "🛡 I am here to safeguard your navigation over the internet.\n\n"
-            "💬 *Please use the inline menu below to configure your default language interface!*\n\n"
             "━━━━━━━━━━━━━━━━\n"
             "⚙️ *WHAT CAN I DO?*\n\n"
             "🔗 *URL Link Scanning*\n"
             "└ Send any link → Deep multi-layer reputation checks\n\n"
             "📱 *APK Android Scanning*\n"
-            "└ Upload any .APK (max 32MB) → Automated malware sandbox sweep\n\n"
+            "└ Upload any .APK (max 32MB) → VirusTotal malware sweep\n\n"
             "📸 *QR Code Reading*\n"
-            "└ Submit a clear picture of any QR → Scan extracted targets\n\n"
-            "🔐 *Data Breach Tracking*\n"
-            "└ /breach email@mail.com → Scan global account exposures\n"
+            "└ Submit a photo of any QR → Scan extracted URL\n\n"
+            "🔐 *Data Breach Tracking* (Premium/Referral)\n"
+            "└ /breach → Check if your email was leaked\n\n"
+            "🎣 *Phishing Simulator*\n"
+            "└ /phish → Test your friends' security awareness\n\n"
+            "🤖 *Secretary Mode* ⭐\n"
+            "└ Connect bot via Telegram Business → Auto-scans your incoming\n"
+            "  personal messages. Dangerous → alerts you. Safe → stays silent.\n"
+            "└ Enable: Telegram Settings → Business → Chatbots → This bot\n\n"
+            "━━━━━━━━━━━━━━━━\n"
+            "📊 *Daily limit:* {limit} free checks (URL + APK + QR combined)\n"
+            "⭐ Unlimited → /premium\n"
+            "🌐 Change language → /language"
         ),
         "checking": "🔄 Scanning target destination...",
         "gsb_safe": "✅ *Google Safe Browsing:* Clean\n",
@@ -348,10 +377,22 @@ if "phish_created" not in TEXTS["uz"]:
         "👉 `{link}`\n\n"
         "⚠️ Do\'stingiz bosgan zahoti ogohlantirish sahifasiga o\'tkaziladi va siz xabar olasiz!"
     )
-    TEXTS["uz"]["phish_alert"] = (
-        "🔍 *Do\'stingiz tuzog\'ingizga tushdi!* "
-        "Test havolangizni bosdi. Kiberxavfsizlik bilimini oshirishi kerak!"
+TEXTS["uz"]["phish_alert"] = (
+    "🔍 *Do\'stingiz ({name}) tuzog\'ingizga tushdi!* "
+    "Test havolangizni bosdi. Kiberxavfsizlik bilimini oshirishi kerak!"
+)
+
+if "phish_created" not in TEXTS["ru"]:
+    TEXTS["ru"]["phish_created"] = (
+        "🎣 *Ссылка для фишинг-теста создана!*\n\n"
+        "Отправьте эту ссылку другу:\n"
+        "👉 `{link}`\n\n"
+        "⚠️ Когда друг нажмёт — получит предупреждение, а вы — уведомление!"
     )
+TEXTS["ru"]["phish_alert"] = (
+    "🔍 *Ваш друг ({name}) попался!* "
+    "Он кликнул по вашей тестовой фишинг-ссылке. Ему стоит быть внимательнее!"
+)
 
 if "phish_created" not in TEXTS["en"]:
     TEXTS["en"]["phish_created"] = (
@@ -360,35 +401,8 @@ if "phish_created" not in TEXTS["en"]:
         "👉 `{link}`\n\n"
         "⚠️ When they click it they get a warning and you\'ll be notified!"
     )
-    TEXTS["en"]["phish_alert"] = (
-        "🔍 *Your friend fell for the test!* "
-        "They clicked your phishing test link. They need cybersecurity training!"
-    )
-
-# Add secretary mode info to ALL start messages
-_SEC_UZ = (
-    "\n🤖 *Secretary Rejimi* ⭐\n"
-    "└ Telegram Business → Bot kiruvchi xabarlaringizni skanerlaydi\n"
-    "└ Yoqish: Telegram Settings → Business → Chatbots → Bu botni qo\'shing\n"
-)
-_SEC_RU = (
-    "\n🤖 *Режим Секретаря* ⭐\n"
-    "└ Telegram Business → Бот сканирует входящие сообщения\n"
-    "└ Включить: Telegram Settings → Business → Chatbots → Добавить бота\n"
-)
-_SEC_EN = (
-    "\n🤖 *Secretary Mode* ⭐\n"
-    "└ Telegram Business → Bot scans your incoming messages\n"
-    "└ Enable: Telegram Settings → Business → Chatbots → Add this bot\n"
+TEXTS["en"]["phish_alert"] = (
+    "🔍 *Your friend ({name}) fell for the test!* "
+    "They clicked your phishing test link. They need cybersecurity training!"
 )
 
-# Add to start messages if not already there
-for lang, sec in [("uz", _SEC_UZ), ("ru", _SEC_RU), ("en", _SEC_EN)]:
-    if "Secretary" not in TEXTS[lang].get("start", "") and "Секретар" not in TEXTS[lang].get("start", ""):
-        current = TEXTS[lang].get("start", "")
-        # Insert before the footer (before the ⚡ or ━ line near end)
-        if "━━━━━━━━━━━━━━━━\n⚡" in current:
-            TEXTS[lang]["start"] = current.replace(
-                "━━━━━━━━━━━━━━━━\n⚡",
-                sec + "━━━━━━━━━━━━━━━━\n⚡"
-            )

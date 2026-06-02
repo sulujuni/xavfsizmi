@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 # Saves to /data on Railway (persistent volume), or locally when testing
 DB_FILE = "/data/users.json" if os.path.exists("/data") else "users.json"
@@ -10,11 +10,13 @@ CACHE_EXPIRE_HOURS = 24
 
 _rate_limit_cache = {}
 
+
 def load_db() -> dict:
     if not os.path.exists(DB_FILE):
         return {}
     with open(DB_FILE, "r") as f:
         return json.load(f)
+
 
 def save_db(data: dict):
     dir_name = os.path.dirname(DB_FILE)
@@ -22,6 +24,7 @@ def save_db(data: dict):
         os.makedirs(dir_name, exist_ok=True)
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
 
 # ─── USER CHECKS ─────────────────────────────────────────────────────────────
 
@@ -35,6 +38,7 @@ def get_user_checks(user_id: int) -> int:
         return 0
     return db[user_key].get("checks", 0)
 
+
 def increment_user_checks(user_id: int):
     db = load_db()
     today = str(date.today())
@@ -47,6 +51,7 @@ def increment_user_checks(user_id: int):
     db[user_key]["checks"] += 1
     save_db(db)
 
+
 # ─── LANGUAGE ─────────────────────────────────────────────────────────────────
 
 def get_user_lang(user_id: int) -> str:
@@ -55,6 +60,7 @@ def get_user_lang(user_id: int) -> str:
     if user_key not in db:
         return "uz"
     return db[user_key].get("lang", "uz")
+
 
 def set_user_lang(user_id: int, lang: str):
     db = load_db()
@@ -65,12 +71,14 @@ def set_user_lang(user_id: int, lang: str):
         db[user_key]["lang"] = lang
     save_db(db)
 
+
 def get_group_lang(chat_id: int) -> str:
     db = load_db()
     key = f"group_{chat_id}"
     if key not in db:
         return "uz"
     return db[key].get("lang", "uz")
+
 
 def set_group_lang(chat_id: int, lang: str):
     db = load_db()
@@ -79,26 +87,70 @@ def set_group_lang(chat_id: int, lang: str):
     db[key]["lang"] = lang
     save_db(db)
 
-# ─── PREMIUM ──────────────────────────────────────────────────────────────────
+
+# ─── PREMIUM (single implementation with expiry support) ─────────────────────
 
 def is_premium(user_id: int) -> bool:
+    """Checks if a user has active premium status (or is the Admin)."""
+    from config import ADMIN_ID
+    if user_id == ADMIN_ID:
+        return True
+
     db = load_db()
     user_key = str(user_id)
     if user_key not in db:
         return False
+
+    # Support both old boolean format and new expiry format
+    expiry_str = db[user_key].get("premium_until")
+    if expiry_str:
+        try:
+            expiry_date = datetime.fromisoformat(expiry_str)
+            return datetime.now() < expiry_date
+        except ValueError:
+            return False
+
+    # Fallback: old boolean field
     return db[user_key].get("premium", False)
 
-def set_premium(user_id: int):
+
+def set_premium(user_id: int, days: int = 30):
+    """Gives a user premium for a specified number of days."""
     db = load_db()
     user_key = str(user_id)
     if user_key not in db:
-        db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+        db[user_key] = {"lang": "uz", "checks": 0, "date": str(date.today())}
+
+    current_expiry = db[user_key].get("premium_until")
+    base_date = datetime.now()
+
+    # If already premium, extend it
+    if current_expiry:
+        try:
+            parsed_expiry = datetime.fromisoformat(current_expiry)
+            if parsed_expiry > base_date:
+                base_date = parsed_expiry
+        except ValueError:
+            pass
+
+    new_expiry = base_date + timedelta(days=days)
+    db[user_key]["premium_until"] = new_expiry.isoformat()
     db[user_key]["premium"] = True
     save_db(db)
 
+
+def get_premium_expiry(user_id: int) -> str:
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return None
+    return db[user_key].get("premium_until")
+
+
 # ─── HISTORY ──────────────────────────────────────────────────────────────────
 
-def add_to_history(user_id: int, url: str, is_safe: bool):
+def add_to_history(user_id: int, url: str, status: str):
+    """Add a URL check to user history. status is a string like '🟢 Clean' or '🔴 Malicious'."""
     db = load_db()
     user_key = str(user_id)
     if user_key not in db:
@@ -106,9 +158,10 @@ def add_to_history(user_id: int, url: str, is_safe: bool):
     if "history" not in db[user_key]:
         db[user_key]["history"] = []
     history = db[user_key]["history"]
-    history.insert(0, {"url": url, "safe": is_safe, "date": str(date.today())})
+    history.insert(0, {"url": url, "status": status, "date": str(date.today())})
     db[user_key]["history"] = history[:10]
     save_db(db)
+
 
 def get_history(user_id: int) -> list:
     db = load_db()
@@ -117,37 +170,83 @@ def get_history(user_id: int) -> list:
         return []
     return db[user_key].get("history", [])
 
+
 # ─── REPORTS ──────────────────────────────────────────────────────────────────
 
-def add_report(user_id: int, url: str, reason: str):
+def add_report(user_id: int, url: str, reason: str = ""):
+    """Add a malicious URL report."""
     db = load_db()
     if "reports" not in db:
         db["reports"] = []
-    db["reports"].append({"user_id": user_id, "url": url, "reason": reason, "date": str(date.today())})
+    db["reports"].append({
+        "user_id": user_id,
+        "url": url,
+        "reason": reason,
+        "date": str(date.today())
+    })
     save_db(db)
+
 
 # ─── STATS ────────────────────────────────────────────────────────────────────
 
 def get_stats() -> dict:
     db = load_db()
     total_users = sum(1 for k in db.keys() if k.isdigit())
-    total_premium = sum(1 for k in db.keys() if k.isdigit() and db[k].get("premium"))
+    total_premium = sum(1 for k in db.keys() if k.isdigit() and is_premium(int(k)))
     total_reports = len(db.get("reports", []))
     return {"total_users": total_users, "total_premium": total_premium, "total_reports": total_reports}
 
+
 # ─── REFERRAL ─────────────────────────────────────────────────────────────────
 
-def add_referral(user_id: int, referred_by: int):
+def add_referral(user_id: int, referred_by: int) -> bool:
+    """Records that user_id was referred by referred_by. Returns True if new referral."""
     db = load_db()
     user_key = str(user_id)
     if user_key not in db:
         db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+
+    # Don't allow re-referral
+    if db[user_key].get("referred_by"):
+        return False
+
     db[user_key]["referred_by"] = referred_by
+
+    # Give the referrer 1 free breach credit
+    referrer_key = str(referred_by)
+    if referrer_key not in db:
+        db[referrer_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+    db[referrer_key]["referral_credits"] = db[referrer_key].get("referral_credits", 0) + 1
+
     save_db(db)
+    return True
+
 
 def get_referral_count(user_id: int) -> int:
     db = load_db()
     return sum(1 for k in db.keys() if k.isdigit() and db[k].get("referred_by") == user_id)
+
+
+def get_referral_credits(user_id: int) -> int:
+    """Returns the number of free breach scan tokens from referrals."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return 0
+    return db[user_key].get("referral_credits", 0)
+
+
+def consume_referral_credit(user_id: int):
+    """Deducts 1 referral credit from a user (for free breach check)."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return
+    credits = db[user_key].get("referral_credits", 0)
+    if credits > 0:
+        db[user_key]["referral_credits"] = credits - 1
+        save_db(db)
+
 
 # ─── GROUP STATS ──────────────────────────────────────────────────────────────
 
@@ -158,6 +257,7 @@ def get_group_stats(chat_id: int) -> dict:
         return {"blocked": 0, "warned": 0}
     return {"blocked": db[key].get("blocked", 0), "warned": db[key].get("warned", 0)}
 
+
 def increment_group_blocked(chat_id: int):
     db = load_db()
     key = f"group_{chat_id}"
@@ -166,6 +266,7 @@ def increment_group_blocked(chat_id: int):
     db[key]["blocked"] = db[key].get("blocked", 0) + 1
     save_db(db)
 
+
 def increment_group_warned(chat_id: int):
     db = load_db()
     key = f"group_{chat_id}"
@@ -173,6 +274,7 @@ def increment_group_warned(chat_id: int):
         db[key] = {"lang": "uz", "blocked": 0, "warned": 0}
     db[key]["warned"] = db[key].get("warned", 0) + 1
     save_db(db)
+
 
 # ─── URL CACHE ────────────────────────────────────────────────────────────────
 
@@ -186,6 +288,7 @@ def cache_url_result(url: str, result: dict):
         del db["url_cache"][oldest]
     save_db(db)
 
+
 def get_cached_url(url: str):
     db = load_db()
     cache = db.get("url_cache", {})
@@ -197,6 +300,7 @@ def get_cached_url(url: str):
         return None
     return entry["result"]
 
+
 # ─── RATE LIMITING ────────────────────────────────────────────────────────────
 
 def is_rate_limited(user_id: int) -> tuple:
@@ -207,110 +311,57 @@ def is_rate_limited(user_id: int) -> tuple:
         return True, int(RATE_LIMIT_SECONDS - elapsed)
     return False, 0
 
+
 def update_rate_limit(user_id: int):
     _rate_limit_cache[user_id] = datetime.now().timestamp()
 
-# ─── PROMOCODE & ADVANCED PREMIUM SYSTEM ──────────────────────────────────────
 
-def is_premium(user_id: int) -> bool:
-    """Checks if a user has active premium status (or is the Admin)."""
-    from config import ADMIN_ID
-    if user_id == ADMIN_ID:
-        return True
-
-    db = load_db()
-    user_key = str(user_id)
-    if user_key not in db or "premium_until" not in db[user_key]:
-        return False
-        
-    expiry_str = db[user_key]["premium_until"]
-    if not expiry_str:
-        return False
-        
-    try:
-        expiry_date = datetime.fromisoformat(expiry_str)
-        return datetime.now() < expiry_date
-    except ValueError:
-        return False
-
-def set_premium(user_id: int, days: int):
-    """Gives a user premium for a specified number of days."""
-    db = load_db()
-    user_key = str(user_id)
-    if user_key not in db:
-        db[user_key] = {"lang": "uz", "checks": 0, "date": str(datetime.now().date())}
-        
-    current_expiry = db[user_key].get("premium_until")
-    base_date = datetime.now()
-    
-    # If already premium, extend it!
-    if current_expiry:
-        try:
-            parsed_expiry = datetime.fromisoformat(current_expiry)
-            if parsed_expiry > base_date:
-                base_date = parsed_expiry
-        except ValueError:
-            pass
-            
-    new_expiry = base_date + timedelta(days=days)
-    db[user_key]["premium_until"] = new_expiry.isoformat()
-    save_db(db)
+# ─── PROMOCODE SYSTEM ─────────────────────────────────────────────────────────
 
 def create_promocode(code: str, days: int, usage_type: str):
     """Creates a promo code. usage_type can be 'once' or 'multi'."""
     db = load_db()
     if "promocodes" not in db:
         db["promocodes"] = {}
-        
+
     db["promocodes"][code.upper()] = {
         "days": days,
-        "type": usage_type, # 'once' or 'multi'
-        "used_by": []       # Track user IDs who redeemed it
+        "type": usage_type,
+        "used_by": []
     }
     save_db(db)
 
-def redeem_promocode(user_id: int, code: str) -> tuple[bool, str]:
+
+def redeem_promocode(user_id: int, code: str) -> tuple:
     """Attempts to redeem a code for a user. Returns (success_bool, message_key)"""
     db = load_db()
     promocodes = db.get("promocodes", {})
     code_upper = code.upper()
-    
+
     if code_upper not in promocodes:
         return False, "promo_invalid"
-        
+
     promo = promocodes[code_upper]
     uid_str = str(user_id)
-    
+
     # Check if this user has already used this specific code
     if uid_str in promo["used_by"]:
         return False, "promo_already_used"
-        
+
     # Check if a single-use code was already taken by someone else
     if promo["type"] == "once" and len(promo["used_by"]) > 0:
         return False, "promo_expired"
-        
+
     # Code is valid! Apply premium days
     set_premium(user_id, promo["days"])
-    
+
     # Mark as used
     promo["used_by"].append(uid_str)
     db["promocodes"][code_upper] = promo
     save_db(db)
-    
+
     return True, "promo_success"
-    
-def consume_referral_credit(user_id: int):
-    """Foydalanuvchi bepul breach tekshirganda uning taklif qilgan odamlar balansidan 1 tani ayiradi"""
-    conn = load_db() # yoki sizda bazaga ulanish qanday nomlangan bo'lsa (masalan: sqlite3.connect)
-    cursor = conn.cursor()
-    
-    # Agar sizda referral_count ustuni bo'lsa, undan 1 ni ayiramiz
-    cursor.execute(
-        "UPDATE users SET referral_count = referral_count - 1 WHERE user_id = ?", 
-        (user_id,)
-    )
-    conn.commit()
-    conn.close()
+
 
 # ─── GROUP PREMIUM ────────────────────────────────────────────────────────────
 
@@ -326,6 +377,7 @@ def is_group_premium(chat_id: int) -> bool:
         return datetime.now() < datetime.fromisoformat(expiry_str)
     except ValueError:
         return False
+
 
 def set_group_premium(chat_id: int, days: int = 30):
     """Give a group premium for N days. Extends if already active."""
@@ -346,12 +398,14 @@ def set_group_premium(chat_id: int, days: int = 30):
     db[key]["premium"] = True
     save_db(db)
 
+
 def get_group_premium_expiry(chat_id: int) -> str:
     db = load_db()
     key = f"group_{chat_id}"
     if key not in db:
         return None
     return db[key].get("premium_until")
+
 
 def get_group_premium_buyer(chat_id: int) -> int:
     """Returns the user_id who activated group premium."""
@@ -361,6 +415,7 @@ def get_group_premium_buyer(chat_id: int) -> int:
         return None
     return db[key].get("premium_buyer")
 
+
 def set_group_premium_buyer(chat_id: int, user_id: int):
     db = load_db()
     key = f"group_{chat_id}"
@@ -369,7 +424,8 @@ def set_group_premium_buyer(chat_id: int, user_id: int):
     db[key]["premium_buyer"] = user_id
     save_db(db)
 
-# ─── BUSINESS CONNECTION ─────────────────────────────────────────────────────
+
+# ─── BUSINESS CONNECTION (Secretary Mode) ────────────────────────────────────
 
 def save_business_connection(user_id: int, connection_id: str, is_active: bool):
     db = load_db()
@@ -380,12 +436,14 @@ def save_business_connection(user_id: int, connection_id: str, is_active: bool):
     db[user_key]["business_secretary"] = is_active
     save_db(db)
 
+
 def get_business_connection_id(user_id: int) -> str:
     db = load_db()
     user_key = str(user_id)
     if user_key not in db:
         return None
     return db[user_key].get("business_connection_id")
+
 
 def is_business_secretary_active(user_id: int) -> bool:
     db = load_db()
@@ -394,21 +452,6 @@ def is_business_secretary_active(user_id: int) -> bool:
         return False
     return db[user_key].get("business_secretary", False)
 
-# ─── ADDITIONAL HELPERS ───────────────────────────────────────────────────────
-
-def get_premium_expiry(user_id: int) -> str:
-    db = load_db()
-    user_key = str(user_id)
-    if user_key not in db:
-        return None
-    return db[user_key].get("premium_until")
-
-def get_referral_credits(user_id: int) -> int:
-    db = load_db()
-    user_key = str(user_id)
-    if user_key not in db:
-        return 0
-    return db[user_key].get("referral_credits", 0)
 
 def get_secretary_mode(user_id: int) -> bool:
     db = load_db()
@@ -416,6 +459,7 @@ def get_secretary_mode(user_id: int) -> bool:
     if user_key not in db:
         return False
     return db[user_key].get("secretary_mode", False)
+
 
 def set_secretary_mode(user_id: int, enabled: bool):
     db = load_db()

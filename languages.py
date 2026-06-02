@@ -420,3 +420,55 @@ TEXTS["en"]["dangerous_no_permission"] = "⚠️ Link `{url}` from {mention} is 
 
 TEXTS["uz"]["phish_usage"] = "⌨️ *Fishing simulyatoridan foydalanish:* `/phish` buyrug'ini yozing va do'stlaringizni sinab ko'ring."
 TEXTS["en"]["phish_usage"] = "⌨️ *Phishing simulator usage:* Type `/phish` to generate a test message for your friends."
+
+
+
+# ─── PREMIUM COMMAND TEXTS (all languages) ────────────────────────────────────
+
+TEXTS["uz"]["premium_already_active"] = "⭐ Sizda allaqachon Premium status faol!"
+TEXTS["ru"]["premium_already_active"] = "⭐ У вас уже активен Премиум статус!"
+TEXTS["en"]["premium_already_active"] = "⭐ You already have active Premium status!"
+
+TEXTS["uz"]["premium_info"] = (
+    "⚡ *SafeLink Premium obunasi!*\n\n"
+    "Premium afzalliklari:\n"
+    "• Cheksiz tekshirish (URL + APK + QR)\n"
+    "• To'liq /breach ma'lumotlar bazasi\n"
+    "• Reklamasiz va yuqori tezlik\n\n"
+    "💳 *To'lov usulini tanlang:*"
+)
+TEXTS["ru"]["premium_info"] = (
+    "⚡ *SafeLink Premium подписка!*\n\n"
+    "Преимущества Premium:\n"
+    "• Безлимитные проверки (URL + APK + QR)\n"
+    "• Полный доступ к /breach базе утечек\n"
+    "• Без рекламы и высокая скорость\n\n"
+    "💳 *Выберите способ оплаты:*"
+)
+TEXTS["en"]["premium_info"] = (
+    "⚡ *SafeLink Premium Subscription!*\n\n"
+    "Premium benefits:\n"
+    "• Unlimited checks (URL + APK + QR)\n"
+    "• Full /breach leak database access\n"
+    "• No ads and high-speed analysis\n\n"
+    "💳 *Choose payment method:*"
+)
+
+TEXTS["uz"]["premium_promo_hint"] = (
+    "🎟 *Promokodingiz bormi?*\n\n"
+    "Agar sizda promokod bo'lsa, uni quyidagicha faollashtiring:\n"
+    "👉 `/promo KODINGIZ`\n\n"
+    "Misol: `/promo FREE30`"
+)
+TEXTS["ru"]["premium_promo_hint"] = (
+    "🎟 *Есть промокод?*\n\n"
+    "Если у вас есть промокод, активируйте его так:\n"
+    "👉 `/promo ВАШКОД`\n\n"
+    "Пример: `/promo FREE30`"
+)
+TEXTS["en"]["premium_promo_hint"] = (
+    "🎟 *Have a promo code?*\n\n"
+    "If you have a promo code, activate it like this:\n"
+    "👉 `/promo YOURCODE`\n\n"
+    "Example: `/promo FREE30`"
+)

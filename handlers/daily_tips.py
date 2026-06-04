@@ -1,23 +1,25 @@
 """
-Daily Security Tips system.
-- Sends a random cybersecurity tip to subscribed users daily.
+Daily Security Tips system powered by Groq AI (free llama3).
+- Generates fresh cybersecurity tips daily using AI.
+- Falls back to pre-written tips if API fails.
 - Users toggle with /tips on or /tips off.
-- Tips are pre-written in 3 languages (no AI API needed = zero cost).
 """
 from telegram import Update
 from telegram.ext import ContextTypes, Application
 from telegram.error import TelegramError
 import random
 import logging
+import aiohttp
 
+from config import GROQ_API_KEY
 from database import get_user_lang, load_db, save_db
 from languages import t
 from handlers.private_messages import require_subscription, react_to_message
 
 
-# ─── TIPS DATABASE (pre-written, 3 languages) ─────────────────────────────────
+# ─── FALLBACK TIPS (used if AI API fails) ─────────────────────────────────────
 
-DAILY_TIPS = [
+FALLBACK_TIPS = [
     {
         "uz": "🔐 Parollaringizni har 90 kunda yangilang va har bir sayt uchun alohida parol ishlating.",
         "ru": "🔐 Меняйте пароли каждые 90 дней и используйте уникальный пароль для каждого сайта.",
@@ -96,6 +98,68 @@ DAILY_TIPS = [
 ]
 
 
+# ─── GROQ AI TIP GENERATOR ───────────────────────────────────────────────────
+
+async def generate_ai_tip(lang: str = "uz") -> str:
+    """
+    Generates a fresh cybersecurity tip using Groq AI (free llama3).
+    Returns the tip text or empty string if fails.
+    """
+    if not GROQ_API_KEY:
+        return ""
+
+    lang_map = {
+        "uz": "O'zbek tilida",
+        "ru": "на русском языке",
+        "en": "in English",
+    }
+    lang_instruction = lang_map.get(lang, "in English")
+
+    prompt = (
+        f"Generate ONE short, practical cybersecurity tip or lifehack for regular internet users "
+        f"{lang_instruction}. It should be:\n"
+        f"- Maximum 2-3 sentences\n"
+        f"- Actionable and specific (not generic)\n"
+        f"- Include a relevant emoji at the start\n"
+        f"- About a DIFFERENT topic each time (phishing, passwords, malware, privacy, "
+        f"social engineering, Wi-Fi security, mobile security, data backups, etc.)\n"
+        f"- Written in a friendly, informative tone\n\n"
+        f"Just output the tip itself, nothing else. No quotation marks."
+    )
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [
+                        {"role": "system", "content": "You are a cybersecurity expert giving daily tips to regular users."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "temperature": 0.9,
+                    "max_tokens": 200,
+                },
+                timeout=aiohttp.ClientTimeout(total=15),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    tip = data["choices"][0]["message"]["content"].strip()
+                    # Clean up any quotes the model might add
+                    tip = tip.strip('"').strip("'")
+                    return tip
+                else:
+                    logging.warning(f"Groq API returned status {resp.status}")
+                    return ""
+    except Exception as e:
+        logging.error(f"Groq AI tip generation error: {e}")
+        return ""
+
+
 # ─── Tips toggle (database helpers) ──────────────────────────────────────────
 
 def get_tips_enabled(user_id: int) -> bool:
@@ -147,15 +211,25 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         set_tips_enabled(user.id, True)
         await update.message.reply_text(t(lang, "tips_enabled"))
     else:
-        # Show current status and a random tip
+        # Show current status and generate a tip
         enabled = get_tips_enabled(user.id)
-        tip = random.choice(DAILY_TIPS)
-        tip_text = tip.get(lang, tip["uz"])
+        status = "✅" if enabled else "❌"
 
-        status = "✅ Yoqilgan" if enabled else "❌ O'chirilgan"
-        await update.message.reply_text(
+        # Try AI tip first, fallback to pre-written
+        status_msg = await update.message.reply_text("💡 Maslahat generatsiya qilinmoqda...")
+        ai_tip = await generate_ai_tip(lang)
+
+        if ai_tip:
+            tip_text = ai_tip
+            source = "🤖 AI"
+        else:
+            tip = random.choice(FALLBACK_TIPS)
+            tip_text = tip.get(lang, tip["uz"])
+            source = "📝"
+
+        await status_msg.edit_text(
             f"💡 *Kunlik Maslahatlar:* {status}\n\n"
-            f"📝 *Bugungi maslahat:*\n{tip_text}\n\n"
+            f"{source} *Bugungi maslahat:*\n{tip_text}\n\n"
             f"O'chirish: `/tips off`\nYoqish: `/tips on`",
             parse_mode="Markdown",
         )
@@ -164,18 +238,32 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── Daily tips sender (called by scheduler) ─────────────────────────────────
 
 async def send_daily_tips(application: Application):
-    """Sends a random tip to all subscribed users. Called by APScheduler."""
+    """
+    Sends an AI-generated tip to all subscribed users.
+    Generates one tip per language, then broadcasts.
+    Called daily by APScheduler.
+    """
     subscribers = get_all_tips_subscribers()
     if not subscribers:
         return
 
-    tip = random.choice(DAILY_TIPS)
+    # Generate tips for each language using AI
+    tips_by_lang = {}
+    for lang in ["uz", "ru", "en"]:
+        ai_tip = await generate_ai_tip(lang)
+        if ai_tip:
+            tips_by_lang[lang] = ai_tip
+        else:
+            # Fallback to pre-written
+            fallback = random.choice(FALLBACK_TIPS)
+            tips_by_lang[lang] = fallback.get(lang, fallback["uz"])
+
     sent = 0
     failed = 0
 
     for user_id in subscribers:
         lang = get_user_lang(user_id)
-        tip_text = tip.get(lang, tip["uz"])
+        tip_text = tips_by_lang.get(lang, tips_by_lang.get("uz", ""))
         message = f"💡 *Kunlik Xavfsizlik Maslahati:*\n\n{tip_text}"
 
         try:
@@ -191,4 +279,4 @@ async def send_daily_tips(application: Application):
             import asyncio
             await asyncio.sleep(1)
 
-    logging.info(f"Daily tips sent: {sent} success, {failed} failed")
+    logging.info(f"Daily AI tips sent: {sent} success, {failed} failed")

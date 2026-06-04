@@ -965,3 +965,9 @@ TEXTS["en"]["group_premium_info"] = (
 TEXTS["uz"]["group_premium_success"] = "🎉 *Guruh Premium faollashtirildi!* {days} kunlik cheksiz himoya."
 TEXTS["ru"]["group_premium_success"] = "🎉 *Премиум группы активирован!* {days} дней безлимитной защиты."
 TEXTS["en"]["group_premium_success"] = "🎉 *Group Premium activated!* {days} days of unlimited protection."
+
+
+
+TEXTS["uz"]["group_premium_admin_only"] = "❗ Guruh Premium faqat guruh adminlari tomonidan xarid qilinishi mumkin."
+TEXTS["ru"]["group_premium_admin_only"] = "❗ Премиум для группы могут купить только администраторы группы."
+TEXTS["en"]["group_premium_admin_only"] = "❗ Group Premium can only be purchased by group admins."

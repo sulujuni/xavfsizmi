@@ -806,3 +806,71 @@ TEXTS["en"]["your_position"] = "Your position"
 TEXTS["uz"]["leaderboard_reward"] = "🏆 *Tabriklaymiz!* Siz bu oyning eng faol taklif qiluvchisi bo'ldingiz!\n\n🎁 30 kunlik bepul Premium taqdim etildi.\n📊 Sizning taklif sonatingiz: {count} ta"
 TEXTS["ru"]["leaderboard_reward"] = "🏆 *Поздравляем!* Вы стали лучшим рефералом этого месяца!\n\n🎁 Вам предоставлено 30 дней бесплатного Premium.\n📊 Ваши приглашения: {count}"
 TEXTS["en"]["leaderboard_reward"] = "🏆 *Congratulations!* You are this month's top referrer!\n\n🎁 You've been awarded 30 days free Premium.\n📊 Your referrals: {count}"
+
+
+
+# ─── CONVERSATION PROMPTS (ask for input) ─────────────────────────────────────
+
+TEXTS["uz"]["scammer_ask"] = "👤 *Skammer Tekshiruvi*\n\nTekshirmoqchi bo'lgan username yoki telefon raqamni yuboring:"
+TEXTS["ru"]["scammer_ask"] = "👤 *Проверка Скаммера*\n\nОтправьте username или номер телефона для проверки:"
+TEXTS["en"]["scammer_ask"] = "👤 *Scammer Check*\n\nSend the username or phone number to check:"
+
+TEXTS["uz"]["privacy_ask"] = "🔏 *Maxfiylik Tahlili*\n\nProfil havolasini yuboring (Instagram, Facebook, va h.k.):"
+TEXTS["ru"]["privacy_ask"] = "🔏 *Анализ Приватности*\n\nОтправьте ссылку на профиль (Instagram, Facebook и т.д.):"
+TEXTS["en"]["privacy_ask"] = "🔏 *Privacy Analysis*\n\nSend the profile URL (Instagram, Facebook, etc.):"
+
+TEXTS["uz"]["report_ask"] = "🚨 *Xavfli Havola Xabari*\n\nXavfli deb hisoblagan havolani yuboring:"
+TEXTS["ru"]["report_ask"] = "🚨 *Сообщить об Опасной Ссылке*\n\nОтправьте ссылку, которую считаете опасной:"
+TEXTS["en"]["report_ask"] = "🚨 *Report Dangerous Link*\n\nSend the link you consider dangerous:"
+
+TEXTS["uz"]["feedback_ask"] = "📩 *Taklif / Shikoyat*\n\nXabaringizni yozing (to'g'ridan-to'g'ri adminga yuboriladi):"
+TEXTS["ru"]["feedback_ask"] = "📩 *Предложение / Жалоба*\n\nНапишите сообщение (отправится напрямую администратору):"
+TEXTS["en"]["feedback_ask"] = "📩 *Feedback / Complaint*\n\nWrite your message (it will be sent directly to the admin):"
+
+TEXTS["uz"]["scammer_result_title"] = "Skammer Tekshiruvi"
+TEXTS["ru"]["scammer_result_title"] = "Проверка Скаммера"
+TEXTS["en"]["scammer_result_title"] = "Scammer Check"
+
+TEXTS["uz"]["warning_found"] = "OGOHLANTIRISH topildi"
+TEXTS["ru"]["warning_found"] = "ПРЕДУПРЕЖДЕНИЕ найдено"
+TEXTS["en"]["warning_found"] = "WARNING found"
+
+TEXTS["uz"]["sources_checked"] = "Tekshirilgan bazalar"
+TEXTS["ru"]["sources_checked"] = "Проверенные базы"
+TEXTS["en"]["sources_checked"] = "Sources checked"
+
+TEXTS["uz"]["no_warnings"] = "Hech qanday ogohlantirish topilmadi."
+TEXTS["ru"]["no_warnings"] = "Предупреждений не найдено."
+TEXTS["en"]["no_warnings"] = "No warnings found."
+
+TEXTS["uz"]["no_guarantee"] = "100% kafolat bermaydi. Ehtiyot bo'ling!"
+TEXTS["ru"]["no_guarantee"] = "100% гарантии нет. Будьте осторожны!"
+TEXTS["en"]["no_guarantee"] = "No 100% guarantee. Stay careful!"
+
+TEXTS["uz"]["privacy_result_title"] = "Maxfiylik Tahlili"
+TEXTS["ru"]["privacy_result_title"] = "Анализ Приватности"
+TEXTS["en"]["privacy_result_title"] = "Privacy Analysis"
+
+TEXTS["uz"]["privacy_score"] = "Maxfiylik Bali"
+TEXTS["ru"]["privacy_score"] = "Оценка Приватности"
+TEXTS["en"]["privacy_score"] = "Privacy Score"
+
+TEXTS["uz"]["findings"] = "Topilmalar"
+TEXTS["ru"]["findings"] = "Находки"
+TEXTS["en"]["findings"] = "Findings"
+
+TEXTS["uz"]["recommendations"] = "Tavsiyalar"
+TEXTS["ru"]["recommendations"] = "Рекомендации"
+TEXTS["en"]["recommendations"] = "Recommendations"
+
+TEXTS["uz"]["privacy_error"] = "Profilni tekshirib bo'lmadi"
+TEXTS["ru"]["privacy_error"] = "Не удалось проверить профиль"
+TEXTS["en"]["privacy_error"] = "Could not check profile"
+
+TEXTS["uz"]["report_admin_alert"] = "Xavfli havola xabari"
+TEXTS["ru"]["report_admin_alert"] = "Жалоба на ссылку"
+TEXTS["en"]["report_admin_alert"] = "Dangerous link report"
+
+TEXTS["uz"]["feedback_admin_title"] = "Yangi taklif/shikoyat"
+TEXTS["ru"]["feedback_admin_title"] = "Новое предложение/жалоба"
+TEXTS["en"]["feedback_admin_title"] = "New feedback/complaint"

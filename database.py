@@ -468,3 +468,42 @@ def set_secretary_mode(user_id: int, enabled: bool):
         db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
     db[user_key]["secretary_mode"] = enabled
     save_db(db)
+
+
+
+# ─── GROUP DAILY CHECKS (free tier limit) ─────────────────────────────────────
+
+GROUP_DAILY_FREE_LIMIT = 20  # Groups get 20 free checks per day
+
+
+def get_group_checks(chat_id: int) -> int:
+    """Get how many checks the group has used today."""
+    db = load_db()
+    today = str(date.today())
+    key = f"group_{chat_id}"
+    if key not in db:
+        return 0
+    if db[key].get("check_date") != today:
+        return 0
+    return db[key].get("checks", 0)
+
+
+def increment_group_checks(chat_id: int):
+    """Increment the group's daily check counter."""
+    db = load_db()
+    today = str(date.today())
+    key = f"group_{chat_id}"
+    if key not in db:
+        db[key] = {"lang": "uz", "blocked": 0, "warned": 0}
+    if db[key].get("check_date") != today:
+        db[key]["check_date"] = today
+        db[key]["checks"] = 0
+    db[key]["checks"] = db[key].get("checks", 0) + 1
+    save_db(db)
+
+
+def is_group_limit_reached(chat_id: int) -> bool:
+    """Check if a group has reached its daily free limit."""
+    if is_group_premium(chat_id):
+        return False
+    return get_group_checks(chat_id) >= GROUP_DAILY_FREE_LIMIT

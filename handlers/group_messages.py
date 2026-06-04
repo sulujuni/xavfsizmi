@@ -3,6 +3,8 @@ Group message handlers:
 - handle_group_message (auto-scan URLs posted in groups)
 - handle_group_apk (scan APK files in groups)
 - handle_group_photo (scan QR codes in group photos)
+
+Free tier groups: 20 checks/day. Premium groups: unlimited.
 """
 import re
 import logging
@@ -14,6 +16,8 @@ from telegram.error import TelegramError
 
 from database import (
     get_group_lang, increment_group_blocked,
+    is_group_limit_reached, increment_group_checks,
+    GROUP_DAILY_FREE_LIMIT,
 )
 from languages import gt, at
 from checker import check_virustotal, check_google_safe_browsing
@@ -21,6 +25,20 @@ from apk_checker import scan_apk
 from qr_checker import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
+
+
+# ─── Helper: check group limit ───────────────────────────────────────────────
+
+def _check_group_limit(chat_id: int) -> bool:
+    """
+    Returns True if the group can proceed.
+    Returns False if the daily limit is reached.
+    Increments counter if allowed.
+    """
+    if is_group_limit_reached(chat_id):
+        return False
+    increment_group_checks(chat_id)
+    return True
 
 
 # ─── Group URL auto-scan ─────────────────────────────────────────────────────
@@ -34,7 +52,14 @@ async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYP
     if not urls:
         return
 
-    lang = get_group_lang(message.chat_id)
+    chat_id = message.chat_id
+    lang = get_group_lang(chat_id)
+
+    # Check group daily limit
+    if not _check_group_limit(chat_id):
+        # Silently skip if limit reached (don't spam the group)
+        return
+
     mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
 
     for url in urls:
@@ -45,11 +70,11 @@ async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYP
             try:
                 await message.delete()
                 await context.bot.send_message(
-                    chat_id=message.chat_id,
+                    chat_id=chat_id,
                     text=gt(lang, "dangerous_deleted", mention=mention, url=url, engines=vt.get("malicious", 0)),
                     parse_mode="Markdown",
                 )
-                increment_group_blocked(message.chat_id)
+                increment_group_blocked(chat_id)
             except TelegramError:
                 await message.reply_text(
                     gt(lang, "dangerous_no_permission", mention=mention, url=url),
@@ -76,8 +101,13 @@ async def handle_group_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_apk:
         return
 
-    lang = get_group_lang(message.chat_id)
+    chat_id = message.chat_id
+    lang = get_group_lang(chat_id)
     mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
+
+    # Check group daily limit
+    if not _check_group_limit(chat_id):
+        return
 
     if doc.file_size > 32 * 1024 * 1024:
         await message.reply_text(at(lang, "too_large"))
@@ -90,7 +120,7 @@ async def handle_group_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         file_bytes = await file.download_as_bytearray()
         result = await scan_apk(bytes(file_bytes), file_name)
     except Exception:
-        await status_msg.edit_text("❌ APK tekshirishda xatolik.")
+        await status_msg.edit_text(at(lang, "error"))
         return
 
     if not result.get("success"):
@@ -110,7 +140,7 @@ async def handle_group_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception:
             pass
         await context.bot.send_message(
-            chat_id=message.chat_id,
+            chat_id=chat_id,
             text=(
                 f"🚨 *XAVFLI APK BLOKLANDI!*\n\n"
                 f"👤 {mention}\n"
@@ -140,7 +170,13 @@ async def handle_group_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not message or not message.photo:
         return
 
-    lang = get_group_lang(message.chat_id)
+    chat_id = message.chat_id
+    lang = get_group_lang(chat_id)
+
+    # Check group daily limit
+    if not _check_group_limit(chat_id):
+        return
+
     photo = message.photo[-1]
 
     try:
@@ -154,7 +190,7 @@ async def handle_group_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return  # Not a QR code, ignore silently
 
     status_msg = await message.reply_text(
-        "📸 QR kod aniqlandi, tekshirilmoqda...",
+        gt(lang, "checking"),
         parse_mode="Markdown",
     )
 
@@ -172,19 +208,14 @@ async def handle_group_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
             except Exception:
                 pass
             await context.bot.send_message(
-                chat_id=message.chat_id,
-                text=(
-                    f"🚨 *XAVFLI QR KOD BLOKLANDI!*\n\n"
-                    f"👤 {mention}\n"
-                    f"🔗 URL: `{url}`\n"
-                    f"Bu QR kodga ishonmang!"
-                ),
+                chat_id=chat_id,
+                text=gt(lang, "dangerous_deleted", mention=mention, url=url, engines=vt_res.get("malicious", 0)),
                 parse_mode="Markdown",
             )
         else:
             await status_msg.edit_text(
-                f"📸 QR kod URL: `{url}`\n\n✅ Xavfsiz ko'rinadi.",
+                f"📸 QR: `{url}`\n\n✅ {gt(lang, 'clean')}",
                 parse_mode="Markdown",
             )
     except Exception:
-        await status_msg.edit_text("❌ QR kod tekshirishda xatolik.")
+        await status_msg.edit_text(at(lang, "error"))

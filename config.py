@@ -13,6 +13,9 @@ UZS_PROVIDER_TOKEN       = os.getenv("UZS_PROVIDER_TOKEN", "")
 REQUIRED_CHANNEL_ID  = int(os.getenv("REQUIRED_CHANNEL_ID", "0"))
 CHANNEL_INVITE_LINK  = os.getenv("CHANNEL_INVITE_LINK", "")
 
+# ─── AI CHATBOT (Groq — free llama3) ──────────────────────────────────────────
+GROQ_API_KEY         = os.getenv("GROQ_API_KEY", "")
+
 DAILY_FREE_LIMIT = 5
 ADMIN_ID         = int(os.getenv("ADMIN_ID", "0"))
 

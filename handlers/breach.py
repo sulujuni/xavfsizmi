@@ -92,5 +92,6 @@ async def breach_receive_email(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def breach_cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("❌ Bekor qilindi.")
+    lang = get_user_lang(update.effective_user.id)
+    await update.message.reply_text(t(lang, "breach_cancel"))
     return ConversationHandler.END

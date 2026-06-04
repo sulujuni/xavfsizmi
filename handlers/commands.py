@@ -125,19 +125,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 pass
             else:
                 if creator_id == user.id:
-                    await update.message.reply_text(
-                        "🎣 Bu sizning shaxsiy fishing testingiz. Uni do'stlaringizga yuboring!"
-                    )
+                    await update.message.reply_text(t(lang, "phish_self_click"))
                     return
 
-                warning_text = (
-                    "🚨 *DIQQAT! Siz fishing tuzog'iga tushdingiz!*\n\n"
-                    "Bu do'stingiz yuborgan *Xavfsizmi? Bot* testi edi.\n"
-                    "Real hayotda skamer parollaringizni o'g'irlashi mumkin edi!\n\n"
-                    "🛡 Shubhali linkni doim @XavfsizmiBot orqali tekshiring.\n"
-                    "💡 Do'stlaringizni sinang: /phish"
+                await update.message.reply_text(
+                    t(lang, "phish_victim_warning"), parse_mode="Markdown"
                 )
-                await update.message.reply_text(warning_text, parse_mode="Markdown")
                 try:
                     creator_lang = get_user_lang(creator_id)
                     await context.bot.send_message(
@@ -156,9 +149,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     success = add_referral(user.id, referrer_id)
                     if success:
                         try:
+                            referrer_lang = get_user_lang(referrer_id)
                             await context.bot.send_message(
                                 chat_id=referrer_id,
-                                text="🎉 Yangi do'st taklif qildingiz! +1 bepul /breach balansi."
+                                text=t(referrer_lang, "referral_success_notify"),
                             )
                         except Exception:
                             pass
@@ -202,7 +196,7 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_id = update.effective_user.id
         member = await context.bot.get_chat_member(update.effective_chat.id, user_id)
         if member.status not in ["administrator", "creator"]:
-            await update.message.reply_text("❗ Faqat guruh adminlari tilni o'zgartira oladi.")
+            await update.message.reply_text(t(get_user_lang(update.effective_user.id), "group_admin_only"))
             return
         prefix = "glang_"
     else:
@@ -306,7 +300,7 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         await update.message.reply_text(t(lang, "feedback_received"))
     except Exception:
-        await update.message.reply_text("❌ Xabarni adminlarga yuborib bo'lmadi.")
+        await update.message.reply_text(t(lang, "error_send_failed"))
 
 
 # ─── /report ──────────────────────────────────────────────────────────────────
@@ -402,12 +396,7 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     copy_text = f"{phish_text}\n{bot_link}"
 
     # First send the explanation
-    await update.message.reply_text(
-        f"🎣 Fishing Simulyatsiya Yaratildi!\n\n"
-        f"Pastdagi xabarni do'stingizga forward qiling yoki nusxalang.\n"
-        f"Bossa — ogohlantirish oladi, siz xabar olasiz.\n\n"
-        f"🔄 Boshqa shablon: /phish",
-    )
+    await update.message.reply_text(t(lang, "phish_intro"))
 
     # Then send the phishing message separately (easy to copy/forward)
     keyboard = [

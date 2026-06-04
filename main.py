@@ -31,13 +31,17 @@ from handlers import (
     language_callback,
     group_language_callback,
     history_command,
-    feedback_command,
-    report_command,
     stats_command,
     referral_command,
     phish_command,
-    scammer_command,
-    privacy_command,
+    # Conversation commands (2-step)
+    scammer_command, scammer_receive,
+    privacy_command, privacy_receive,
+    report_command, report_receive,
+    feedback_command, feedback_receive,
+    cancel_conversation,
+    WAITING_SCAMMER_INPUT, WAITING_PRIVACY_INPUT,
+    WAITING_REPORT_INPUT, WAITING_FEEDBACK_INPUT,
     # Premium & payment handlers
     premium_command,
     add_promo_command,
@@ -163,11 +167,8 @@ def main():
     app.add_handler(CommandHandler("admin", admin_command))
     app.add_handler(CommandHandler("broadcast", broadcast_command))
     app.add_handler(CommandHandler("phish", phish_command))
-    app.add_handler(CommandHandler("feedback", feedback_command))
     app.add_handler(CommandHandler("history", history_command))
     app.add_handler(CommandHandler("ratelimit", ratelimit_command))
-    app.add_handler(CommandHandler("scammer", scammer_command))
-    app.add_handler(CommandHandler("privacy", privacy_command))
     app.add_handler(CommandHandler("tips", tips_command))
     app.add_handler(CommandHandler("top", top_command))
 
@@ -183,6 +184,42 @@ def main():
         per_user=True, per_chat=True,
     )
     app.add_handler(breach_conv)
+
+    # ── Scammer Conversation Handler ──────────────────────────────────────────
+    scammer_conv = ConversationHandler(
+        entry_points=[CommandHandler("scammer", scammer_command)],
+        states={WAITING_SCAMMER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, scammer_receive)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(scammer_conv)
+
+    # ── Privacy Conversation Handler ──────────────────────────────────────────
+    privacy_conv = ConversationHandler(
+        entry_points=[CommandHandler("privacy", privacy_command)],
+        states={WAITING_PRIVACY_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, privacy_receive)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(privacy_conv)
+
+    # ── Report Conversation Handler ───────────────────────────────────────────
+    report_conv = ConversationHandler(
+        entry_points=[CommandHandler("report", report_command)],
+        states={WAITING_REPORT_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, report_receive)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(report_conv)
+
+    # ── Feedback Conversation Handler ─────────────────────────────────────────
+    feedback_conv = ConversationHandler(
+        entry_points=[CommandHandler("feedback", feedback_command)],
+        states={WAITING_FEEDBACK_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, feedback_receive)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(feedback_conv)
 
     # ── Callback Query Handlers ───────────────────────────────────────────────
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_"))

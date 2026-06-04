@@ -9,13 +9,25 @@ from .commands import (
     language_callback,
     group_language_callback,
     history_command,
-    feedback_command,
-    report_command,
     stats_command,
     referral_command,
     phish_command,
+)
+
+from .conversations import (
     scammer_command,
+    scammer_receive,
     privacy_command,
+    privacy_receive,
+    report_command,
+    report_receive,
+    feedback_command,
+    feedback_receive,
+    cancel_conversation,
+    WAITING_SCAMMER_INPUT,
+    WAITING_PRIVACY_INPUT,
+    WAITING_REPORT_INPUT,
+    WAITING_FEEDBACK_INPUT,
 )
 
 from .premium import (

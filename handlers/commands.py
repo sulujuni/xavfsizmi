@@ -16,11 +16,10 @@ from telegram.error import TelegramError
 from config import ADMIN_ID, DAILY_FREE_LIMIT, CHANNEL_INVITE_LINK
 from database import (
     get_user_lang, set_user_lang, get_group_lang, set_group_lang,
-    get_history, add_referral, get_referral_count, add_report,
+    get_history, add_referral, get_referral_count,
 )
 from languages import t, gt
 from admin import is_admin
-from handlers.tools import check_social_account, check_privacy_score
 
 REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
 
@@ -277,62 +276,6 @@ async def history_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
-# ─── /feedback ────────────────────────────────────────────────────────────────
-
-async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "feedback_usage"), parse_mode="Markdown")
-        return
-
-    feedback_text = " ".join(context.args).strip()
-    try:
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f"📩 *Yangi taklif/shikoyat:*\nKimdan: {user.full_name} (`{user.id}`)\nMatn: {feedback_text}",
-            parse_mode="Markdown"
-        )
-        await update.message.reply_text(t(lang, "feedback_received"))
-    except Exception:
-        await update.message.reply_text(t(lang, "error_send_failed"))
-
-
-# ─── /report ──────────────────────────────────────────────────────────────────
-
-async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "report_usage"), parse_mode="Markdown")
-        return
-
-    url_to_report = context.args[0].strip()
-    try:
-        add_report(user.id, url_to_report)
-    except Exception:
-        pass
-    try:
-        await context.bot.send_message(
-            chat_id=ADMIN_ID,
-            text=f"🚨 *Xavfli havola:*\nUser: {user.id}\nLink: {url_to_report}",
-            parse_mode="Markdown"
-        )
-    except Exception:
-        pass
-    await update.message.reply_text(t(lang, "report_sent"))
-
-
 # ─── /stats ───────────────────────────────────────────────────────────────────
 
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -407,85 +350,3 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         disable_web_page_preview=True,
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
-
-
-# ─── /scammer ─────────────────────────────────────────────────────────────────
-
-async def scammer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "scammer_usage"), parse_mode="Markdown")
-        return
-
-    username = context.args[0].strip()
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-
-    result = await check_social_account(username)
-
-    if result["reports_found"] > 0:
-        warnings_text = "\n".join([f"  🚨 {w}" for w in result["warnings"]])
-        text = (
-            f"⚠️ *Skammer Tekshiruvi:*\n\n"
-            f"👤 `@{result['username']}`\n\n"
-            f"🚨 *OGOHLANTIRISH!*\n{warnings_text}\n\n"
-            f"📊 Tekshirilgan: {result['sources_checked']} baza"
-        )
-    else:
-        text = (
-            f"✅ *Skammer Tekshiruvi:*\n\n"
-            f"👤 `@{result['username']}`\n\n"
-            f"✅ Ogohlantirish topilmadi.\n"
-            f"📊 Tekshirilgan: {result['sources_checked']} baza\n"
-            f"⚠️ 100% kafolat bermaydi. Ehtiyot bo'ling!"
-        )
-    await status_msg.edit_text(text, parse_mode="Markdown")
-
-
-# ─── /privacy ─────────────────────────────────────────────────────────────────
-
-async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "privacy_usage"), parse_mode="Markdown")
-        return
-
-    profile_url = context.args[0].strip()
-    if not profile_url.startswith("http"):
-        profile_url = f"https://{profile_url}"
-
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-    result = await check_privacy_score(profile_url)
-
-    if result.get("score", -1) < 0:
-        text = f"❌ Profilni tekshirib bo'lmadi: {result.get('error', 'Xatolik')}"
-    else:
-        score = result["score"]
-        if score >= 80:
-            score_emoji = f"🟢 {score}/100"
-        elif score >= 50:
-            score_emoji = f"🟡 {score}/100"
-        else:
-            score_emoji = f"🔴 {score}/100"
-
-        findings_text = "\n".join([f"  • {f}" for f in result["findings"]])
-        recs_text = "\n".join([f"  💡 {r}" for r in result["recommendations"]])
-
-        text = (
-            f"🔏 *Maxfiylik Tahlili:*\n\n"
-            f"🎯 *Bal:* {score_emoji}\n\n"
-            f"📋 *Topilmalar:*\n{findings_text}\n\n"
-            f"💡 *Tavsiyalar:*\n{recs_text}"
-        )
-    await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)

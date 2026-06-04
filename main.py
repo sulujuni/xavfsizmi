@@ -26,6 +26,7 @@ from rate_tracker import send_limit_warnings
 from handlers import (
     # Command handlers
     start_command,
+    help_command,
     language_command,
     language_callback,
     group_language_callback,
@@ -35,11 +36,6 @@ from handlers import (
     stats_command,
     referral_command,
     phish_command,
-    # New advanced commands
-    expand_command,
-    ssl_command,
-    redirect_command,
-    typo_command,
     scammer_command,
     privacy_command,
     # Premium & payment handlers
@@ -66,8 +62,6 @@ from handlers import (
     # Secretary mode (Business Connection)
     handle_business_connection,
     handle_business_message,
-    # Bulk check
-    handle_bulk_check,
     # Daily tips & leaderboard
     tips_command,
     send_daily_tips,
@@ -89,13 +83,9 @@ async def setup_menu(application: Application):
     """Configure bot menu buttons and commands on startup."""
     public_commands = [
         BotCommand("start", "🚀 Botni ishga tushirish"),
+        BotCommand("help", "📖 Barcha buyruqlar ro'yxati"),
         BotCommand("language", "🌐 Tilni o'zgartirish"),
-        BotCommand("breach", "🔐 Email leak check"),
-        BotCommand("bulk", "📋 Ko'p havolalarni tekshirish"),
-        BotCommand("expand", "🔀 Qisqa havolani kengaytirish"),
-        BotCommand("ssl", "🔒 SSL sertifikat tekshiruvi"),
-        BotCommand("redirect", "🔗 Redirect zanjiri"),
-        BotCommand("typo", "🔤 Typosquatting tekshiruvi"),
+        BotCommand("breach", "🔐 Email leak tekshiruvi"),
         BotCommand("scammer", "👤 Skammer tekshiruvi"),
         BotCommand("privacy", "🔏 Maxfiylik tahlili"),
         BotCommand("phish", "🎣 Fishing simulyatori"),
@@ -138,35 +128,21 @@ def setup_scheduler(application: Application):
     """Configure APScheduler for daily tips, monthly rewards, and rate limit warnings."""
     scheduler = AsyncIOScheduler()
 
-    # Daily tips at 09:00 UTC (14:00 UZT)
     scheduler.add_job(
-        send_daily_tips,
-        CronTrigger(hour=9, minute=0),
-        args=[application],
-        id="daily_tips",
-        replace_existing=True,
+        send_daily_tips, CronTrigger(hour=9, minute=0),
+        args=[application], id="daily_tips", replace_existing=True,
     )
-
-    # Monthly top referrer reward (1st of each month at 00:00)
     scheduler.add_job(
-        reward_top_referrers,
-        CronTrigger(day=1, hour=0, minute=0),
-        args=[application],
-        id="monthly_reward",
-        replace_existing=True,
+        reward_top_referrers, CronTrigger(day=1, hour=0, minute=0),
+        args=[application], id="monthly_reward", replace_existing=True,
     )
-
-    # Rate limit warnings every 4 hours
     scheduler.add_job(
-        send_limit_warnings,
-        CronTrigger(hour="*/4", minute=0),
-        args=[application],
-        id="rate_limit_check",
-        replace_existing=True,
+        send_limit_warnings, CronTrigger(hour="*/4", minute=0),
+        args=[application], id="rate_limit_check", replace_existing=True,
     )
 
     scheduler.start()
-    print("⏰ Scheduler ishga tushdi (daily tips + monthly rewards + rate limit warnings)")
+    print("⏰ Scheduler ishga tushdi")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -176,6 +152,7 @@ def main():
 
     # ── Command Handlers ──────────────────────────────────────────────────────
     app.add_handler(CommandHandler("start", start_command))
+    app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("language", language_command))
     app.add_handler(CommandHandler("promo", promo_command))
     app.add_handler(CommandHandler("addpromo", add_promo_command))
@@ -189,15 +166,8 @@ def main():
     app.add_handler(CommandHandler("feedback", feedback_command))
     app.add_handler(CommandHandler("history", history_command))
     app.add_handler(CommandHandler("ratelimit", ratelimit_command))
-
-    # New advanced commands
-    app.add_handler(CommandHandler("expand", expand_command))
-    app.add_handler(CommandHandler("ssl", ssl_command))
-    app.add_handler(CommandHandler("redirect", redirect_command))
-    app.add_handler(CommandHandler("typo", typo_command))
     app.add_handler(CommandHandler("scammer", scammer_command))
     app.add_handler(CommandHandler("privacy", privacy_command))
-    app.add_handler(CommandHandler("bulk", handle_bulk_check))
     app.add_handler(CommandHandler("tips", tips_command))
     app.add_handler(CommandHandler("top", top_command))
 
@@ -210,8 +180,7 @@ def main():
             ]
         },
         fallbacks=[CommandHandler("cancel", breach_cancel)],
-        per_user=True,
-        per_chat=True,
+        per_user=True, per_chat=True,
     )
     app.add_handler(breach_conv)
 
@@ -230,58 +199,31 @@ def main():
     app.add_handler(BusinessConnectionHandler(handle_business_connection))
     app.add_handler(TypeHandler(type=Update, callback=handle_business_message), group=-1)
 
-    # ── Private Message Handlers (Documents, Photos, Text) ────────────────────
-    app.add_handler(MessageHandler(
-        filters.Document.ALL & filters.ChatType.PRIVATE, handle_apk
-    ))
-    app.add_handler(MessageHandler(
-        filters.PHOTO & filters.ChatType.PRIVATE, handle_photo
-    ))
-    app.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, handle_private_message
-    ))
+    # ── Private Message Handlers ──────────────────────────────────────────────
+    app.add_handler(MessageHandler(filters.Document.ALL & filters.ChatType.PRIVATE, handle_apk))
+    app.add_handler(MessageHandler(filters.PHOTO & filters.ChatType.PRIVATE, handle_photo))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & filters.ChatType.PRIVATE, handle_private_message))
 
-    # ── Group Message Handlers (Documents, Photos, Text) ──────────────────────
-    app.add_handler(MessageHandler(
-        filters.Document.ALL & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP),
-        handle_group_apk,
-    ))
-    app.add_handler(MessageHandler(
-        filters.PHOTO & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP),
-        handle_group_photo,
-    ))
-    app.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP),
-        handle_group_message,
-    ))
+    # ── Group Message Handlers ────────────────────────────────────────────────
+    app.add_handler(MessageHandler(filters.Document.ALL & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP), handle_group_apk))
+    app.add_handler(MessageHandler(filters.PHOTO & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP), handle_group_photo))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND & (filters.ChatType.GROUP | filters.ChatType.SUPERGROUP), handle_group_message))
 
-    # ── Setup Scheduler ───────────────────────────────────────────────────────
+    # ── Scheduler + Error Handler ─────────────────────────────────────────────
     setup_scheduler(app)
-
-    # ── Global Error Handler (sends crashes to admin) ─────────────────────────
     app.add_error_handler(error_handler)
 
-    # ── Start Bot (Webhook or Polling) ────────────────────────────────────────
+    # ── Start Bot ─────────────────────────────────────────────────────────────
     if USE_WEBHOOK and WEBHOOK_URL:
         print(f"🌐 Webhook mode: {WEBHOOK_URL}")
         app.run_webhook(
-            listen="0.0.0.0",
-            port=WEBHOOK_PORT,
-            url_path="webhook",
+            listen="0.0.0.0", port=WEBHOOK_PORT, url_path="webhook",
             webhook_url=f"{WEBHOOK_URL}/webhook",
-            allowed_updates=[
-                "message", "callback_query", "pre_checkout_query",
-                "business_connection", "business_message",
-                "edited_business_message",
-            ],
+            allowed_updates=["message", "callback_query", "pre_checkout_query", "business_connection", "business_message", "edited_business_message"],
         )
     else:
-        print("🚀 Xavfsizmi? Bot barcha yangi funksiyalari bilan ishga tushdi!")
-        app.run_polling(allowed_updates=[
-            "message", "callback_query", "pre_checkout_query",
-            "business_connection", "business_message",
-            "edited_business_message",
-        ])
+        print("🚀 Xavfsizmi? Bot ishga tushdi!")
+        app.run_polling(allowed_updates=["message", "callback_query", "pre_checkout_query", "business_connection", "business_message", "edited_business_message"])
 
 
 if __name__ == "__main__":

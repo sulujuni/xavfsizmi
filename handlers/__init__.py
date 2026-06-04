@@ -4,6 +4,7 @@ Handlers package — all bot handler functions organized by responsibility.
 
 from .commands import (
     start_command,
+    help_command,
     language_command,
     language_callback,
     group_language_callback,
@@ -13,11 +14,6 @@ from .commands import (
     stats_command,
     referral_command,
     phish_command,
-    # New advanced commands
-    expand_command,
-    ssl_command,
-    redirect_command,
-    typo_command,
     scammer_command,
     privacy_command,
 )
@@ -58,6 +54,5 @@ from .secretary import (
     handle_business_message,
 )
 
-from .bulk_check import handle_bulk_check
 from .daily_tips import tips_command, send_daily_tips
 from .leaderboard import top_command, reward_top_referrers

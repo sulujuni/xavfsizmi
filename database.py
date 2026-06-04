@@ -91,13 +91,22 @@ def set_group_lang(chat_id: int, lang: str):
 # ─── PREMIUM (single implementation with expiry support) ─────────────────────
 
 def is_premium(user_id: int) -> bool:
-    """Checks if a user has active premium status (or is the Admin)."""
+    """Checks if a user has active premium status."""
     from config import ADMIN_ID
-    if user_id == ADMIN_ID:
-        return True
 
     db = load_db()
     user_key = str(user_id)
+
+    # Admin: if premium was explicitly removed (no premium_until key), respect that
+    if user_id == ADMIN_ID:
+        if user_key in db and "premium_until" not in db[user_key] and not db[user_key].get("premium"):
+            return False
+        # If admin has no explicit off, default to True
+        if user_key not in db:
+            return True
+        if "premium_until" not in db[user_key]:
+            return True
+
     if user_key not in db:
         return False
 

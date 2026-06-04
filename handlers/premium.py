@@ -39,6 +39,24 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_user_lang(user_id)
     is_group = update.effective_chat.type in ["group", "supergroup"]
 
+    # Admin toggle: /premium off to test as free user, /premium on to restore
+    if is_admin(user_id) and context.args:
+        arg = context.args[0].lower()
+        if arg == "off":
+            from database import load_db, save_db
+            db = load_db()
+            key = str(user_id)
+            if key in db:
+                db[key].pop("premium_until", None)
+                db[key].pop("premium", None)
+                save_db(db)
+            await update.message.reply_text("🔓 Admin Premium o'chirildi. Endi oddiy user sifatida test qilishingiz mumkin.")
+            return
+        elif arg == "on":
+            set_premium(user_id, days=9999)
+            await update.message.reply_text("🔒 Admin Premium qayta yoqildi.")
+            return
+
     if is_group:
         # Group premium — only admins can buy
         chat_id = update.effective_chat.id

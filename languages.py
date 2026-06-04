@@ -971,3 +971,49 @@ TEXTS["en"]["group_premium_success"] = "🎉 *Group Premium activated!* {days} d
 TEXTS["uz"]["group_premium_admin_only"] = "❗ Guruh Premium faqat guruh adminlari tomonidan xarid qilinishi mumkin."
 TEXTS["ru"]["group_premium_admin_only"] = "❗ Премиум для группы могут купить только администраторы группы."
 TEXTS["en"]["group_premium_admin_only"] = "❗ Group Premium can only be purchased by group admins."
+
+
+
+# ─── PAYNET QR PAYMENT TEXTS ──────────────────────────────────────────────────
+
+TEXTS["uz"]["pay_via_qr"] = "QR orqali to'lash"
+TEXTS["ru"]["pay_via_qr"] = "Оплата по QR"
+TEXTS["en"]["pay_via_qr"] = "Pay via QR"
+
+# Override premium_info to show new payment methods
+TEXTS["uz"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Cheksiz tekshiruv (URL + APK + QR)\n"
+    "✅ /breach email tekshiruvi\n"
+    "✅ Reklamasiz va yuqori tezlik\n\n"
+    "💰 *Narxlar:*\n"
+    "• 1 oy: 25 Stars yoki 9,990 so'm (Paynet QR)\n"
+    "• 3 oy: 65 Stars yoki 24,990 so'm (Paynet QR) 🔥\n\n"
+    "⭐ Stars — Telegram ichida to'lov\n"
+    "💳 Paynet — QR skanerlash orqali\n\n"
+    "👇 *Tanlang:*"
+)
+TEXTS["ru"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Безлимитные проверки (URL + APK + QR)\n"
+    "✅ Проверка утечек /breach\n"
+    "✅ Без рекламы и высокая скорость\n\n"
+    "💰 *Цены:*\n"
+    "• 1 мес: 25 Stars или 9,990 сум (Paynet QR)\n"
+    "• 3 мес: 65 Stars или 24,990 сум (Paynet QR) 🔥\n\n"
+    "⭐ Stars — оплата внутри Telegram\n"
+    "💳 Paynet — сканируйте QR-код\n\n"
+    "👇 *Выберите:*"
+)
+TEXTS["en"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Unlimited checks (URL + APK + QR)\n"
+    "✅ Email breach /breach access\n"
+    "✅ No ads and high speed\n\n"
+    "💰 *Pricing:*\n"
+    "• 1 month: 25 Stars or 9,990 UZS (Paynet QR)\n"
+    "• 3 months: 65 Stars or 24,990 UZS (Paynet QR) 🔥\n\n"
+    "⭐ Stars — pay inside Telegram\n"
+    "💳 Paynet — scan QR code to pay\n\n"
+    "👇 *Choose:*"
+)

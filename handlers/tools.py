@@ -73,16 +73,22 @@ def calculate_trust_score(vt_res: dict, gsb_res: dict, alien_res: dict,
     return max(0, min(100, score))
 
 
-def trust_score_emoji(score: int) -> str:
-    """Returns appropriate emoji + label for a trust score."""
+def trust_score_emoji(score: int, lang: str = "uz") -> str:
+    """Returns appropriate emoji + label for a trust score in user's language."""
+    labels = {
+        "uz": ("Ishonchli", "Ehtiyot bo'ling", "Xavfli", "Juda xavfli!"),
+        "ru": ("Надёжно", "Будьте осторожны", "Опасно", "Очень опасно!"),
+        "en": ("Trusted", "Be careful", "Dangerous", "Very dangerous!"),
+    }
+    l = labels.get(lang, labels["en"])
     if score >= 80:
-        return f"🟢 {score}/100 (Ishonchli)"
+        return f"🟢 {score}/100 ({l[0]})"
     elif score >= 50:
-        return f"🟡 {score}/100 (Ehtiyot bo'ling)"
+        return f"🟡 {score}/100 ({l[1]})"
     elif score >= 25:
-        return f"🟠 {score}/100 (Xavfli)"
+        return f"🟠 {score}/100 ({l[2]})"
     else:
-        return f"🔴 {score}/100 (Juda xavfli!)"
+        return f"🔴 {score}/100 ({l[3]})"
 
 
 # ─── WEBSITE SCREENSHOT ───────────────────────────────────────────────────────

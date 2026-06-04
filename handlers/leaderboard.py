@@ -2,15 +2,16 @@
 Referral Leaderboard:
 /top shows top 10 referrers this month.
 Top 3 get a free premium month automatically.
+Admin is excluded from the leaderboard.
 """
 from telegram import Update
 from telegram.ext import ContextTypes, Application
 from telegram.error import TelegramError
 import logging
-from datetime import datetime, date
 
+from config import ADMIN_ID
 from database import (
-    get_user_lang, load_db, save_db, set_premium,
+    get_user_lang, load_db, set_premium,
     get_referral_count,
 )
 from languages import t
@@ -22,6 +23,7 @@ from handlers.private_messages import require_subscription, react_to_message
 def get_monthly_referral_leaderboard() -> list:
     """
     Returns top referrers sorted by count.
+    Excludes admin from the leaderboard.
     Returns list of (user_id, count) tuples.
     """
     db = load_db()
@@ -32,6 +34,9 @@ def get_monthly_referral_leaderboard() -> list:
             referred_by = db[key].get("referred_by")
             if referred_by:
                 referrer_id = int(referred_by) if isinstance(referred_by, str) else referred_by
+                # Exclude admin from leaderboard
+                if referrer_id == ADMIN_ID:
+                    continue
                 referral_counts[referrer_id] = referral_counts.get(referrer_id, 0) + 1
 
     # Sort by count descending
@@ -71,14 +76,15 @@ async def top_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             name = f"User {uid}"
 
         prize = " ⭐" if i < 3 else ""
-        text += f"{medal} *{name}* — {count} ta taklif{prize}\n"
+        text += f"{medal} *{name}* — {count} {t(lang, 'referrals_count')}{prize}\n"
 
     text += f"\n{'─' * 20}\n"
     text += t(lang, "leaderboard_footer")
 
-    # Check user's own position
-    user_count = get_referral_count(user.id)
-    text += f"\n\n👤 *Sizning o'rningiz:* {user_count} ta taklif"
+    # Check user's own position (skip for admin)
+    if user.id != ADMIN_ID:
+        user_count = get_referral_count(user.id)
+        text += f"\n\n👤 *{t(lang, 'your_position')}:* {user_count} {t(lang, 'referrals_count')}"
 
     await update.message.reply_text(text, parse_mode="Markdown")
 
@@ -97,14 +103,12 @@ async def reward_top_referrers(application: Application):
             continue
         # Give 30 days premium
         set_premium(uid, days=30)
+
+        lang = get_user_lang(uid)
         try:
             await application.bot.send_message(
                 chat_id=uid,
-                text=(
-                    f"🏆 *Tabriklaymiz!* Siz bu oyning eng faol taklif qiluvchisi bo'ldingiz!\n\n"
-                    f"🎁 Sizga 30 kunlik bepul Premium taqdim etildi.\n"
-                    f"📊 Sizning taklif sonatingiz: {count} ta"
-                ),
+                text=t(lang, "leaderboard_reward", count=count),
                 parse_mode="Markdown",
             )
         except TelegramError:

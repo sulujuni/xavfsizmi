@@ -170,7 +170,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         expand_result = await expand_short_url(url)
         if expand_result["redirect_count"] > 0:
             url = expand_result["final_url"]
-            expanded_info = f"🔀 *Qisqa havola kengaytirildi:* `{expand_result['original']}` → `{url}`\n\n"
+            expanded_info = f"🔀 *{t(lang, 'short_url_expanded')}:* `{expand_result['original']}` → `{url}`\n\n"
 
     # Deep multi-API scan
     try:
@@ -185,7 +185,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 
         # Calculate Trust Score
         trust_score = calculate_trust_score(vt_res, gsb_res, alien_res, uscan_res, domain_age)
-        score_display = trust_score_emoji(trust_score)
+        score_display = trust_score_emoji(trust_score, lang)
 
         is_dangerous = trust_score < 50
         status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
@@ -196,25 +196,25 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         typo_warning = ""
         if typo_result.get("is_typosquat"):
             match = typo_result["matches"][0]
-            typo_warning = f"\n⚠️ *TYPOSQUATTING:* Bu domen `{match['similar_to']}` ga juda o'xshash! Fishing bo'lishi mumkin!\n"
+            typo_warning = f"\n⚠️ *TYPOSQUATTING:* {t(lang, 'typo_warning', domain=match['similar_to'])}\n"
 
         # Build report
         report = expanded_info
-        report += f"🛡 *SafeLink Chuqur Tahlil:*\n\n"
+        report += t(lang, "scan_header") + "\n\n"
         report += f"🔗 *URL:* `{url}`\n"
-        report += f"🎯 *Ishonch Darajasi:* {score_display}\n"
+        report += f"🎯 *{t(lang, 'trust_score_label')}:* {score_display}\n"
         report += typo_warning
         report += f"\n"
-        report += f"🔍 *VirusTotal:* `{vt_res.get('malicious', 0)}/{vt_res.get('total', 0)}` tahdid\n"
-        report += f"🌐 *Google Safe Browsing:* {'❌ Xavfli' if gsb_res.get('dangerous') else '✅ Toza'}\n"
-        report += f"👽 *AlienVault OTX:* `{alien_res.get('pulses_count', 0)}` tahdid guruhi\n"
-        report += f"📸 *URLScan.io:* `{str(uscan_res.get('verdict', 'unknown')).upper()}` (skor: {uscan_res.get('score', 0)}/100)\n"
+        report += f"🔍 *VirusTotal:* `{vt_res.get('malicious', 0)}/{vt_res.get('total', 0)}` {t(lang, 'threats')}\n"
+        report += f"🌐 *Google Safe Browsing:* {'❌ ' + t(lang, 'dangerous') if gsb_res.get('dangerous') else '✅ ' + t(lang, 'clean')}\n"
+        report += f"👽 *AlienVault OTX:* `{alien_res.get('pulses_count', 0)}` {t(lang, 'threat_groups')}\n"
+        report += f"📸 *URLScan.io:* `{str(uscan_res.get('verdict', 'unknown')).upper()}` ({t(lang, 'score')}: {uscan_res.get('score', 0)}/100)\n"
 
         if domain_res and "age_days" in domain_res:
             age = domain_res.get("age_days", 0)
-            report += f"📅 *Domen yoshi:* `{age} kun` ({domain_res.get('created', 'N/A')})\n"
+            report += f"📅 *{t(lang, 'domain_age_label')}:* `{age} {t(lang, 'days')}` ({domain_res.get('created', 'N/A')})\n"
             if age < 30:
-                report += f"⚠️ *Juda yangi domen! Fishing bo'lishi mumkin!*\n"
+                report += f"⚠️ *{t(lang, 'new_domain_warning')}*\n"
 
         # Try to get screenshot (non-blocking, don't wait too long)
         try:
@@ -222,7 +222,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
                 get_website_screenshot(url), timeout=5
             )
             if screenshot_url:
-                report += f"\n📸 [Sayt ko'rinishi]({screenshot_url})"
+                report += f"\n📸 [{t(lang, 'screenshot_link')}]({screenshot_url})"
         except (asyncio.TimeoutError, Exception):
             pass
 

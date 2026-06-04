@@ -736,3 +736,73 @@ TEXTS["en"]["error_send_failed"] = "❌ Could not send message to admins."
 TEXTS["uz"]["breach_cancel"] = "❌ Bekor qilindi."
 TEXTS["ru"]["breach_cancel"] = "❌ Отменено."
 TEXTS["en"]["breach_cancel"] = "❌ Cancelled."
+
+
+
+# ─── URL SCAN REPORT LABELS (all translated) ──────────────────────────────────
+
+TEXTS["uz"]["scan_header"] = "🛡 *SafeLink Chuqur Tahlil:*"
+TEXTS["ru"]["scan_header"] = "🛡 *SafeLink Глубокий Анализ:*"
+TEXTS["en"]["scan_header"] = "🛡 *SafeLink Deep Analysis:*"
+
+TEXTS["uz"]["trust_score_label"] = "Ishonch Darajasi"
+TEXTS["ru"]["trust_score_label"] = "Уровень Доверия"
+TEXTS["en"]["trust_score_label"] = "Trust Score"
+
+TEXTS["uz"]["threats"] = "tahdid"
+TEXTS["ru"]["threats"] = "угроз"
+TEXTS["en"]["threats"] = "threats"
+
+TEXTS["uz"]["dangerous"] = "Xavfli"
+TEXTS["ru"]["dangerous"] = "Опасно"
+TEXTS["en"]["dangerous"] = "Dangerous"
+
+TEXTS["uz"]["clean"] = "Toza"
+TEXTS["ru"]["clean"] = "Чисто"
+TEXTS["en"]["clean"] = "Clean"
+
+TEXTS["uz"]["threat_groups"] = "tahdid guruhi"
+TEXTS["ru"]["threat_groups"] = "групп угроз"
+TEXTS["en"]["threat_groups"] = "threat groups"
+
+TEXTS["uz"]["score"] = "skor"
+TEXTS["ru"]["score"] = "оценка"
+TEXTS["en"]["score"] = "score"
+
+TEXTS["uz"]["domain_age_label"] = "Domen yoshi"
+TEXTS["ru"]["domain_age_label"] = "Возраст домена"
+TEXTS["en"]["domain_age_label"] = "Domain age"
+
+TEXTS["uz"]["days"] = "kun"
+TEXTS["ru"]["days"] = "дней"
+TEXTS["en"]["days"] = "days"
+
+TEXTS["uz"]["new_domain_warning"] = "Juda yangi domen! Fishing bo'lishi mumkin!"
+TEXTS["ru"]["new_domain_warning"] = "Очень новый домен! Возможен фишинг!"
+TEXTS["en"]["new_domain_warning"] = "Very new domain! Could be phishing!"
+
+TEXTS["uz"]["short_url_expanded"] = "Qisqa havola kengaytirildi"
+TEXTS["ru"]["short_url_expanded"] = "Короткая ссылка раскрыта"
+TEXTS["en"]["short_url_expanded"] = "Short URL expanded"
+
+TEXTS["uz"]["screenshot_link"] = "Sayt ko'rinishi"
+TEXTS["ru"]["screenshot_link"] = "Вид сайта"
+TEXTS["en"]["screenshot_link"] = "Website preview"
+
+TEXTS["uz"]["typo_warning"] = "Bu domen `{domain}` ga juda o'xshash! Fishing bo'lishi mumkin!"
+TEXTS["ru"]["typo_warning"] = "Этот домен очень похож на `{domain}`! Возможен фишинг!"
+TEXTS["en"]["typo_warning"] = "This domain looks very similar to `{domain}`! Could be phishing!"
+
+# ─── LEADERBOARD LABELS (all translated) ──────────────────────────────────────
+
+TEXTS["uz"]["referrals_count"] = "ta taklif"
+TEXTS["ru"]["referrals_count"] = "приглашений"
+TEXTS["en"]["referrals_count"] = "referrals"
+
+TEXTS["uz"]["your_position"] = "Sizning o'rningiz"
+TEXTS["ru"]["your_position"] = "Ваша позиция"
+TEXTS["en"]["your_position"] = "Your position"
+
+TEXTS["uz"]["leaderboard_reward"] = "🏆 *Tabriklaymiz!* Siz bu oyning eng faol taklif qiluvchisi bo'ldingiz!\n\n🎁 30 kunlik bepul Premium taqdim etildi.\n📊 Sizning taklif sonatingiz: {count} ta"
+TEXTS["ru"]["leaderboard_reward"] = "🏆 *Поздравляем!* Вы стали лучшим рефералом этого месяца!\n\n🎁 Вам предоставлено 30 дней бесплатного Premium.\n📊 Ваши приглашения: {count}"
+TEXTS["en"]["leaderboard_reward"] = "🏆 *Congratulations!* You are this month's top referrer!\n\n🎁 You've been awarded 30 days free Premium.\n📊 Your referrals: {count}"

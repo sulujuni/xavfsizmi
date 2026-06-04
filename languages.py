@@ -874,3 +874,54 @@ TEXTS["en"]["report_admin_alert"] = "Dangerous link report"
 TEXTS["uz"]["feedback_admin_title"] = "Yangi taklif/shikoyat"
 TEXTS["ru"]["feedback_admin_title"] = "Новое предложение/жалоба"
 TEXTS["en"]["feedback_admin_title"] = "New feedback/complaint"
+
+
+
+# ─── PREMIUM PRICING TEXTS (updated) ─────────────────────────────────────────
+
+TEXTS["uz"]["month"] = "oy"
+TEXTS["ru"]["month"] = "мес"
+TEXTS["en"]["month"] = "mo"
+
+TEXTS["uz"]["months"] = "oy"
+TEXTS["ru"]["months"] = "мес"
+TEXTS["en"]["months"] = "mo"
+
+TEXTS["uz"]["premium_already_active_with_expiry"] = "⭐ Sizda Premium faol!\n📅 Muddati: `{expiry}` gacha"
+TEXTS["ru"]["premium_already_active_with_expiry"] = "⭐ У вас активен Premium!\n📅 Действует до: `{expiry}`"
+TEXTS["en"]["premium_already_active_with_expiry"] = "⭐ You have active Premium!\n📅 Expires: `{expiry}`"
+
+TEXTS["uz"]["premium_success_with_days"] = "🎉 *To'lov muvaffaqiyatli!* Sizga {days} kunlik Premium taqdim etildi."
+TEXTS["ru"]["premium_success_with_days"] = "🎉 *Оплата успешна!* Вам предоставлено {days} дней Premium."
+TEXTS["en"]["premium_success_with_days"] = "🎉 *Payment successful!* You've been granted {days} days of Premium."
+
+TEXTS["uz"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Cheksiz tekshiruv (URL + APK + QR)\n"
+    "✅ /breach email tekshiruvi\n"
+    "✅ Reklamasiz va yuqori tezlik\n\n"
+    "💰 *Narxlar:*\n"
+    "• 1 oy: 25 Stars yoki 9,990 so'm\n"
+    "• 3 oy: 65 Stars yoki 24,990 so'm (17% tejash!) 🔥\n\n"
+    "👇 *Rejani tanlang:*"
+)
+TEXTS["ru"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Безлимитные проверки (URL + APK + QR)\n"
+    "✅ Проверка утечек /breach\n"
+    "✅ Без рекламы и высокая скорость\n\n"
+    "💰 *Цены:*\n"
+    "• 1 мес: 25 Stars или 9,990 сум\n"
+    "• 3 мес: 65 Stars или 24,990 сум (скидка 17%!) 🔥\n\n"
+    "👇 *Выберите план:*"
+)
+TEXTS["en"]["premium_info"] = (
+    "⚡ *Xavfsizmi? Premium*\n\n"
+    "✅ Unlimited checks (URL + APK + QR)\n"
+    "✅ Email breach /breach access\n"
+    "✅ No ads and high speed\n\n"
+    "💰 *Pricing:*\n"
+    "• 1 month: 25 Stars or 9,990 UZS\n"
+    "• 3 months: 65 Stars or 24,990 UZS (save 17%!) 🔥\n\n"
+    "👇 *Choose a plan:*"
+)

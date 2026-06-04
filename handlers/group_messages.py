@@ -12,7 +12,6 @@ import asyncio
 
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.error import TelegramError
 
 from database import (
     get_group_lang, increment_group_blocked,
@@ -67,19 +66,12 @@ async def handle_group_message(update: Update, context: ContextTypes.DEFAULT_TYP
         gsb = await check_google_safe_browsing(url)
 
         if gsb.get("dangerous") or vt.get("malicious", 0) > 0:
-            try:
-                await message.delete()
-                await context.bot.send_message(
-                    chat_id=chat_id,
-                    text=gt(lang, "dangerous_deleted", mention=mention, url=url, engines=vt.get("malicious", 0)),
-                    parse_mode="Markdown",
-                )
-                increment_group_blocked(chat_id)
-            except TelegramError:
-                await message.reply_text(
-                    gt(lang, "dangerous_no_permission", mention=mention, url=url),
-                    parse_mode="Markdown",
-                )
+            # Always alert on dangerous links (even if limit reached)
+            await message.reply_text(
+                gt(lang, "dangerous_no_permission", mention=mention, url=url),
+                parse_mode="Markdown",
+            )
+            increment_group_blocked(chat_id)
             break
 
 
@@ -135,18 +127,14 @@ async def handle_group_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     total = result["total"]
 
     if mal > 0:
-        try:
-            await message.delete()
-        except Exception:
-            pass
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                f"🚨 *XAVFLI APK BLOKLANDI!*\n\n"
+                f"🚨 *XAVFLI APK ANIQLANDI!*\n\n"
                 f"👤 {mention}\n"
                 f"📱 Fayl: `{file_name}`\n"
                 f"{mal}/{total} antivirus xavfli deb topdi!\n"
-                f"❌ Bu ilovani O'RNATMANG!"
+                f"⚠️ Bu ilovani O'RNATMANG!"
             ),
             parse_mode="Markdown",
         )
@@ -203,13 +191,14 @@ async def handle_group_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         mention = f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
 
         if is_dangerous:
-            try:
-                await message.delete()
-            except Exception:
-                pass
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=gt(lang, "dangerous_deleted", mention=mention, url=url, engines=vt_res.get("malicious", 0)),
+                text=(
+                    f"🚨 *XAVFLI QR KOD ANIQLANDI!*\n\n"
+                    f"👤 {mention}\n"
+                    f"🔗 URL: `{url}`\n"
+                    f"⚠️ Bu QR kodga ishonmang!"
+                ),
                 parse_mode="Markdown",
             )
         else:

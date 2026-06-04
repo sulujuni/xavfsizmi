@@ -2,13 +2,9 @@
 Premium & Payment handlers:
 /premium, /promo, /addpromo, payment callbacks, pre-checkout, success
 
-Personal Plans:
-- 1 month: 25 Stars / 9,990 UZS
-- 3 months: 65 Stars / 24,990 UZS
-
-Group Plans:
-- 1 month: 50 Stars / 19,990 UZS
-- 3 months: 130 Stars / 49,990 UZS
+Payment methods:
+- Telegram Stars (in-app)
+- Paynet QR link (external)
 """
 from telegram import (
     Update,
@@ -22,10 +18,7 @@ from telegram.error import TelegramError
 
 from config import (
     PERSONAL_1M_STARS, PERSONAL_3M_STARS,
-    PERSONAL_1M_UZS, PERSONAL_3M_UZS,
     GROUP_1M_STARS, GROUP_3M_STARS,
-    GROUP_1M_UZS, GROUP_3M_UZS,
-    UZS_PROVIDER_TOKEN,
 )
 from database import (
     get_user_lang, is_premium, set_premium, get_premium_expiry,
@@ -34,6 +27,9 @@ from database import (
 )
 from languages import t
 from admin import is_admin
+
+# Paynet QR link
+PAYNET_QR_LINK = "https://app.paynet.uz/qr-online/00020101021140440012qr-online.uz01186r10poerJSNZJzxWmP0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz63040D46"
 
 
 # ─── /premium ─────────────────────────────────────────────────────────────────
@@ -44,7 +40,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_group = update.effective_chat.type in ["group", "supergroup"]
 
     if is_group:
-        # Group premium — only admins who added the bot can see/buy
+        # Group premium — only admins can buy
         chat_id = update.effective_chat.id
         try:
             member = await context.bot.get_chat_member(chat_id, user_id)
@@ -66,8 +62,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [InlineKeyboardButton(f"⭐ 1 {t(lang, 'month')} — {GROUP_1M_STARS} Stars", callback_data="pay_g1m_stars")],
             [InlineKeyboardButton(f"⭐ 3 {t(lang, 'months')} — {GROUP_3M_STARS} Stars 🔥", callback_data="pay_g3m_stars")],
-            [InlineKeyboardButton(f"💳 1 {t(lang, 'month')} — {GROUP_1M_UZS // 100:,} so'm", callback_data="pay_g1m_uzs")],
-            [InlineKeyboardButton(f"💳 3 {t(lang, 'months')} — {GROUP_3M_UZS // 100:,} so'm 🔥", callback_data="pay_g3m_uzs")],
+            [InlineKeyboardButton(f"💳 Paynet ({t(lang, 'pay_via_qr')})", url=PAYNET_QR_LINK)],
         ]
         await update.message.reply_text(
             t(lang, "group_premium_info"),
@@ -88,8 +83,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [
             [InlineKeyboardButton(f"⭐ 1 {t(lang, 'month')} — {PERSONAL_1M_STARS} Stars", callback_data="pay_p1m_stars")],
             [InlineKeyboardButton(f"⭐ 3 {t(lang, 'months')} — {PERSONAL_3M_STARS} Stars 🔥", callback_data="pay_p3m_stars")],
-            [InlineKeyboardButton(f"💳 1 {t(lang, 'month')} — {PERSONAL_1M_UZS // 100:,} so'm", callback_data="pay_p1m_uzs")],
-            [InlineKeyboardButton(f"💳 3 {t(lang, 'months')} — {PERSONAL_3M_UZS // 100:,} so'm 🔥", callback_data="pay_p3m_uzs")],
+            [InlineKeyboardButton(f"💳 Paynet ({t(lang, 'pay_via_qr')})", url=PAYNET_QR_LINK)],
         ]
         await update.message.reply_text(
             t(lang, "premium_info"),
@@ -148,19 +142,13 @@ async def promo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(text=t(lang, msg_key))
 
 
-# ─── Payment gateway callback ─────────────────────────────────────────────────
+# ─── Payment gateway callback (Stars only now) ───────────────────────────────
 
 PAYMENT_PLANS = {
-    # Personal
-    "pay_p1m_stars": ("XTR", PERSONAL_1M_STARS, 30, "Personal Premium 1 month", "personal"),
-    "pay_p3m_stars": ("XTR", PERSONAL_3M_STARS, 90, "Personal Premium 3 months", "personal"),
-    "pay_p1m_uzs": ("UZS", PERSONAL_1M_UZS, 30, "Personal Premium 1 month", "personal"),
-    "pay_p3m_uzs": ("UZS", PERSONAL_3M_UZS, 90, "Personal Premium 3 months", "personal"),
-    # Group
-    "pay_g1m_stars": ("XTR", GROUP_1M_STARS, 30, "Group Premium 1 month", "group"),
-    "pay_g3m_stars": ("XTR", GROUP_3M_STARS, 90, "Group Premium 3 months", "group"),
-    "pay_g1m_uzs": ("UZS", GROUP_1M_UZS, 30, "Group Premium 1 month", "group"),
-    "pay_g3m_uzs": ("UZS", GROUP_3M_UZS, 90, "Group Premium 3 months", "group"),
+    "pay_p1m_stars": (PERSONAL_1M_STARS, 30, "Personal Premium 1 month", "personal"),
+    "pay_p3m_stars": (PERSONAL_3M_STARS, 90, "Personal Premium 3 months", "personal"),
+    "pay_g1m_stars": (GROUP_1M_STARS, 30, "Group Premium 1 month", "group"),
+    "pay_g3m_stars": (GROUP_3M_STARS, 90, "Group Premium 3 months", "group"),
 }
 
 
@@ -173,10 +161,7 @@ async def payment_gateway_callback(update: Update, context: ContextTypes.DEFAULT
     if not plan:
         return
 
-    currency, amount, days, title, plan_type = plan
-    provider_token = "" if currency == "XTR" else UZS_PROVIDER_TOKEN
-
-    # Store plan type and chat_id for group payments
+    amount, days, title, plan_type = plan
     payload = f"{plan_type}_{days}d_{chat_id}"
 
     await context.bot.send_invoice(
@@ -184,8 +169,8 @@ async def payment_gateway_callback(update: Update, context: ContextTypes.DEFAULT
         title=title,
         description=f"{days}-day Premium subscription",
         payload=payload,
-        provider_token=provider_token,
-        currency=currency,
+        provider_token="",  # Empty for Telegram Stars
+        currency="XTR",
         prices=[LabeledPrice(title, amount)],
     )
 
@@ -211,7 +196,6 @@ async def payment_success(update: Update, context: ContextTypes.DEFAULT_TYPE):
         days = 30
 
     if plan_type == "group" and len(parts) >= 3:
-        # Group premium — extract chat_id from payload
         try:
             group_chat_id = int(parts[2])
             set_group_premium(group_chat_id, days=days)
@@ -220,14 +204,12 @@ async def payment_success(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown",
             )
         except (ValueError, IndexError):
-            # Fallback to personal
             set_premium(user_id, days=days)
             await update.message.reply_text(
                 t(lang, "premium_success_with_days", days=days),
                 parse_mode="Markdown",
             )
     else:
-        # Personal premium
         set_premium(user_id, days=days)
         try:
             await update.message.set_reaction([ReactionTypeEmoji(emoji="🎉")])

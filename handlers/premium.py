@@ -44,8 +44,16 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_group = update.effective_chat.type in ["group", "supergroup"]
 
     if is_group:
-        # Group premium
+        # Group premium — only admins who added the bot can see/buy
         chat_id = update.effective_chat.id
+        try:
+            member = await context.bot.get_chat_member(chat_id, user_id)
+            if member.status not in ["administrator", "creator"]:
+                await update.message.reply_text(t(lang, "group_premium_admin_only"))
+                return
+        except Exception:
+            return
+
         if is_group_premium(chat_id):
             expiry = get_group_premium_expiry(chat_id)
             expiry_text = expiry[:10] if expiry else "?"

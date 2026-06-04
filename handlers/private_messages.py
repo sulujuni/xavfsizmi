@@ -1,11 +1,12 @@
 """
 Private message handlers:
-- handle_private_message (URL scanning)
+- handle_private_message (URL scanning with Trust Score)
 - handle_apk (APK file scanning)
 - handle_photo (QR code scanning)
 
 All checks (URL, APK, QR) share the same daily limit for non-premium users.
 Bot reacts to every message with a random emoji.
+Mandatory channel subscription enforced on all handlers.
 """
 import re
 import logging
@@ -31,6 +32,11 @@ from languages import t
 from checker import (
     check_virustotal, check_google_safe_browsing,
     check_alienvault, check_urlscan, check_url_with_domain_age,
+)
+from handlers.tools import (
+    calculate_trust_score, trust_score_emoji,
+    get_website_screenshot, check_typosquatting,
+    is_short_url, expand_short_url,
 )
 from apk_checker import scan_apk
 from qr_checker import extract_qr_url
@@ -70,7 +76,6 @@ def check_and_consume_limit(user_id: int) -> bool:
 
 async def is_user_subscribed(application: Application, user_id: int) -> bool:
     """Check if user is subscribed to the required channel."""
-    # If no channel configured, skip the check
     if not REQUIRED_CHANNEL_ID or REQUIRED_CHANNEL_ID == 0:
         return True
     try:
@@ -84,6 +89,29 @@ async def is_user_subscribed(application: Application, user_id: int) -> bool:
         ]
     except TelegramError:
         return False
+
+
+async def require_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+    """
+    Checks subscription. If not subscribed, sends subscription prompt and returns False.
+    Returns True if user is subscribed.
+    """
+    user = update.effective_user
+    lang = get_user_lang(user.id)
+
+    if await is_user_subscribed(context.application, user.id):
+        return True
+
+    keyboard = [
+        [InlineKeyboardButton(t(lang, "sub_button"), url=CHANNEL_INVITE_LINK)],
+        [InlineKeyboardButton(t(lang, "sub_check_btn"), callback_data="check_subscription")],
+    ]
+    await update.message.reply_text(
+        text=t(lang, "sub_required"),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="Markdown",
+    )
+    return False
 
 
 async def check_subscription_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,7 +132,7 @@ async def check_subscription_callback(update: Update, context: ContextTypes.DEFA
         await context.bot.send_message(chat_id=user.id, text=t(lang, "sub_failed"))
 
 
-# ─── Private text/URL handler ────────────────────────────────────────────────
+# ─── Private text/URL handler (with Trust Score + Typosquatting) ──────────────
 
 async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -115,16 +143,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     await react_to_message(update.message)
 
     # Check mandatory subscription
-    if not await is_user_subscribed(context.application, user.id):
-        keyboard = [
-            [InlineKeyboardButton(t(lang, "sub_button"), url=CHANNEL_INVITE_LINK)],
-            [InlineKeyboardButton(t(lang, "sub_check_btn"), callback_data="check_subscription")],
-        ]
-        await update.message.reply_text(
-            text=t(lang, "sub_required"),
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode="Markdown",
-        )
+    if not await require_subscription(update, context):
         return
 
     # Search for URLs in the message
@@ -145,6 +164,14 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 
     status_msg = await update.message.reply_text(t(lang, "checking"))
 
+    # If it's a short URL, expand it first
+    expanded_info = ""
+    if is_short_url(url):
+        expand_result = await expand_short_url(url)
+        if expand_result["redirect_count"] > 0:
+            url = expand_result["final_url"]
+            expanded_info = f"🔀 *Qisqa havola kengaytirildi:* `{expand_result['original']}` → `{url}`\n\n"
+
     # Deep multi-API scan
     try:
         vt_res, gsb_res, alien_res, uscan_res = await asyncio.gather(
@@ -154,19 +181,30 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             check_urlscan(url),
         )
         domain_res = await check_url_with_domain_age(url)
+        domain_age = domain_res.get("age_days", 365) if domain_res else 365
 
-        is_dangerous = (
-            gsb_res.get("dangerous", False)
-            or vt_res.get("malicious", 0) > 0
-            or alien_res.get("dangerous", False)
-            or uscan_res.get("verdict") == "malicious"
-        )
-        status_str = "🔴 Malicious" if is_dangerous else "🟢 Clean"
+        # Calculate Trust Score
+        trust_score = calculate_trust_score(vt_res, gsb_res, alien_res, uscan_res, domain_age)
+        score_display = trust_score_emoji(trust_score)
+
+        is_dangerous = trust_score < 50
+        status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user.id, url, status_str)
 
-        report = f"🛡 *SafeLink Ko'p Qatlamli Tahlil:*\n\n"
+        # Check typosquatting
+        typo_result = check_typosquatting(url)
+        typo_warning = ""
+        if typo_result.get("is_typosquat"):
+            match = typo_result["matches"][0]
+            typo_warning = f"\n⚠️ *TYPOSQUATTING:* Bu domen `{match['similar_to']}` ga juda o'xshash! Fishing bo'lishi mumkin!\n"
+
+        # Build report
+        report = expanded_info
+        report += f"🛡 *SafeLink Chuqur Tahlil:*\n\n"
         report += f"🔗 *URL:* `{url}`\n"
-        report += f"📊 *Xulosa:* {'🚨 XAVFLI' if is_dangerous else '✅ XAVFSIZ'}\n\n"
+        report += f"🎯 *Ishonch Darajasi:* {score_display}\n"
+        report += typo_warning
+        report += f"\n"
         report += f"🔍 *VirusTotal:* `{vt_res.get('malicious', 0)}/{vt_res.get('total', 0)}` tahdid\n"
         report += f"🌐 *Google Safe Browsing:* {'❌ Xavfli' if gsb_res.get('dangerous') else '✅ Toza'}\n"
         report += f"👽 *AlienVault OTX:* `{alien_res.get('pulses_count', 0)}` tahdid guruhi\n"
@@ -177,6 +215,16 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             report += f"📅 *Domen yoshi:* `{age} kun` ({domain_res.get('created', 'N/A')})\n"
             if age < 30:
                 report += f"⚠️ *Juda yangi domen! Fishing bo'lishi mumkin!*\n"
+
+        # Try to get screenshot (non-blocking, don't wait too long)
+        try:
+            screenshot_url = await asyncio.wait_for(
+                get_website_screenshot(url), timeout=5
+            )
+            if screenshot_url:
+                report += f"\n📸 [Sayt ko'rinishi]({screenshot_url})"
+        except (asyncio.TimeoutError, Exception):
+            pass
 
         await status_msg.edit_text(text=report, parse_mode="Markdown", disable_web_page_preview=True)
     except Exception as e:
@@ -196,6 +244,10 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # React to every message
     await react_to_message(update.message)
+
+    # Check mandatory subscription
+    if not await require_subscription(update, context):
+        return
 
     # Rate limiting
     limited, seconds = is_rate_limited(user_id)
@@ -227,26 +279,31 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sus = result.get("suspicious", 0)
             total = result.get("total", 0)
 
+            report = f"📱 *APK Tahlil Hisoboti:*\n\n"
+            report += f"📦 *Fayl:* `{doc.file_name}`\n"
+
             if mal > 0:
-                await status_msg.edit_text(
-                    f"🚨 *Zararli APK aniqlandi!* (Virus)\n"
-                    f"📦 Nomi: `{doc.file_name}`\n"
-                    f"Aniqlovchi dvigatellar: `{mal}/{total}`",
-                    parse_mode="Markdown",
-                )
+                report += f"🚨 *Holat:* ZARARLI (Virus)\n"
+                report += f"🔍 *Aniqlovchilar:* `{mal}/{total}`\n"
             elif sus > 0:
-                await status_msg.edit_text(
-                    f"⚠️ *Shubhali APK activity!*\n"
-                    f"📦 Nomi: `{doc.file_name}`\n"
-                    f"Shubhali qismlar: `{sus}/{total}`",
-                    parse_mode="Markdown",
-                )
+                report += f"⚠️ *Holat:* SHUBHALI\n"
+                report += f"🔍 *Shubhali:* `{sus}/{total}`\n"
             else:
-                await status_msg.edit_text(
-                    f"✅ *Xavfsiz APK!* Zararli kodlar aniqlanmadi.\n"
-                    f"📦 Nomi: `{doc.file_name}`",
-                    parse_mode="Markdown",
-                )
+                report += f"✅ *Holat:* XAVFSIZ\n"
+                report += f"🔍 *Tekshiruvchilar:* `{total}` ta dvigatel\n"
+
+            # Behavioral analysis (permissions, network)
+            if result.get("permissions"):
+                perms = result["permissions"][:8]
+                report += f"\n📋 *Ruxsatlar ({len(result['permissions'])} ta):*\n"
+                for p in perms:
+                    emoji = "🔴" if "DANGEROUS" in p.get("level", "") else "🟢"
+                    report += f"  {emoji} `{p.get('name', '')}`\n"
+
+            if result.get("network_calls"):
+                report += f"\n🌐 *Tarmoq so'rovlari:* {len(result['network_calls'])} ta\n"
+
+            await status_msg.edit_text(report, parse_mode="Markdown")
         else:
             await status_msg.edit_text("❌ VirusTotal API orqali APK faylni tekshirib bo'lmadi.")
     except Exception as e:
@@ -262,6 +319,10 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # React to every message
     await react_to_message(update.message)
+
+    # Check mandatory subscription
+    if not await require_subscription(update, context):
+        return
 
     # Rate limiting
     limited, seconds = is_rate_limited(user_id)
@@ -293,16 +354,29 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         # Deep check the URL from QR
-        vt_res = await check_virustotal(url)
-        gsb_res = await check_google_safe_browsing(url)
-        is_dangerous = gsb_res.get("dangerous", False) or vt_res.get("malicious", 0) > 0
+        vt_res, gsb_res = await asyncio.gather(
+            check_virustotal(url),
+            check_google_safe_browsing(url),
+        )
+        domain_res = await check_url_with_domain_age(url)
+        domain_age = domain_res.get("age_days", 365) if domain_res else 365
 
-        status_str = "🔴 Malicious" if is_dangerous else "🟢 Clean"
+        # Trust score for QR URLs too
+        trust_score = calculate_trust_score(
+            vt_res, gsb_res, {"pulses_count": 0, "dangerous": False},
+            {"verdict": "unknown", "score": 0}, domain_age
+        )
+        score_display = trust_score_emoji(trust_score)
+        is_dangerous = trust_score < 50
+
+        status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user_id, url, status_str)
 
-        report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n`{url}`\n\n"
-        report += f"Holati: {'🚨 ZARARLI/FISHING' if is_dangerous else '✅ TOZA'}\n"
-        report += f"VirusTotal tahlili: {vt_res.get('malicious', 0)} ta dvigatel xavf aniqladi."
+        report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n"
+        report += f"🔗 `{url}`\n\n"
+        report += f"🎯 *Ishonch Darajasi:* {score_display}\n"
+        report += f"🔍 *VirusTotal:* {vt_res.get('malicious', 0)} ta dvigatel xavf aniqladi\n"
+        report += f"🌐 *Google Safe Browsing:* {'❌ Xavfli' if gsb_res.get('dangerous') else '✅ Toza'}"
 
         await status_msg.edit_text(report, parse_mode="Markdown")
     except Exception as e:

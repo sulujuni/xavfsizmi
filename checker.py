@@ -4,6 +4,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 # config.py faylidan barcha API kalitlarini olamiz
 from config import VIRUSTOTAL_API_KEY, GOOGLE_SAFE_BROWSING_KEY, ALIENVAULT_API_KEY, URLSCAN_API_KEY
+from rate_tracker import track_api_call
  
 logging.basicConfig(level=logging.INFO)
  
@@ -19,6 +20,7 @@ async def check_virustotal(url: str) -> dict:
             import base64
             url_id = base64.urlsafe_b64encode(url.encode()).decode().strip("=")
             response = await client.get(f"https://www.virustotal.com/api/v3/urls/{url_id}", headers=headers, timeout=10)
+            track_api_call("virustotal")
             if response.status_code == 200:
                 stats = response.json().get("data", {}).get("attributes", {}).get("last_analysis_stats", {})
                 return {"malicious": stats.get("malicious", 0), "total": sum(stats.values())}
@@ -44,6 +46,7 @@ async def check_google_safe_browsing(url: str) -> dict:
     async with httpx.AsyncClient() as client:
         try:
             res = await client.post(endpoint, json=payload, timeout=10)
+            track_api_call("google_safe_browsing")
             if res.status_code == 200 and "matches" in res.json():
                 return {"dangerous": True}
         except Exception as e:
@@ -63,6 +66,7 @@ async def check_alienvault(url: str) -> dict:
     async with httpx.AsyncClient() as client:
         try:
             res = await client.get(endpoint, headers=headers, timeout=10)
+            track_api_call("alienvault")
             if res.status_code == 200:
                 data = res.json()
                 pulses = data.get("pulse_info", {}).get("pulses", [])
@@ -86,6 +90,7 @@ async def check_urlscan(url: str) -> dict:
             domain = urlparse(url).netloc
             search_endpoint = f"https://urlscan.io/api/v1/search/?q=domain:{domain}"
             res = await client.get(search_endpoint, headers=headers, timeout=10)
+            track_api_call("urlscan")
             if res.status_code == 200:
                 results = res.json().get("results", [])
                 if results:

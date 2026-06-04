@@ -33,8 +33,14 @@ API_LIMITS = {
     "groq": 14400,  # 30/min * 60 * 8h
 }
 
-# ─── PREMIUM PRICING ───────────────────────────────────────────────────────────
+# ─── PERSONAL PREMIUM PRICING ─────────────────────────────────────────────────
 PERSONAL_1M_STARS = 25        # 1 month — 25 Stars
 PERSONAL_3M_STARS = 65        # 3 months — 65 Stars (save 17%)
 PERSONAL_1M_UZS   = 999000    # 1 month — 9,990 UZS (in tiyin)
 PERSONAL_3M_UZS   = 2499000   # 3 months — 24,990 UZS (in tiyin, save 17%)
+
+# ─── GROUP PREMIUM PRICING ────────────────────────────────────────────────────
+GROUP_1M_STARS = 50           # 1 month — 50 Stars
+GROUP_3M_STARS = 130          # 3 months — 130 Stars (save 13%)
+GROUP_1M_UZS   = 1999000      # 1 month — 19,990 UZS (in tiyin)
+GROUP_3M_UZS   = 4999000      # 3 months — 49,990 UZS (in tiyin, save 17%)

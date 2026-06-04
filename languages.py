@@ -925,3 +925,43 @@ TEXTS["en"]["premium_info"] = (
     "• 3 months: 65 Stars or 24,990 UZS (save 17%!) 🔥\n\n"
     "👇 *Choose a plan:*"
 )
+
+
+
+# ─── GROUP PREMIUM TEXTS ──────────────────────────────────────────────────────
+
+TEXTS["uz"]["group_premium_active"] = "⭐ Bu guruhda Premium faol!\n📅 Muddati: `{expiry}` gacha\n♾ Cheksiz tekshiruvlar"
+TEXTS["ru"]["group_premium_active"] = "⭐ В этой группе активен Premium!\n📅 До: `{expiry}`\n♾ Безлимитные проверки"
+TEXTS["en"]["group_premium_active"] = "⭐ This group has active Premium!\n📅 Until: `{expiry}`\n♾ Unlimited checks"
+
+TEXTS["uz"]["group_premium_info"] = (
+    "⚡ *Guruh Premium*\n\n"
+    "✅ Cheksiz tekshiruv (kunlik limit yo'q)\n"
+    "✅ Tezkor skanerlash\n\n"
+    "💰 *Narxlar:*\n"
+    "• 1 oy: 50 Stars yoki 19,990 so'm\n"
+    "• 3 oy: 130 Stars yoki 49,990 so'm 🔥\n\n"
+    "👇 *Rejani tanlang:*"
+)
+TEXTS["ru"]["group_premium_info"] = (
+    "⚡ *Премиум для Группы*\n\n"
+    "✅ Безлимитные проверки (без дневного лимита)\n"
+    "✅ Быстрое сканирование\n\n"
+    "💰 *Цены:*\n"
+    "• 1 мес: 50 Stars или 19,990 сум\n"
+    "• 3 мес: 130 Stars или 49,990 сум 🔥\n\n"
+    "👇 *Выберите план:*"
+)
+TEXTS["en"]["group_premium_info"] = (
+    "⚡ *Group Premium*\n\n"
+    "✅ Unlimited checks (no daily limit)\n"
+    "✅ Fast scanning\n\n"
+    "💰 *Pricing:*\n"
+    "• 1 month: 50 Stars or 19,990 UZS\n"
+    "• 3 months: 130 Stars or 49,990 UZS 🔥\n\n"
+    "👇 *Choose a plan:*"
+)
+
+TEXTS["uz"]["group_premium_success"] = "🎉 *Guruh Premium faollashtirildi!* {days} kunlik cheksiz himoya."
+TEXTS["ru"]["group_premium_success"] = "🎉 *Премиум группы активирован!* {days} дней безлимитной защиты."
+TEXTS["en"]["group_premium_success"] = "🎉 *Group Premium activated!* {days} days of unlimited protection."

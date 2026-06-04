@@ -672,3 +672,15 @@ TEXTS["en"]["help_message"] = (
     "🤖 Connect via Telegram Business — auto-protects your personal chats.\n"
     "Enable: Settings → Business → Chatbots → This bot"
 )
+
+
+
+# ─── ADD TO GROUP BUTTON & PHISH COPY BUTTON ──────────────────────────────────
+
+TEXTS["uz"]["add_to_group_btn"] = "➕ Guruhga qo'shish"
+TEXTS["ru"]["add_to_group_btn"] = "➕ Добавить в группу"
+TEXTS["en"]["add_to_group_btn"] = "➕ Add to group"
+
+TEXTS["uz"]["phish_copy_btn"] = "📋 Do'stga yuborish"
+TEXTS["ru"]["phish_copy_btn"] = "📋 Отправить другу"
+TEXTS["en"]["phish_copy_btn"] = "📋 Send to friend"

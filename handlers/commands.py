@@ -39,6 +39,73 @@ async def _require_sub(update, context):
     return await require_subscription(update, context)
 
 
+# ─── Translated menu commands per user language ───────────────────────────────
+
+MENU_COMMANDS = {
+    "uz": [
+        ("start", "🚀 Botni ishga tushirish"),
+        ("help", "📖 Barcha buyruqlar"),
+        ("language", "🌐 Tilni o'zgartirish"),
+        ("breach", "🔐 Email tekshiruvi"),
+        ("scammer", "👤 Skammer tekshiruvi"),
+        ("privacy", "🔏 Maxfiylik tahlili"),
+        ("phish", "🎣 Fishing simulyatori"),
+        ("referral", "👥 Do'stlarni taklif qilish"),
+        ("top", "🏆 Liderlar jadvali"),
+        ("tips", "💡 Kunlik maslahatlar"),
+        ("premium", "⭐ Premium xarid"),
+        ("history", "🕒 Tekshiruvlar tarixi"),
+        ("feedback", "📩 Taklif/shikoyat"),
+        ("report", "🚨 Xavfli link xabar"),
+    ],
+    "ru": [
+        ("start", "🚀 Запустить бота"),
+        ("help", "📖 Все команды"),
+        ("language", "🌐 Сменить язык"),
+        ("breach", "🔐 Проверка email"),
+        ("scammer", "👤 Проверка скаммера"),
+        ("privacy", "🔏 Анализ приватности"),
+        ("phish", "🎣 Симулятор фишинга"),
+        ("referral", "👥 Пригласить друзей"),
+        ("top", "🏆 Таблица лидеров"),
+        ("tips", "💡 Ежедневные советы"),
+        ("premium", "⭐ Купить Premium"),
+        ("history", "🕒 История проверок"),
+        ("feedback", "📩 Обратная связь"),
+        ("report", "🚨 Сообщить о ссылке"),
+    ],
+    "en": [
+        ("start", "🚀 Start the bot"),
+        ("help", "📖 All commands"),
+        ("language", "🌐 Change language"),
+        ("breach", "🔐 Email breach check"),
+        ("scammer", "👤 Scammer check"),
+        ("privacy", "🔏 Privacy analysis"),
+        ("phish", "🎣 Phishing simulator"),
+        ("referral", "👥 Invite friends"),
+        ("top", "🏆 Leaderboard"),
+        ("tips", "💡 Daily tips"),
+        ("premium", "⭐ Buy Premium"),
+        ("history", "🕒 Check history"),
+        ("feedback", "📩 Send feedback"),
+        ("report", "🚨 Report link"),
+    ],
+}
+
+
+async def _set_user_menu_commands(context, user_id: int, lang: str):
+    """Set translated menu commands for a specific user."""
+    from telegram import BotCommand, BotCommandScopeChat
+    commands_list = MENU_COMMANDS.get(lang, MENU_COMMANDS["en"])
+    try:
+        await context.bot.set_my_commands(
+            commands=[BotCommand(cmd, desc) for cmd, desc in commands_list],
+            scope=BotCommandScopeChat(chat_id=user_id),
+        )
+    except Exception:
+        pass
+
+
 # ─── /start (short welcome) ──────────────────────────────────────────────────
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -104,7 +171,8 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("🇺🇿 O'zbekcha", callback_data="lang_uz"),
             InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
             InlineKeyboardButton("🇺🇸 English", callback_data="lang_en"),
-        ]
+        ],
+        [InlineKeyboardButton(t(lang, "add_to_group_btn"), url=f"https://t.me/{context.bot.username}?startgroup=true")],
     ]
     await update.message.reply_text(
         welcome_text, parse_mode="Markdown",
@@ -158,7 +226,32 @@ async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     lang = query.data.replace("lang_", "")
     set_user_lang(query.from_user.id, lang)
-    await query.edit_message_text(t(lang, "language_set"), parse_mode="Markdown")
+
+    # Delete old message and send fresh start in new language
+    try:
+        await query.message.delete()
+    except TelegramError:
+        pass
+
+    user = query.from_user
+    welcome_text = t(lang, "start", name=user.full_name, limit=DAILY_FREE_LIMIT)
+    keyboard = [
+        [
+            InlineKeyboardButton("🇺🇿 O'zbekcha", callback_data="lang_uz"),
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+            InlineKeyboardButton("🇺🇸 English", callback_data="lang_en"),
+        ],
+        [InlineKeyboardButton(t(lang, "add_to_group_btn"), url=f"https://t.me/{context.bot.username}?startgroup=true")],
+    ]
+    await context.bot.send_message(
+        chat_id=query.message.chat_id,
+        text=welcome_text,
+        parse_mode="Markdown",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    # Update menu commands in user's language
+    await _set_user_menu_commands(context, query.from_user.id, lang)
 
 
 async def group_language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -305,16 +398,26 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     template = random.choice(PHISH_TEMPLATES)
     phish_text = template.get(lang, template["uz"])
 
-    response = (
+    # The copyable phishing message
+    copy_text = f"{phish_text}\n{bot_link}"
+
+    # First send the explanation
+    await update.message.reply_text(
         f"🎣 Fishing Simulyatsiya Yaratildi!\n\n"
-        f"Do'stingizga yuboring:\n\n"
-        f"━━━━━━━━━━━━━━━━\n"
-        f"{phish_text}\n{bot_link}\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"📋 Nusxalab yuboring. Bossa — ogohlantirish oladi.\n"
-        f"🔄 Boshqa shablon: /phish"
+        f"Pastdagi xabarni do'stingizga forward qiling yoki nusxalang.\n"
+        f"Bossa — ogohlantirish oladi, siz xabar olasiz.\n\n"
+        f"🔄 Boshqa shablon: /phish",
     )
-    await update.message.reply_text(response, disable_web_page_preview=True)
+
+    # Then send the phishing message separately (easy to copy/forward)
+    keyboard = [
+        [InlineKeyboardButton(t(lang, "phish_copy_btn"), switch_inline_query=copy_text[:64])],
+    ]
+    await update.message.reply_text(
+        copy_text,
+        disable_web_page_preview=True,
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
 
 
 # ─── /scammer ─────────────────────────────────────────────────────────────────

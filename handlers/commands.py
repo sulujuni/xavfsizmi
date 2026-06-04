@@ -1,8 +1,7 @@
 """
-Command handlers for basic bot commands:
-/start, /language, /history, /feedback, /report, /stats, /referral, /phish
-Plus new advanced commands:
-/expand, /ssl, /redirect, /typo, /scammer, /privacy
+Command handlers:
+/start, /help, /language, /history, /feedback, /report, /stats,
+/referral, /phish, /scammer, /privacy
 """
 import random
 from telegram import (
@@ -21,10 +20,7 @@ from database import (
 )
 from languages import t, gt
 from admin import is_admin
-from handlers.tools import (
-    expand_short_url, check_ssl_certificate, get_redirect_chain,
-    check_typosquatting, check_social_account, check_privacy_score,
-)
+from handlers.tools import check_social_account, check_privacy_score
 
 REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
 
@@ -37,15 +33,13 @@ async def react_to_message(message):
         pass
 
 
-# ─── Subscription helper (imported in other modules too) ──────────────────────
-
 async def _require_sub(update, context):
     """Lazy import to avoid circular dependency."""
     from handlers.private_messages import require_subscription
     return await require_subscription(update, context)
 
 
-# ─── /start ──────────────────────────────────────────────────────────────────
+# ─── /start (short welcome) ──────────────────────────────────────────────────
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -53,11 +47,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await react_to_message(update.message)
 
-    # Start arguments (Referral or Phishing test)
+    # Handle start arguments (Referral / Phish)
     if context.args:
         args_text = context.args[0]
 
-        # Phishing simulation click
         if args_text.startswith("phish_"):
             try:
                 creator_id = int(args_text.split("_")[1])
@@ -72,19 +65,12 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 warning_text = (
                     "🚨 *DIQQAT! Siz fishing tuzog'iga tushdingiz!*\n\n"
-                    "Xavotir olmang, bu shunchaki do'stingiz tomonidan yuborilgan "
-                    "*Xavfsizmi? Bot* xavfsizlik testi edi. "
-                    "Lekin real hayotda bu haqiqiy skamer bo'lishi va barcha "
-                    "parollaringizni o'g'irlashi mumkin edi!\n\n"
-                    "🛡 *Qanday himoyalanish kerak:*\n"
-                    "• Notanish havolalarni hech qachon bosmang\n"
-                    "• Shubhali linkni avval @XavfsizmiBot orqali tekshiring\n"
-                    "• 2-bosqichli autentifikatsiyani yoqing\n"
-                    "• Parollarni har 3 oyda yangilang\n\n"
-                    "💡 Siz ham do'stlaringizni sinab ko'ring: /phish"
+                    "Bu do'stingiz yuborgan *Xavfsizmi? Bot* testi edi.\n"
+                    "Real hayotda skamer parollaringizni o'g'irlashi mumkin edi!\n\n"
+                    "🛡 Shubhali linkni doim @XavfsizmiBot orqali tekshiring.\n"
+                    "💡 Do'stlaringizni sinang: /phish"
                 )
                 await update.message.reply_text(warning_text, parse_mode="Markdown")
-
                 try:
                     creator_lang = get_user_lang(creator_id)
                     await context.bot.send_message(
@@ -96,7 +82,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     pass
                 return
 
-        # Referral link
         elif args_text.startswith("ref_") or args_text.isdigit():
             try:
                 referrer_id = int(args_text.replace("ref_", ""))
@@ -106,8 +91,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         try:
                             await context.bot.send_message(
                                 chat_id=referrer_id,
-                                text="🎉 Yangi do'st taklif qildingiz! "
-                                     "Sizga 1 ta bepul /breach tekshiruv balansi qo'shildi."
+                                text="🎉 Yangi do'st taklif qildingiz! +1 bepul /breach balansi."
                             )
                         except Exception:
                             pass
@@ -123,10 +107,21 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
     ]
     await update.message.reply_text(
-        welcome_text,
-        parse_mode="Markdown",
+        welcome_text, parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
+
+
+# ─── /help (detailed command list) ───────────────────────────────────────────
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await react_to_message(update.message)
+
+    user = update.effective_user
+    lang = get_user_lang(user.id)
+
+    help_text = t(lang, "help_message")
+    await update.message.reply_text(help_text, parse_mode="Markdown", disable_web_page_preview=True)
 
 
 # ─── /language ────────────────────────────────────────────────────────────────
@@ -152,13 +147,8 @@ async def language_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("🇺🇸 English", callback_data=f"{prefix}en"),
         ]
     ]
-    text = (
-        t(get_user_lang(update.effective_user.id), "choose_language")
-        if not is_group
-        else "🌐 Guruh tilini tanlang / Выберите язык группы:"
-    )
     await update.message.reply_text(
-        text=text,
+        text=t(get_user_lang(update.effective_user.id), "choose_language") if not is_group else "🌐 Guruh tilini tanlang:",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
@@ -218,9 +208,7 @@ async def feedback_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_message(
             chat_id=ADMIN_ID,
-            text=f"📩 *Yangi taklif/shikoyat:*\n"
-                 f"Kimdan: {user.full_name} (`{user.id}`)\n"
-                 f"Matn: {feedback_text}",
+            text=f"📩 *Yangi taklif/shikoyat:*\nKimdan: {user.full_name} (`{user.id}`)\nMatn: {feedback_text}",
             parse_mode="Markdown"
         )
         await update.message.reply_text(t(lang, "feedback_received"))
@@ -250,7 +238,7 @@ async def report_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.send_message(
             chat_id=ADMIN_ID,
-            text=f"🚨 *Xavfli havola haqida xabar:*\nUser: {user.id}\nLink: {url_to_report}",
+            text=f"🚨 *Xavfli havola:*\nUser: {user.id}\nLink: {url_to_report}",
             parse_mode="Markdown"
         )
     except Exception:
@@ -269,12 +257,12 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         stats_data = get_stats()
         text = (
             f"📊 *Bot statistikasi:*\n"
-            f"Jami foydalanuvchilar: {stats_data['total_users']}\n"
+            f"Jami: {stats_data['total_users']}\n"
             f"Premium: {stats_data['total_premium']}\n"
             f"Hisobotlar: {stats_data['total_reports']}"
         )
     except Exception:
-        text = "📊 *Bot statistikasi:* Ma'lumotlarni olishda xatolik."
+        text = "📊 Ma'lumotlarni olishda xatolik."
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
@@ -290,44 +278,18 @@ async def referral_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     count = get_referral_count(user.id)
     await update.message.reply_text(
         text=t(lang, "referral_link", ref_code=user.id, count=count),
-        parse_mode="Markdown",
-        disable_web_page_preview=True,
+        parse_mode="Markdown", disable_web_page_preview=True,
     )
 
 
-# ─── /phish (Upgraded — realistic phishing simulation) ───────────────────────
+# ─── /phish ───────────────────────────────────────────────────────────────────
 
 PHISH_TEMPLATES = [
-    {
-        "type": "bank",
-        "uz": "🏦 Diqqat! Sizning kartangizdan 1,500,000 so'm yechilmoqda. Bekor qilish uchun bosing:",
-        "ru": "🏦 Внимание! С вашей карты списывается 1,500,000 сум. Для отмены нажмите:",
-        "en": "🏦 Alert! $150 is being withdrawn from your card. Cancel here:",
-    },
-    {
-        "type": "prize",
-        "uz": "🎁 Tabriklaymiz! Siz 5,000,000 so'm yutdingiz! Sovg'angizni olish uchun:",
-        "ru": "🎁 Поздравляем! Вы выиграли 5,000,000 сум! Получить приз:",
-        "en": "🎁 Congratulations! You won $500! Claim your prize:",
-    },
-    {
-        "type": "account",
-        "uz": "⚠️ Sizning Telegram akkauntingiz bloklanmoqda! Tasdiqlash:",
-        "ru": "⚠️ Ваш аккаунт Telegram будет заблокирован! Подтвердите:",
-        "en": "⚠️ Your Telegram account is being suspended! Verify now:",
-    },
-    {
-        "type": "delivery",
-        "uz": "📦 Sizga jo'natma keldi! Kuzatish raqami: UZ7839. Ma'lumot:",
-        "ru": "📦 У вас посылка! Номер отслеживания: RU7839. Подробнее:",
-        "en": "📦 You have a package! Tracking: EN7839. Details:",
-    },
-    {
-        "type": "password",
-        "uz": "🔒 Kimdir akkauntingizga kirmoqchi! Parolni tiklash:",
-        "ru": "🔒 Кто-то пытается войти в ваш аккаунт! Сбросить пароль:",
-        "en": "🔒 Someone is trying to access your account! Reset password:",
-    },
+    {"uz": "🏦 Diqqat! Kartangizdan 1,500,000 so'm yechilmoqda. Bekor qilish:", "ru": "🏦 Внимание! Списание 1,500,000 сум. Отменить:", "en": "🏦 Alert! $150 withdrawal from your card. Cancel:"},
+    {"uz": "🎁 Tabriklaymiz! 5,000,000 so'm yutdingiz! Olish:", "ru": "🎁 Поздравляем! Выигрыш 5,000,000 сум! Получить:", "en": "🎁 You won $500! Claim:"},
+    {"uz": "⚠️ Telegram akkauntingiz bloklanmoqda! Tasdiqlash:", "ru": "⚠️ Ваш Telegram будет заблокирован! Подтвердить:", "en": "⚠️ Your Telegram is being suspended! Verify:"},
+    {"uz": "📦 Sizga jo'natma keldi! Kuzatish: UZ7839. Batafsil:", "ru": "📦 Посылка! Трек: RU7839. Подробнее:", "en": "📦 Package! Track: EN7839. Details:"},
+    {"uz": "🔒 Kimdir akkauntingizga kirmoqchi! Parolni tiklash:", "ru": "🔒 Попытка входа! Сбросить пароль:", "en": "🔒 Login attempt! Reset password:"},
 ]
 
 
@@ -345,183 +307,17 @@ async def phish_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     response = (
         f"🎣 Fishing Simulyatsiya Yaratildi!\n\n"
-        f"Quyidagi xabarni do'stingizga yuboring:\n\n"
+        f"Do'stingizga yuboring:\n\n"
+        f"━━━━━━━━━━━━━━━━\n"
+        f"{phish_text}\n{bot_link}\n"
         f"━━━━━━━━━━━━━━━━\n\n"
-        f"{phish_text}\n"
-        f"{bot_link}\n\n"
-        f"━━━━━━━━━━━━━━━━\n\n"
-        f"📋 Yuqoridagi matnni nusxalab, do'stingizga yuboring.\n"
-        f"Agar u havolani bossa — ogohlantirish oladi, siz esa xabar.\n\n"
+        f"📋 Nusxalab yuboring. Bossa — ogohlantirish oladi.\n"
         f"🔄 Boshqa shablon: /phish"
     )
-
     await update.message.reply_text(response, disable_web_page_preview=True)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# NEW ADVANCED COMMANDS
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
-# ─── /expand — Short URL Expander ─────────────────────────────────────────────
-
-async def expand_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "expand_usage"), parse_mode="Markdown")
-        return
-
-    url = context.args[0].strip()
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-
-    result = await expand_short_url(url)
-
-    if result["redirect_count"] == 0:
-        text = t(lang, "expand_no_redirect", url=url)
-    else:
-        hops_text = ""
-        for i, hop in enumerate(result["hops"]):
-            prefix = "  → " if i > 0 else "🔗 "
-            hops_text += f"{prefix}`{hop}`\n"
-
-        text = (
-            f"🔀 *URL Kengaytirish Natijasi:*\n\n"
-            f"{hops_text}\n"
-            f"📍 *Yakuniy manzil:* `{result['final_url']}`\n"
-            f"🔢 *Yo'naltirish soni:* {result['redirect_count']}"
-        )
-
-    await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)
-
-
-# ─── /ssl — SSL Certificate Checker ──────────────────────────────────────────
-
-async def ssl_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "ssl_usage"), parse_mode="Markdown")
-        return
-
-    url = context.args[0].strip()
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-
-    result = await check_ssl_certificate(url)
-
-    if not result.get("valid"):
-        text = (
-            f"🔓 *SSL Sertifikat Tekshiruvi:*\n\n"
-            f"🔗 `{url}`\n\n"
-            f"❌ *Holat:* Xavfsiz emas!\n"
-            f"⚠️ *Xatolik:* {result.get('error', 'Noma`lum')}\n\n"
-            f"🚨 Bu saytga shaxsiy ma'lumot BERMANG!"
-        )
-    else:
-        days = result["days_remaining"]
-        if days < 0:
-            status_emoji = "🔴 MUDDATI O'TGAN"
-        elif days < 30:
-            status_emoji = f"🟡 {days} kun qoldi (tez tugaydi!)"
-        else:
-            status_emoji = f"🟢 {days} kun qoldi"
-
-        text = (
-            f"🔒 *SSL Sertifikat Tekshiruvi:*\n\n"
-            f"🔗 `{url}`\n\n"
-            f"✅ *Holat:* Xavfsiz\n"
-            f"🏢 *Beruvchi:* {result['issuer']}\n"
-            f"📛 *Domen:* {result['common_name']}\n"
-            f"📅 *Muddati:* {result['expiry']}\n"
-            f"⏳ *Qoldi:* {status_emoji}"
-        )
-
-    await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)
-
-
-# ─── /redirect — Redirect Chain Tracker ──────────────────────────────────────
-
-async def redirect_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "redirect_usage"), parse_mode="Markdown")
-        return
-
-    url = context.args[0].strip()
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-
-    result = await get_redirect_chain(url)
-
-    if result["redirect_count"] == 0:
-        text = f"🔗 *Redirect Zanjiri:*\n\n`{url}`\n\n✅ Hech qanday yo'naltirish yo'q. To'g'ridan-to'g'ri ochiladi."
-    else:
-        text = f"🔗 *Redirect Zanjiri ({result['redirect_count']} qadam):*\n\n"
-        for i, hop in enumerate(result["hops"]):
-            if i == 0:
-                text += f"1️⃣ `{hop}`\n"
-            elif i == len(result["hops"]) - 1:
-                text += f"🏁 `{hop}` (yakuniy)\n"
-            else:
-                text += f"  ↓ `{hop}`\n"
-
-        text += f"\n⚠️ Ko'p yo'naltirish = shubhali bo'lishi mumkin!" if result["redirect_count"] > 3 else ""
-
-    await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)
-
-
-# ─── /typo — Typosquatting Detector ──────────────────────────────────────────
-
-async def typo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await react_to_message(update.message)
-    if not await _require_sub(update, context):
-        return
-
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-
-    if not context.args:
-        await update.message.reply_text(t(lang, "typo_usage"), parse_mode="Markdown")
-        return
-
-    url = context.args[0].strip()
-    result = check_typosquatting(url)
-
-    if result.get("exact_match"):
-        text = f"✅ *Typosquatting Tekshiruvi:*\n\n`{url}`\n\nBu rasmiy domen: `{result['exact_match']}`"
-    elif result.get("is_typosquat"):
-        matches_text = ""
-        for m in result["matches"]:
-            matches_text += f"  • `{m['similar_to']}` (farq: {m['distance']} belgi)\n"
-        text = (
-            f"🚨 *TYPOSQUATTING ANIQLANDI!*\n\n"
-            f"🔗 Tekshirilgan: `{result['domain']}`\n\n"
-            f"⚠️ Bu domen quyidagilarga juda o'xshash:\n{matches_text}\n"
-            f"🎯 Bu fishing sayt bo'lishi mumkin!\n"
-            f"❌ Shaxsiy ma'lumot BERMANG!"
-        )
-    else:
-        text = f"✅ *Typosquatting Tekshiruvi:*\n\n`{result.get('domain', url)}`\n\nHech qanday mashhur domenga o'xshamasligi aniqlandi."
-
-    await update.message.reply_text(text, parse_mode="Markdown", disable_web_page_preview=True)
-
-
-# ─── /scammer — Social Media Account Checker ─────────────────────────────────
+# ─── /scammer ─────────────────────────────────────────────────────────────────
 
 async def scammer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await react_to_message(update.message)
@@ -545,23 +341,21 @@ async def scammer_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             f"⚠️ *Skammer Tekshiruvi:*\n\n"
             f"👤 `@{result['username']}`\n\n"
-            f"🚨 *OGOHLANTIRISH topildi!*\n{warnings_text}\n\n"
-            f"📊 Tekshirilgan bazalar: {result['sources_checked']}\n"
-            f"⚠️ Bu akkaunt bilan ehtiyot bo'ling!"
+            f"🚨 *OGOHLANTIRISH!*\n{warnings_text}\n\n"
+            f"📊 Tekshirilgan: {result['sources_checked']} baza"
         )
     else:
         text = (
             f"✅ *Skammer Tekshiruvi:*\n\n"
             f"👤 `@{result['username']}`\n\n"
-            f"✅ Hech qanday ogohlantirish topilmadi.\n"
-            f"📊 Tekshirilgan bazalar: {result['sources_checked']}\n\n"
-            f"⚠️ Eslatma: bu 100% kafolat bermaydi. Doim ehtiyot bo'ling!"
+            f"✅ Ogohlantirish topilmadi.\n"
+            f"📊 Tekshirilgan: {result['sources_checked']} baza\n"
+            f"⚠️ 100% kafolat bermaydi. Ehtiyot bo'ling!"
         )
-
     await status_msg.edit_text(text, parse_mode="Markdown")
 
 
-# ─── /privacy — Privacy Score ─────────────────────────────────────────────────
+# ─── /privacy ─────────────────────────────────────────────────────────────────
 
 async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await react_to_message(update.message)
@@ -580,29 +374,26 @@ async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         profile_url = f"https://{profile_url}"
 
     status_msg = await update.message.reply_text(t(lang, "checking"))
-
     result = await check_privacy_score(profile_url)
 
     if result.get("score", -1) < 0:
-        text = f"❌ Profilni tekshirib bo'lmadi: {result.get('error', 'Noma`lum xatolik')}"
+        text = f"❌ Profilni tekshirib bo'lmadi: {result.get('error', 'Xatolik')}"
     else:
         score = result["score"]
         if score >= 80:
-            score_emoji = f"🟢 {score}/100 (Yaxshi himoyalangan)"
+            score_emoji = f"🟢 {score}/100"
         elif score >= 50:
-            score_emoji = f"🟡 {score}/100 (O'rtacha)"
+            score_emoji = f"🟡 {score}/100"
         else:
-            score_emoji = f"🔴 {score}/100 (Xavfli darajada ochiq!)"
+            score_emoji = f"🔴 {score}/100"
 
         findings_text = "\n".join([f"  • {f}" for f in result["findings"]])
         recs_text = "\n".join([f"  💡 {r}" for r in result["recommendations"]])
 
         text = (
             f"🔏 *Maxfiylik Tahlili:*\n\n"
-            f"🔗 `{profile_url}`\n\n"
-            f"🎯 *Maxfiylik Bali:* {score_emoji}\n\n"
+            f"🎯 *Bal:* {score_emoji}\n\n"
             f"📋 *Topilmalar:*\n{findings_text}\n\n"
             f"💡 *Tavsiyalar:*\n{recs_text}"
         )
-
     await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)

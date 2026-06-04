@@ -472,3 +472,68 @@ TEXTS["en"]["premium_promo_hint"] = (
     "👉 `/promo YOURCODE`\n\n"
     "Example: `/promo FREE30`"
 )
+
+
+
+# ─── NEW FEATURE TEXT KEYS ────────────────────────────────────────────────────
+
+# Bulk check
+TEXTS["uz"]["bulk_usage"] = "📋 *Bulk Tekshiruv:*\n\nBir nechta havolani tekshirish uchun:\n`/bulk https://link1.com\nhttps://link2.com`\n\nHar bir qatorga bitta havola yozing."
+TEXTS["ru"]["bulk_usage"] = "📋 *Массовая Проверка:*\n\nДля проверки нескольких ссылок:\n`/bulk https://link1.com\nhttps://link2.com`\n\nОдна ссылка на строку."
+TEXTS["en"]["bulk_usage"] = "📋 *Bulk Check:*\n\nTo check multiple links:\n`/bulk https://link1.com\nhttps://link2.com`\n\nOne link per line."
+
+# Expand
+TEXTS["uz"]["expand_usage"] = "🔀 *URL Kengaytirish:*\n\n`/expand https://bit.ly/xxxxx`\n\nQisqa havolaning asl manzilini ko'rsatadi."
+TEXTS["ru"]["expand_usage"] = "🔀 *Развернуть URL:*\n\n`/expand https://bit.ly/xxxxx`\n\nПоказывает реальный адрес короткой ссылки."
+TEXTS["en"]["expand_usage"] = "🔀 *Expand URL:*\n\n`/expand https://bit.ly/xxxxx`\n\nReveals the real destination of a short link."
+
+TEXTS["uz"]["expand_no_redirect"] = "✅ `{url}` — hech qanday yo'naltirish yo'q. To'g'ridan-to'g'ri ochiladi."
+TEXTS["ru"]["expand_no_redirect"] = "✅ `{url}` — нет перенаправлений. Открывается напрямую."
+TEXTS["en"]["expand_no_redirect"] = "✅ `{url}` — no redirects. Opens directly."
+
+# SSL
+TEXTS["uz"]["ssl_usage"] = "🔒 *SSL Sertifikat Tekshiruvi:*\n\n`/ssl example.com`\n\nSaytning xavfsizlik sertifikatini tekshiradi."
+TEXTS["ru"]["ssl_usage"] = "🔒 *Проверка SSL Сертификата:*\n\n`/ssl example.com`\n\nПроверяет сертификат безопасности сайта."
+TEXTS["en"]["ssl_usage"] = "🔒 *SSL Certificate Check:*\n\n`/ssl example.com`\n\nChecks the site's security certificate."
+
+# Redirect
+TEXTS["uz"]["redirect_usage"] = "🔗 *Redirect Zanjiri:*\n\n`/redirect https://example.com`\n\nHavola qayerga olib borishini ko'rsatadi."
+TEXTS["ru"]["redirect_usage"] = "🔗 *Цепочка Редиректов:*\n\n`/redirect https://example.com`\n\nПоказывает куда ведёт ссылка."
+TEXTS["en"]["redirect_usage"] = "🔗 *Redirect Chain:*\n\n`/redirect https://example.com`\n\nShows where a link actually leads."
+
+# Typo
+TEXTS["uz"]["typo_usage"] = "🔤 *Typosquatting Tekshiruvi:*\n\n`/typo gooogle.com`\n\nDomen nomi mashhur saytlarga o'xshash emasligini tekshiradi."
+TEXTS["ru"]["typo_usage"] = "🔤 *Проверка Тайпосквоттинга:*\n\n`/typo gooogle.com`\n\nПроверяет не является ли домен подделкой."
+TEXTS["en"]["typo_usage"] = "🔤 *Typosquatting Check:*\n\n`/typo gooogle.com`\n\nChecks if a domain is a fake version of a popular site."
+
+# Scammer
+TEXTS["uz"]["scammer_usage"] = "👤 *Skammer Tekshiruvi:*\n\n`/scammer @username`\n\nFoydalanuvchi skammer sifatida xabar qilinganmi tekshiradi."
+TEXTS["ru"]["scammer_usage"] = "👤 *Проверка Скаммера:*\n\n`/scammer @username`\n\nПроверяет был ли пользователь отмечен как мошенник."
+TEXTS["en"]["scammer_usage"] = "👤 *Scammer Check:*\n\n`/scammer @username`\n\nChecks if a user has been reported as a scammer."
+
+# Privacy
+TEXTS["uz"]["privacy_usage"] = "🔏 *Maxfiylik Tahlili:*\n\n`/privacy https://instagram.com/username`\n\nProfildagi ochiq ma'lumotlarni tahlil qiladi."
+TEXTS["ru"]["privacy_usage"] = "🔏 *Анализ Приватности:*\n\n`/privacy https://instagram.com/username`\n\nАнализирует публичную информацию профиля."
+TEXTS["en"]["privacy_usage"] = "🔏 *Privacy Analysis:*\n\n`/privacy https://instagram.com/username`\n\nAnalyzes public information exposure of a profile."
+
+# Tips
+TEXTS["uz"]["tips_enabled"] = "✅ Kunlik xavfsizlik maslahatlari YOQILDI! Har kuni bir ta maslahat olasiz."
+TEXTS["ru"]["tips_enabled"] = "✅ Ежедневные советы по безопасности ВКЛЮЧЕНЫ! Вы будете получать совет каждый день."
+TEXTS["en"]["tips_enabled"] = "✅ Daily security tips ENABLED! You'll receive a tip every day."
+
+TEXTS["uz"]["tips_disabled"] = "❌ Kunlik maslahatlar O'CHIRILDI. Qayta yoqish: `/tips on`"
+TEXTS["ru"]["tips_disabled"] = "❌ Ежедневные советы ОТКЛЮЧЕНЫ. Включить: `/tips on`"
+TEXTS["en"]["tips_disabled"] = "❌ Daily tips DISABLED. Re-enable: `/tips on`"
+
+# Leaderboard
+TEXTS["uz"]["leaderboard_title"] = "🏆 *Referral Liderlar Jadvali (Oylik):*"
+TEXTS["ru"]["leaderboard_title"] = "🏆 *Таблица Лидеров Рефералов (Месяц):*"
+TEXTS["en"]["leaderboard_title"] = "🏆 *Referral Leaderboard (Monthly):*"
+
+TEXTS["uz"]["leaderboard_empty"] = "📭 Hozircha hech kim do'st taklif qilmagan. Birinchi bo'ling! /referral"
+TEXTS["ru"]["leaderboard_empty"] = "📭 Пока никто не пригласил друзей. Будьте первым! /referral"
+TEXTS["en"]["leaderboard_empty"] = "📭 No referrals yet. Be the first! /referral"
+
+TEXTS["uz"]["leaderboard_footer"] = "⭐ Top 3 har oy oxirida 30 kunlik bepul Premium oladi!"
+TEXTS["ru"]["leaderboard_footer"] = "⭐ Топ 3 получают 30 дней бесплатного Премиума в конце месяца!"
+TEXTS["en"]["leaderboard_footer"] = "⭐ Top 3 get 30 days free Premium at the end of each month!"

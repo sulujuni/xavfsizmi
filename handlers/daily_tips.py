@@ -1,0 +1,194 @@
+"""
+Daily Security Tips system.
+- Sends a random cybersecurity tip to subscribed users daily.
+- Users toggle with /tips on or /tips off.
+- Tips are pre-written in 3 languages (no AI API needed = zero cost).
+"""
+from telegram import Update
+from telegram.ext import ContextTypes, Application
+from telegram.error import TelegramError
+import random
+import logging
+
+from database import get_user_lang, load_db, save_db
+from languages import t
+from handlers.private_messages import require_subscription, react_to_message
+
+
+# ─── TIPS DATABASE (pre-written, 3 languages) ─────────────────────────────────
+
+DAILY_TIPS = [
+    {
+        "uz": "🔐 Parollaringizni har 90 kunda yangilang va har bir sayt uchun alohida parol ishlating.",
+        "ru": "🔐 Меняйте пароли каждые 90 дней и используйте уникальный пароль для каждого сайта.",
+        "en": "🔐 Change your passwords every 90 days and use a unique password for each site.",
+    },
+    {
+        "uz": "📱 Ilovalani faqat rasmiy do'konlardan (Google Play, App Store) yuklab oling.",
+        "ru": "📱 Скачивайте приложения только из официальных магазинов (Google Play, App Store).",
+        "en": "📱 Only download apps from official stores (Google Play, App Store).",
+    },
+    {
+        "uz": "🔗 Qisqa havolalarga (bit.ly, tinyurl) ishonmang — avval /expand orqali tekshiring.",
+        "ru": "🔗 Не доверяйте коротким ссылкам (bit.ly, tinyurl) — проверьте через /expand.",
+        "en": "🔗 Don't trust short links (bit.ly, tinyurl) — check them first with /expand.",
+    },
+    {
+        "uz": "🛡 Ikki bosqichli autentifikatsiyani (2FA) barcha akkauntlaringizda yoqing.",
+        "ru": "🛡 Включите двухфакторную аутентификацию (2FA) на всех аккаунтах.",
+        "en": "🛡 Enable two-factor authentication (2FA) on all your accounts.",
+    },
+    {
+        "uz": "📧 Notanish emaillardan kelgan fayllarni HECH QACHON ochmang.",
+        "ru": "📧 НИКОГДА не открывайте файлы из писем незнакомых отправителей.",
+        "en": "📧 NEVER open files from emails sent by unknown senders.",
+    },
+    {
+        "uz": "🏦 Bankingiz HECH QACHON parol yoki PIN kod so'ramaydi. Bu 100% fishing!",
+        "ru": "🏦 Ваш банк НИКОГДА не просит пароль или ПИН-код. Это 100% фишинг!",
+        "en": "🏦 Your bank NEVER asks for passwords or PINs. It's 100% phishing!",
+    },
+    {
+        "uz": "📶 Ochiq Wi-Fi tarmoqlarida (kafe, metro) bank ilovalaringizni ISHLATMANG.",
+        "ru": "📶 НЕ используйте банковские приложения в открытых Wi-Fi сетях (кафе, метро).",
+        "en": "📶 DON'T use banking apps on public Wi-Fi networks (cafes, metro).",
+    },
+    {
+        "uz": "🔍 Saytga parol kiritishdan oldin URL manzilini diqqat bilan tekshiring — https borligini aniqlang.",
+        "ru": "🔍 Перед вводом пароля внимательно проверьте URL — убедитесь что есть https.",
+        "en": "🔍 Before entering passwords, check the URL carefully — make sure it has https.",
+    },
+    {
+        "uz": "💾 Muhim fayllaringizni kamida 2 ta joyda saqlang (bulut + tashqi disk).",
+        "ru": "💾 Храните важные файлы минимум в 2 местах (облако + внешний диск).",
+        "en": "💾 Keep important files in at least 2 places (cloud + external drive).",
+    },
+    {
+        "uz": "🚫 'Siz yutdingiz!' xabarlariga ISHONMANG. Hech kim bepulga pul bermaydi.",
+        "ru": "🚫 НЕ верьте сообщениям 'Вы выиграли!' Никто не дарит деньги просто так.",
+        "en": "🚫 DON'T believe 'You won!' messages. Nobody gives away money for free.",
+    },
+    {
+        "uz": "🔄 Telefon va kompyuteringiz dasturlarini doim yangilab turing — xavfsizlik tuzatishlari muhim!",
+        "ru": "🔄 Всегда обновляйте программы на телефоне и компьютере — патчи безопасности важны!",
+        "en": "🔄 Always update your phone and computer software — security patches matter!",
+    },
+    {
+        "uz": "👁 Ijtimoiy tarmoqlarda juda ko'p shaxsiy ma'lumot qoldirmang — firibgarlar foydalanadi.",
+        "ru": "👁 Не оставляйте слишком много личной информации в соцсетях — мошенники используют её.",
+        "en": "👁 Don't share too much personal info on social media — scammers use it.",
+    },
+    {
+        "uz": "📲 QR-kodni skanerlaganingizda avtomatik ochilgan saytga shaxsiy ma'lumot BERMANG.",
+        "ru": "📲 Не вводите личные данные на сайтах, открывшихся после сканирования QR-кода.",
+        "en": "📲 Don't enter personal info on sites opened after scanning a QR code.",
+    },
+    {
+        "uz": "🔑 Parol menejeri ishlating (Bitwarden — bepul va xavfsiz). Bitta parolni eslab qolasiz.",
+        "ru": "🔑 Используйте менеджер паролей (Bitwarden — бесплатный и безопасный). Запомните один пароль.",
+        "en": "🔑 Use a password manager (Bitwarden — free and secure). Remember just one password.",
+    },
+    {
+        "uz": "⚠️ Telegram'da 'Admin' yoki 'Support' yozgan odamga parolingizni BERMANG — bu firibgar.",
+        "ru": "⚠️ НЕ давайте пароль людям с ником 'Admin' или 'Support' в Telegram — это мошенники.",
+        "en": "⚠️ NEVER give your password to people named 'Admin' or 'Support' in Telegram — they're scammers.",
+    },
+]
+
+
+# ─── Tips toggle (database helpers) ──────────────────────────────────────────
+
+def get_tips_enabled(user_id: int) -> bool:
+    """Check if user has tips enabled (default: True)."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return True
+    return db[user_key].get("tips_enabled", True)
+
+
+def set_tips_enabled(user_id: int, enabled: bool):
+    """Toggle tips on/off for a user."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        db[user_key] = {"lang": "uz", "checks": 0}
+    db[user_key]["tips_enabled"] = enabled
+    save_db(db)
+
+
+def get_all_tips_subscribers() -> list:
+    """Returns list of user IDs who have tips enabled."""
+    db = load_db()
+    subscribers = []
+    for key in db.keys():
+        if key.isdigit():
+            if db[key].get("tips_enabled", True):
+                subscribers.append(int(key))
+    return subscribers
+
+
+# ─── /tips command ────────────────────────────────────────────────────────────
+
+async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle daily tips on/off. Usage: /tips on or /tips off"""
+    user = update.effective_user
+    lang = get_user_lang(user.id)
+
+    await react_to_message(update.message)
+
+    if not await require_subscription(update, context):
+        return
+
+    if context.args and context.args[0].lower() in ("off", "0", "no", "yoq"):
+        set_tips_enabled(user.id, False)
+        await update.message.reply_text(t(lang, "tips_disabled"))
+    elif context.args and context.args[0].lower() in ("on", "1", "yes", "ha"):
+        set_tips_enabled(user.id, True)
+        await update.message.reply_text(t(lang, "tips_enabled"))
+    else:
+        # Show current status and a random tip
+        enabled = get_tips_enabled(user.id)
+        tip = random.choice(DAILY_TIPS)
+        tip_text = tip.get(lang, tip["uz"])
+
+        status = "✅ Yoqilgan" if enabled else "❌ O'chirilgan"
+        await update.message.reply_text(
+            f"💡 *Kunlik Maslahatlar:* {status}\n\n"
+            f"📝 *Bugungi maslahat:*\n{tip_text}\n\n"
+            f"O'chirish: `/tips off`\nYoqish: `/tips on`",
+            parse_mode="Markdown",
+        )
+
+
+# ─── Daily tips sender (called by scheduler) ─────────────────────────────────
+
+async def send_daily_tips(application: Application):
+    """Sends a random tip to all subscribed users. Called by APScheduler."""
+    subscribers = get_all_tips_subscribers()
+    if not subscribers:
+        return
+
+    tip = random.choice(DAILY_TIPS)
+    sent = 0
+    failed = 0
+
+    for user_id in subscribers:
+        lang = get_user_lang(user_id)
+        tip_text = tip.get(lang, tip["uz"])
+        message = f"💡 *Kunlik Xavfsizlik Maslahati:*\n\n{tip_text}"
+
+        try:
+            await application.bot.send_message(
+                chat_id=user_id, text=message, parse_mode="Markdown"
+            )
+            sent += 1
+        except TelegramError:
+            failed += 1
+
+        # Rate limit: don't spam Telegram API
+        if (sent + failed) % 25 == 0:
+            import asyncio
+            await asyncio.sleep(1)
+
+    logging.info(f"Daily tips sent: {sent} success, {failed} failed")

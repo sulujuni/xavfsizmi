@@ -13,6 +13,13 @@ from .commands import (
     stats_command,
     referral_command,
     phish_command,
+    # New advanced commands
+    expand_command,
+    ssl_command,
+    redirect_command,
+    typo_command,
+    scammer_command,
+    privacy_command,
 )
 
 from .premium import (
@@ -33,6 +40,7 @@ from .breach import (
 
 from .private_messages import (
     is_user_subscribed,
+    require_subscription,
     check_subscription_callback,
     handle_private_message,
     handle_apk,
@@ -49,3 +57,7 @@ from .secretary import (
     handle_business_connection,
     handle_business_message,
 )
+
+from .bulk_check import handle_bulk_check
+from .daily_tips import tips_command, send_daily_tips
+from .leaderboard import top_command, reward_top_referrers

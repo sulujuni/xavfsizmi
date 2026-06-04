@@ -15,6 +15,8 @@ from telegram.ext import (
     TypeHandler,
     filters,
 )
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from config import BOT_TOKEN, ADMIN_ID
 from admin import admin_command, admin_callback, broadcast_command
@@ -31,6 +33,13 @@ from handlers import (
     stats_command,
     referral_command,
     phish_command,
+    # New advanced commands
+    expand_command,
+    ssl_command,
+    redirect_command,
+    typo_command,
+    scammer_command,
+    privacy_command,
     # Premium & payment handlers
     premium_command,
     add_promo_command,
@@ -55,6 +64,13 @@ from handlers import (
     # Secretary mode (Business Connection)
     handle_business_connection,
     handle_business_message,
+    # Bulk check
+    handle_bulk_check,
+    # Daily tips & leaderboard
+    tips_command,
+    send_daily_tips,
+    top_command,
+    reward_top_referrers,
 )
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────
@@ -71,14 +87,23 @@ async def setup_menu(application: Application):
     """Configure bot menu buttons and commands on startup."""
     public_commands = [
         BotCommand("start", "🚀 Botni ishga tushirish"),
-        BotCommand("language", "🌐 Tilni o'zgartirish (Language)"),
-        BotCommand("breach", "🔐 Email leak check (Premium)"),
+        BotCommand("language", "🌐 Tilni o'zgartirish"),
+        BotCommand("breach", "🔐 Email leak check"),
+        BotCommand("bulk", "📋 Ko'p havolalarni tekshirish"),
+        BotCommand("expand", "🔀 Qisqa havolani kengaytirish"),
+        BotCommand("ssl", "🔒 SSL sertifikat tekshiruvi"),
+        BotCommand("redirect", "🔗 Redirect zanjiri"),
+        BotCommand("typo", "🔤 Typosquatting tekshiruvi"),
+        BotCommand("scammer", "👤 Skammer tekshiruvi"),
+        BotCommand("privacy", "🔏 Maxfiylik tahlili"),
+        BotCommand("phish", "🎣 Fishing simulyatori"),
         BotCommand("referral", "👥 Do'stlarni taklif qilish"),
-        BotCommand("phish", "🎣 Fishing simulyatori (Xavfsizlik testi)"),
-        BotCommand("premium", "⭐ Premium xarid qilish / Promokod"),
-        BotCommand("feedback", "📩 Taklif va shikoyatlar"),
-        BotCommand("report", "🚨 Xavfli link haqida xabar berish"),
+        BotCommand("top", "🏆 Liderlar jadvali"),
+        BotCommand("tips", "💡 Kunlik maslahatlar"),
+        BotCommand("premium", "⭐ Premium xarid qilish"),
         BotCommand("history", "🕒 Tekshiruvlar tarixi"),
+        BotCommand("feedback", "📩 Taklif va shikoyatlar"),
+        BotCommand("report", "🚨 Xavfli link xabar berish"),
     ]
     await application.bot.set_my_commands(public_commands)
 
@@ -89,7 +114,7 @@ async def setup_menu(application: Application):
 
     # Admin gets extra commands
     admin_commands = public_commands + [
-        BotCommand("stats", "📊 Bot statistikasi (Admin Only)"),
+        BotCommand("stats", "📊 Bot statistikasi"),
         BotCommand("broadcast", "📢 Hammaga xabar yuborish"),
         BotCommand("admin", "🔐 Admin panel"),
         BotCommand("addpromo", "🔑 Promokod yaratish"),
@@ -102,6 +127,34 @@ async def setup_menu(application: Application):
         print("✅ Bot menyulari muvaffaqiyatli yuklandi!")
     except Exception as e:
         print(f"⚠️ Menyu sozlashda xatolik: {e}")
+
+
+# ─── SCHEDULER SETUP ──────────────────────────────────────────────────────────
+
+def setup_scheduler(application: Application):
+    """Configure APScheduler for daily tips and monthly rewards."""
+    scheduler = AsyncIOScheduler()
+
+    # Daily tips at 09:00 UTC (14:00 UZT)
+    scheduler.add_job(
+        send_daily_tips,
+        CronTrigger(hour=9, minute=0),
+        args=[application],
+        id="daily_tips",
+        replace_existing=True,
+    )
+
+    # Monthly top referrer reward (1st of each month at 00:00)
+    scheduler.add_job(
+        reward_top_referrers,
+        CronTrigger(day=1, hour=0, minute=0),
+        args=[application],
+        id="monthly_reward",
+        replace_existing=True,
+    )
+
+    scheduler.start()
+    print("⏰ Scheduler ishga tushdi (daily tips + monthly rewards)")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -123,6 +176,17 @@ def main():
     app.add_handler(CommandHandler("phish", phish_command))
     app.add_handler(CommandHandler("feedback", feedback_command))
     app.add_handler(CommandHandler("history", history_command))
+
+    # New advanced commands
+    app.add_handler(CommandHandler("expand", expand_command))
+    app.add_handler(CommandHandler("ssl", ssl_command))
+    app.add_handler(CommandHandler("redirect", redirect_command))
+    app.add_handler(CommandHandler("typo", typo_command))
+    app.add_handler(CommandHandler("scammer", scammer_command))
+    app.add_handler(CommandHandler("privacy", privacy_command))
+    app.add_handler(CommandHandler("bulk", handle_bulk_check))
+    app.add_handler(CommandHandler("tips", tips_command))
+    app.add_handler(CommandHandler("top", top_command))
 
     # ── Breach Conversation Handler ───────────────────────────────────────────
     breach_conv = ConversationHandler(
@@ -151,7 +215,6 @@ def main():
 
     # ── Secretary Mode (Business Connection) ──────────────────────────────────
     app.add_handler(BusinessConnectionHandler(handle_business_connection))
-    # TypeHandler in group=-1 so it doesn't block other handlers
     app.add_handler(TypeHandler(type=Update, callback=handle_business_message), group=-1)
 
     # ── Private Message Handlers (Documents, Photos, Text) ────────────────────
@@ -179,7 +242,10 @@ def main():
         handle_group_message,
     ))
 
-    print("🚀 Xavfsizmi? Bot muvaffaqiyatli ishga tushdi!")
+    # ── Setup Scheduler ───────────────────────────────────────────────────────
+    setup_scheduler(app)
+
+    print("🚀 Xavfsizmi? Bot barcha yangi funksiyalari bilan ishga tushdi!")
     app.run_polling(allowed_updates=[
         "message", "callback_query", "pre_checkout_query",
         "business_connection", "business_message",

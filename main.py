@@ -18,8 +18,10 @@ from telegram.ext import (
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from config import BOT_TOKEN, ADMIN_ID
-from admin import admin_command, admin_callback, broadcast_command
+from config import BOT_TOKEN, ADMIN_ID, USE_WEBHOOK, WEBHOOK_URL, WEBHOOK_PORT
+from admin import admin_command, admin_callback, broadcast_command, ratelimit_command
+from error_handler import error_handler
+from rate_tracker import send_limit_warnings
 
 from handlers import (
     # Command handlers
@@ -118,6 +120,7 @@ async def setup_menu(application: Application):
         BotCommand("broadcast", "📢 Hammaga xabar yuborish"),
         BotCommand("admin", "🔐 Admin panel"),
         BotCommand("addpromo", "🔑 Promokod yaratish"),
+        BotCommand("ratelimit", "📉 API limit dashboard"),
     ]
     try:
         await application.bot.set_my_commands(
@@ -132,7 +135,7 @@ async def setup_menu(application: Application):
 # ─── SCHEDULER SETUP ──────────────────────────────────────────────────────────
 
 def setup_scheduler(application: Application):
-    """Configure APScheduler for daily tips and monthly rewards."""
+    """Configure APScheduler for daily tips, monthly rewards, and rate limit warnings."""
     scheduler = AsyncIOScheduler()
 
     # Daily tips at 09:00 UTC (14:00 UZT)
@@ -153,8 +156,17 @@ def setup_scheduler(application: Application):
         replace_existing=True,
     )
 
+    # Rate limit warnings every 4 hours
+    scheduler.add_job(
+        send_limit_warnings,
+        CronTrigger(hour="*/4", minute=0),
+        args=[application],
+        id="rate_limit_check",
+        replace_existing=True,
+    )
+
     scheduler.start()
-    print("⏰ Scheduler ishga tushdi (daily tips + monthly rewards)")
+    print("⏰ Scheduler ishga tushdi (daily tips + monthly rewards + rate limit warnings)")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -176,6 +188,7 @@ def main():
     app.add_handler(CommandHandler("phish", phish_command))
     app.add_handler(CommandHandler("feedback", feedback_command))
     app.add_handler(CommandHandler("history", history_command))
+    app.add_handler(CommandHandler("ratelimit", ratelimit_command))
 
     # New advanced commands
     app.add_handler(CommandHandler("expand", expand_command))
@@ -245,12 +258,30 @@ def main():
     # ── Setup Scheduler ───────────────────────────────────────────────────────
     setup_scheduler(app)
 
-    print("🚀 Xavfsizmi? Bot barcha yangi funksiyalari bilan ishga tushdi!")
-    app.run_polling(allowed_updates=[
-        "message", "callback_query", "pre_checkout_query",
-        "business_connection", "business_message",
-        "edited_business_message",
-    ])
+    # ── Global Error Handler (sends crashes to admin) ─────────────────────────
+    app.add_error_handler(error_handler)
+
+    # ── Start Bot (Webhook or Polling) ────────────────────────────────────────
+    if USE_WEBHOOK and WEBHOOK_URL:
+        print(f"🌐 Webhook mode: {WEBHOOK_URL}")
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=WEBHOOK_PORT,
+            url_path="webhook",
+            webhook_url=f"{WEBHOOK_URL}/webhook",
+            allowed_updates=[
+                "message", "callback_query", "pre_checkout_query",
+                "business_connection", "business_message",
+                "edited_business_message",
+            ],
+        )
+    else:
+        print("🚀 Xavfsizmi? Bot barcha yangi funksiyalari bilan ishga tushdi!")
+        app.run_polling(allowed_updates=[
+            "message", "callback_query", "pre_checkout_query",
+            "business_connection", "business_message",
+            "edited_business_message",
+        ])
 
 
 if __name__ == "__main__":

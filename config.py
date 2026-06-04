@@ -19,6 +19,20 @@ GROQ_API_KEY         = os.getenv("GROQ_API_KEY", "")
 DAILY_FREE_LIMIT = 5
 ADMIN_ID         = int(os.getenv("ADMIN_ID", "0"))
 
+# ─── WEBHOOK SETTINGS ─────────────────────────────────────────────────────────
+WEBHOOK_URL      = os.getenv("WEBHOOK_URL", "")  # e.g. https://yourapp.railway.app
+WEBHOOK_PORT     = int(os.getenv("PORT", "8443"))
+USE_WEBHOOK      = os.getenv("USE_WEBHOOK", "false").lower() == "true"
+
+# ─── API RATE LIMITS (free tier daily caps) ───────────────────────────────────
+API_LIMITS = {
+    "virustotal": 500,
+    "google_safe_browsing": 10000,
+    "urlscan": 100,
+    "alienvault": 10000,
+    "groq": 14400,  # 30/min * 60 * 8h
+}
+
 # ─── PERSONAL PREMIUM PRICING ─────────────────────────────────────────────────
 PERSONAL_1M_STARS = 25        # 1 month — 25 Stars
 PERSONAL_3M_STARS = 65        # 3 months — 65 Stars

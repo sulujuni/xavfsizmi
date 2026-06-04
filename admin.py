@@ -92,6 +92,19 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ─── BROADCAST ───────────────────────────────────────────────────────────────
 
+async def ratelimit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Shows API rate limit dashboard to admin."""
+    if not is_admin(update.effective_user.id):
+        await update.message.reply_text("❌ Admin only.")
+        return
+
+    from rate_tracker import get_usage_dashboard
+    text = get_usage_dashboard()
+    await update.message.reply_text(text, parse_mode="Markdown")
+
+
+# ─── BROADCAST ───────────────────────────────────────────────────────────────
+
 async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 

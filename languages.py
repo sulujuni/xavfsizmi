@@ -684,3 +684,55 @@ TEXTS["en"]["add_to_group_btn"] = "➕ Add to group"
 TEXTS["uz"]["phish_copy_btn"] = "📋 Do'stga yuborish"
 TEXTS["ru"]["phish_copy_btn"] = "📋 Отправить другу"
 TEXTS["en"]["phish_copy_btn"] = "📋 Send to friend"
+
+
+
+# ─── HARDCODED MESSAGE FIXES (all translated) ─────────────────────────────────
+
+TEXTS["uz"]["phish_self_click"] = "🎣 Bu sizning shaxsiy fishing testingiz. Uni do'stlaringizga yuboring!"
+TEXTS["ru"]["phish_self_click"] = "🎣 Это ваш собственный фишинг-тест. Отправьте его друзьям!"
+TEXTS["en"]["phish_self_click"] = "🎣 This is your own phishing test. Send it to your friends!"
+
+TEXTS["uz"]["phish_victim_warning"] = (
+    "🚨 *DIQQAT! Siz fishing tuzog'iga tushdingiz!*\n\n"
+    "Bu do'stingiz yuborgan *Xavfsizmi? Bot* testi edi.\n"
+    "Real hayotda skamer parollaringizni o'g'irlashi mumkin edi!\n\n"
+    "🛡 Shubhali linkni doim @XavfsizmiBot orqali tekshiring.\n"
+    "💡 Do'stlaringizni sinang: /phish"
+)
+TEXTS["ru"]["phish_victim_warning"] = (
+    "🚨 *ВНИМАНИЕ! Вы попались на фишинг!*\n\n"
+    "Это был тест от вашего друга через *Xavfsizmi? Bot*.\n"
+    "В реальной жизни мошенник мог бы украсть ваши пароли!\n\n"
+    "🛡 Всегда проверяйте подозрительные ссылки через @XavfsizmiBot.\n"
+    "💡 Проверьте своих друзей: /phish"
+)
+TEXTS["en"]["phish_victim_warning"] = (
+    "🚨 *WARNING! You fell for a phishing trap!*\n\n"
+    "This was a security test from your friend via *Xavfsizmi? Bot*.\n"
+    "In real life, a scammer could have stolen your passwords!\n\n"
+    "🛡 Always check suspicious links via @XavfsizmiBot.\n"
+    "💡 Test your friends: /phish"
+)
+
+TEXTS["uz"]["referral_success_notify"] = "🎉 Yangi do'st taklif qildingiz! +1 bepul /breach balansi."
+TEXTS["ru"]["referral_success_notify"] = "🎉 Новый друг приглашён! +1 бесплатная проверка /breach."
+TEXTS["en"]["referral_success_notify"] = "🎉 New friend invited! +1 free /breach check."
+
+TEXTS["uz"]["phish_intro"] = "🎣 Fishing Simulyatsiya Yaratildi!\n\nPastdagi xabarni do'stingizga forward qiling yoki nusxalang.\nBossa — ogohlantirish oladi, siz xabar olasiz.\n\n🔄 Boshqa shablon: /phish"
+TEXTS["ru"]["phish_intro"] = "🎣 Фишинг-симуляция создана!\n\nПерешлите сообщение ниже другу или скопируйте.\nКогда нажмёт — получит предупреждение, а вы уведомление.\n\n🔄 Другой шаблон: /phish"
+TEXTS["en"]["phish_intro"] = "🎣 Phishing Simulation Created!\n\nForward the message below to your friend or copy it.\nIf they click — they get a warning, you get notified.\n\n🔄 Another template: /phish"
+
+TEXTS["uz"]["group_admin_only"] = "❗ Faqat guruh adminlari tilni o'zgartira oladi."
+TEXTS["ru"]["group_admin_only"] = "❗ Только администраторы группы могут менять язык."
+TEXTS["en"]["group_admin_only"] = "❗ Only group admins can change the language."
+
+TEXTS["uz"]["error_send_failed"] = "❌ Xabarni adminlarga yuborib bo'lmadi."
+TEXTS["ru"]["error_send_failed"] = "❌ Не удалось отправить сообщение администраторам."
+TEXTS["en"]["error_send_failed"] = "❌ Could not send message to admins."
+
+
+
+TEXTS["uz"]["breach_cancel"] = "❌ Bekor qilindi."
+TEXTS["ru"]["breach_cancel"] = "❌ Отменено."
+TEXTS["en"]["breach_cancel"] = "❌ Cancelled."

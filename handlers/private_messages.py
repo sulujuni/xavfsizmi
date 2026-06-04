@@ -263,7 +263,7 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Max size check (32 MB)
     if doc.file_size > 32 * 1024 * 1024:
-        await update.message.reply_text("❌ APK fayl hajmi juda katta. Maksimal limit 32 MB.")
+        await update.message.reply_text(t(lang, "too_large"))
         return
 
     status_msg = await update.message.reply_text(

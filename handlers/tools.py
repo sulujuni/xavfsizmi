@@ -373,52 +373,49 @@ async def check_social_account(username: str) -> dict:
 
 async def check_privacy_score(profile_url: str, lang: str = "uz") -> dict:
     """
-    Checks what info is publicly visible on a social media profile.
-    Returns a privacy score 0-100 and recommendations in user's language.
+    Checks basic public exposure of a social media profile.
+    Uses multiple signals: page accessibility, meta tags, visible text.
+    Avoids false positives from JavaScript/CSS code.
     """
-    # Translated findings & recommendations
     PRIVACY_TEXTS = {
         "uz": {
-            "email_found": "Email ochiq: {count} ta topildi",
-            "email_rec": "Emailingizni yashiring",
-            "phone_found": "Telefon raqam ochiq: {count} ta topildi",
-            "phone_rec": "Telefon raqamni profildan olib tashlang",
-            "location_found": "Manzil/Joylashuv ma'lumoti ko'rinadi",
-            "location_rec": "Aniq manzilingizni yashirishni o'ylab ko'ring",
-            "birthday_found": "Tug'ilgan sana ko'rinishi mumkin",
-            "birthday_rec": "Tug'ilgan sanangizni yashiring",
-            "public_profile": "Profil hammaga ochiq",
-            "no_issues": "Ochiq shaxsiy ma'lumotlar topilmadi",
-            "well_protected": "Profilingiz yaxshi himoyalangan!",
+            "profile_public": "Profil hammaga ochiq (login talab qilinmaydi)",
+            "profile_private": "Profil yopiq yoki login talab qiladi",
+            "username_visible": "Username/nom ommaviy ko'rinadi",
+            "bio_has_contacts": "Bio/tavsifda aloqa ma'lumotlari bor",
+            "bio_clean": "Bio/tavsifda shaxsiy ma'lumot ko'rinmaydi",
+            "rec_private": "Profilni yopiq (private) rejimga o'tkazing",
+            "rec_remove_contacts": "Bio'dan telefon/email ni olib tashlang",
+            "rec_good": "Profilingiz yaxshi himoyalangan!",
             "access_error": "Profilga kirish imkoni bo'lmadi",
+            "posts_public": "Postlar/kontentlar ommaviy",
+            "rec_limit_posts": "Postlar ko'rinishini faqat do'stlarga cheklang",
         },
         "ru": {
-            "email_found": "Email открыт: {count} найдено",
-            "email_rec": "Скройте ваш email",
-            "phone_found": "Телефон открыт: {count} найдено",
-            "phone_rec": "Уберите номер телефона из профиля",
-            "location_found": "Информация о местоположении видна",
-            "location_rec": "Скройте точный адрес",
-            "birthday_found": "Дата рождения может быть видна",
-            "birthday_rec": "Скройте дату рождения",
-            "public_profile": "Профиль публичный",
-            "no_issues": "Открытых личных данных не обнаружено",
-            "well_protected": "Ваш профиль хорошо защищён!",
+            "profile_public": "Профиль публичный (вход не требуется)",
+            "profile_private": "Профиль закрыт или требует входа",
+            "username_visible": "Имя пользователя публично видно",
+            "bio_has_contacts": "В био есть контактные данные",
+            "bio_clean": "В био нет личных данных",
+            "rec_private": "Переключите профиль в приватный режим",
+            "rec_remove_contacts": "Уберите телефон/email из био",
+            "rec_good": "Ваш профиль хорошо защищён!",
             "access_error": "Не удалось получить доступ к профилю",
+            "posts_public": "Публикации видны всем",
+            "rec_limit_posts": "Ограничьте видимость постов только для друзей",
         },
         "en": {
-            "email_found": "Email exposed: {count} found",
-            "email_rec": "Hide your email from public view",
-            "phone_found": "Phone numbers exposed: {count} found",
-            "phone_rec": "Remove phone number from public profile",
-            "location_found": "Location/address info may be visible",
-            "location_rec": "Consider hiding your exact location",
-            "birthday_found": "Birth date may be visible",
-            "birthday_rec": "Hide your date of birth",
-            "public_profile": "Profile is publicly accessible",
-            "no_issues": "No obvious personal data exposure detected",
-            "well_protected": "Your profile looks well-protected!",
+            "profile_public": "Profile is public (no login required)",
+            "profile_private": "Profile is private or requires login",
+            "username_visible": "Username/name is publicly visible",
+            "bio_has_contacts": "Bio contains contact information",
+            "bio_clean": "Bio has no exposed personal data",
+            "rec_private": "Switch your profile to private mode",
+            "rec_remove_contacts": "Remove phone/email from your bio",
+            "rec_good": "Your profile is well-protected!",
             "access_error": "Could not access profile",
+            "posts_public": "Posts/content are publicly visible",
+            "rec_limit_posts": "Limit post visibility to friends only",
         },
     }
 
@@ -434,54 +431,72 @@ async def check_privacy_score(profile_url: str, lang: str = "uz") -> dict:
             }
             async with session.get(
                 profile_url, headers=headers,
-                timeout=aiohttp.ClientTimeout(total=10)
+                timeout=aiohttp.ClientTimeout(total=10),
+                allow_redirects=True,
             ) as resp:
+                final_url = str(resp.url)
                 if resp.status != 200:
                     return {"score": -1, "error": pt["access_error"]}
-                text = await resp.text()
-        except Exception as e:
+                html = await resp.text()
+        except Exception:
             return {"score": -1, "error": pt["access_error"]}
 
-    # Check for exposed personal info patterns
-    emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
-    if emails:
+    # ── Check 1: Is profile publicly accessible? ──────────────────────────────
+    # If we got a 200 and the page has real content (not a login redirect)
+    login_indicators = ["login", "sign in", "log in", "accounts/login", "kirish"]
+    is_login_page = any(indicator in html.lower()[:5000] for indicator in login_indicators)
+    # Also check for redirect to login
+    is_redirected_to_login = "login" in final_url.lower() or "accounts" in final_url.lower()
+
+    if is_login_page or is_redirected_to_login:
+        # Profile is likely private
+        score -= 0  # No penalty for private
+        findings.append(pt["profile_private"])
+    else:
+        # Profile is public
         score -= 20
-        findings.append(pt["email_found"].format(count=len(emails)))
-        recommendations.append(pt["email_rec"])
+        findings.append(pt["profile_public"])
+        recommendations.append(pt["rec_private"])
 
-    phones = re.findall(r'[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}', text)
-    if phones:
+    # ── Check 2: Extract ONLY visible text content (not JavaScript/CSS) ───────
+    # Remove script and style tags
+    import re as _re
+    clean_html = _re.sub(r'<script[^>]*>.*?</script>', '', html, flags=_re.DOTALL | _re.IGNORECASE)
+    clean_html = _re.sub(r'<style[^>]*>.*?</style>', '', clean_html, flags=_re.DOTALL | _re.IGNORECASE)
+    # Remove all HTML tags to get just text
+    visible_text = _re.sub(r'<[^>]+>', ' ', clean_html)
+    # Only look at first 3000 chars of visible text (bio area)
+    visible_text = visible_text[:3000]
+
+    # ── Check 3: Contact info in visible bio text ─────────────────────────────
+    # Real email pattern (not in URLs/code)
+    emails_in_text = _re.findall(r'\b[A-Za-z0-9._%+-]+@(?:gmail|yahoo|mail|outlook|hotmail|icloud)\.[a-z]{2,}\b', visible_text)
+    # Real phone pattern (starts with + or country code, not random numbers)
+    phones_in_text = _re.findall(r'[\+]?[0-9]{1,3}[-\s]?[(]?[0-9]{2,3}[)]?[-\s]?[0-9]{3}[-\s]?[0-9]{2}[-\s]?[0-9]{2}', visible_text)
+
+    if emails_in_text or phones_in_text:
         score -= 25
-        findings.append(pt["phone_found"].format(count=len(phones)))
-        recommendations.append(pt["phone_rec"])
+        findings.append(pt["bio_has_contacts"])
+        recommendations.append(pt["rec_remove_contacts"])
+    else:
+        findings.append(pt["bio_clean"])
 
-    location_keywords = ["street", "avenue", "city", "address", "location",
-                         "район", "город", "адрес", "ko'cha", "shahar"]
-    for kw in location_keywords:
-        if kw.lower() in text.lower():
-            score -= 10
-            findings.append(pt["location_found"])
-            recommendations.append(pt["location_rec"])
-            break
+    # ── Check 4: Are posts/content visible? ───────────────────────────────────
+    # Check for content indicators (images, posts, media counts)
+    content_indicators = ["data-media-count", "edge_owner_to_timeline", "posts", "postlar", "публикации"]
+    has_public_content = any(ind in html.lower() for ind in content_indicators)
 
-    date_patterns = re.findall(r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b', text)
-    if date_patterns:
+    if has_public_content and not is_login_page:
         score -= 15
-        findings.append(pt["birthday_found"])
-        recommendations.append(pt["birthday_rec"])
+        findings.append(pt["posts_public"])
+        recommendations.append(pt["rec_limit_posts"])
 
-    if '<title>' in text:
-        score -= 5
-        findings.append(pt["public_profile"])
-
-    if not findings:
-        findings.append(pt["no_issues"])
-
+    # ── Final ─────────────────────────────────────────────────────────────────
     if not recommendations:
-        recommendations.append(pt["well_protected"])
+        recommendations.append(pt["rec_good"])
 
     return {
-        "score": max(0, score),
+        "score": max(0, min(100, score)),
         "findings": findings,
         "recommendations": recommendations,
         "url": profile_url,

@@ -14,8 +14,11 @@ _rate_limit_cache = {}
 def load_db() -> dict:
     if not os.path.exists(DB_FILE):
         return {}
-    with open(DB_FILE, "r") as f:
-        return json.load(f)
+    try:
+        with open(DB_FILE, "r") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, IOError):
+        return {}
 
 
 def save_db(data: dict):
@@ -24,6 +27,15 @@ def save_db(data: dict):
         os.makedirs(dir_name, exist_ok=True)
     with open(DB_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def ensure_user_exists(user_id: int):
+    """Make sure user is registered in the database (for accurate stats)."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+        save_db(db)
 
 
 # ─── USER CHECKS ─────────────────────────────────────────────────────────────
@@ -201,7 +213,22 @@ def add_report(user_id: int, url: str, reason: str = ""):
 def get_stats() -> dict:
     db = load_db()
     total_users = sum(1 for k in db.keys() if k.isdigit())
-    total_premium = sum(1 for k in db.keys() if k.isdigit() and is_premium(int(k)))
+    # Count premium without calling is_premium (which reloads DB each time)
+    total_premium = 0
+    for k in db.keys():
+        if not k.isdigit():
+            continue
+        user = db[k]
+        expiry = user.get("premium_until")
+        if expiry:
+            try:
+                if datetime.now() < datetime.fromisoformat(expiry):
+                    total_premium += 1
+                    continue
+            except ValueError:
+                pass
+        if user.get("premium"):
+            total_premium += 1
     total_reports = len(db.get("reports", []))
     return {"total_users": total_users, "total_premium": total_premium, "total_reports": total_reports}
 

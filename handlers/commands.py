@@ -16,7 +16,7 @@ from telegram.error import TelegramError
 from config import ADMIN_ID, DAILY_FREE_LIMIT, CHANNEL_INVITE_LINK
 from database import (
     get_user_lang, set_user_lang, get_group_lang, set_group_lang,
-    get_history, add_referral, get_referral_count,
+    get_history, add_referral, get_referral_count, ensure_user_exists,
 )
 from languages import t, gt
 from admin import is_admin
@@ -110,6 +110,9 @@ async def _set_user_menu_commands(context, user_id: int, lang: str):
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     lang = get_user_lang(user.id)
+
+    # Register user in database for accurate stats
+    ensure_user_exists(user.id)
 
     await react_to_message(update.message)
 

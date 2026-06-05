@@ -11,12 +11,11 @@ from telegram.ext import ContextTypes, ConversationHandler
 from config import ADMIN_ID
 from database import get_user_lang, add_report
 from languages import t
-from handlers.tools import check_social_account, check_privacy_score
+from handlers.tools import check_social_account
 from handlers.private_messages import require_subscription, react_to_message
 
 # Conversation states
 WAITING_SCAMMER_INPUT = 10
-WAITING_PRIVACY_INPUT = 11
 WAITING_REPORT_INPUT = 12
 WAITING_FEEDBACK_INPUT = 13
 
@@ -62,57 +61,6 @@ async def scammer_receive(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"⚠️ {t(lang, 'no_guarantee')}"
         )
     await status_msg.edit_text(text, parse_mode="Markdown")
-    return ConversationHandler.END
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# /privacy conversation
-# ═══════════════════════════════════════════════════════════════════════════════
-
-async def privacy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Step 1: Ask for profile URL."""
-    await react_to_message(update.message)
-    if not await require_subscription(update, context):
-        return ConversationHandler.END
-
-    lang = get_user_lang(update.effective_user.id)
-    await update.message.reply_text(t(lang, "privacy_ask"), parse_mode="Markdown")
-    return WAITING_PRIVACY_INPUT
-
-
-async def privacy_receive(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Step 2: Receive profile URL and analyze."""
-    user = update.effective_user
-    lang = get_user_lang(user.id)
-    profile_url = update.message.text.strip()
-
-    if not profile_url.startswith("http"):
-        profile_url = f"https://{profile_url}"
-
-    status_msg = await update.message.reply_text(t(lang, "checking"))
-    result = await check_privacy_score(profile_url, lang=lang)
-
-    if result.get("score", -1) < 0:
-        text = f"❌ {t(lang, 'privacy_error')}: {result.get('error', '')}"
-    else:
-        score = result["score"]
-        if score >= 80:
-            score_emoji = f"🟢 {score}/100"
-        elif score >= 50:
-            score_emoji = f"🟡 {score}/100"
-        else:
-            score_emoji = f"🔴 {score}/100"
-
-        findings_text = "\n".join([f"  • {f}" for f in result["findings"]])
-        recs_text = "\n".join([f"  💡 {r}" for r in result["recommendations"]])
-
-        text = (
-            f"🔏 *{t(lang, 'privacy_result_title')}:*\n\n"
-            f"🎯 *{t(lang, 'privacy_score')}:* {score_emoji}\n\n"
-            f"📋 *{t(lang, 'findings')}:*\n{findings_text}\n\n"
-            f"💡 *{t(lang, 'recommendations')}:*\n{recs_text}"
-        )
-    await status_msg.edit_text(text, parse_mode="Markdown", disable_web_page_preview=True)
     return ConversationHandler.END
 
 

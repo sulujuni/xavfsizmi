@@ -1128,3 +1128,49 @@ TEXTS["en"]["secretary_enabled"] = (
 TEXTS["uz"]["secretary_disabled"] = "🤖 Secretary Mode o'chirildi. Endi xabarlaringizni tekshirmayman."
 TEXTS["ru"]["secretary_disabled"] = "🤖 Режим Секретаря отключён. Больше не проверяю сообщения."
 TEXTS["en"]["secretary_disabled"] = "🤖 Secretary Mode disabled. No longer scanning your messages."
+
+
+
+# ─── BREACH + PASSWORD CHECK TEXTS ────────────────────────────────────────────
+
+TEXTS["uz"]["breach_ask_input"] = (
+    "🔐 *Email & Parol Tekshiruvi*\n\n"
+    "📧 Email yuboring — ma'lumotlar sizib chiqqanini tekshiraman\n"
+    "🔑 Yoki parol yuboring — leak bazalarida borligini tekshiraman\n\n"
+    "⚠️ Parolingiz xavfsiz — faqat SHA1 hashning 5 belgisi yuboriladi\n\n"
+    "👇 Email yoki parolni yuboring:"
+)
+TEXTS["ru"]["breach_ask_input"] = (
+    "🔐 *Проверка Email & Пароля*\n\n"
+    "📧 Отправьте email — проверю утечки данных\n"
+    "🔑 Или отправьте пароль — проверю в базах утечек\n\n"
+    "⚠️ Ваш пароль в безопасности — отправляются только 5 символов SHA1 хеша\n\n"
+    "👇 Отправьте email или пароль:"
+)
+TEXTS["en"]["breach_ask_input"] = (
+    "🔐 *Email & Password Check*\n\n"
+    "📧 Send an email — I'll check for data breaches\n"
+    "🔑 Or send a password — I'll check if it's been leaked\n\n"
+    "⚠️ Your password is safe — only 5 chars of SHA1 hash are sent\n\n"
+    "👇 Send email or password:"
+)
+
+TEXTS["uz"]["breach_credits_left"] = "Sizda {credits} ta bepul tekshiruv bor."
+TEXTS["ru"]["breach_credits_left"] = "У вас {credits} бесплатных проверок."
+TEXTS["en"]["breach_credits_left"] = "You have {credits} free checks left."
+
+TEXTS["uz"]["password_compromised"] = "🚨 *PAROL XAVF OSTIDA!*\n\n🔑 Bu parol ma'lumotlar sizib chiqishlarida *{count}* marta topilgan!\n\n⚠️ Bu parolni ISHLATMANG!\n💡 Yangi, kuchli parol yarating (12+ belgi, aralash harflar + raqamlar)"
+TEXTS["ru"]["password_compromised"] = "🚨 *ПАРОЛЬ СКОМПРОМЕТИРОВАН!*\n\n🔑 Этот пароль найден в утечках данных *{count}* раз!\n\n⚠️ НЕ используйте этот пароль!\n💡 Создайте новый сильный пароль (12+ символов, буквы + цифры)"
+TEXTS["en"]["password_compromised"] = "🚨 *PASSWORD COMPROMISED!*\n\n🔑 This password has been found in data breaches *{count}* times!\n\n⚠️ DO NOT use this password!\n💡 Create a new strong password (12+ chars, mixed letters + numbers)"
+
+TEXTS["uz"]["password_safe"] = "✅ *PAROL XAVFSIZ*\n\n🔑 Bu parol ma'lum sizib chiqishlarda topilmadi.\n\n💡 Baribir, uni vaqti-vaqti bilan yangilab turing!"
+TEXTS["ru"]["password_safe"] = "✅ *ПАРОЛЬ В БЕЗОПАСНОСТИ*\n\n🔑 Этот пароль не найден в известных утечках.\n\n💡 Всё равно рекомендуем периодически его менять!"
+TEXTS["en"]["password_safe"] = "✅ *PASSWORD SAFE*\n\n🔑 This password was not found in known data breaches.\n\n💡 Still, update it periodically!"
+
+TEXTS["uz"]["password_check_error"] = "⚠️ Parol tekshirish xizmati hozir ishlamayapti. Keyinroq urinib ko'ring."
+TEXTS["ru"]["password_check_error"] = "⚠️ Сервис проверки паролей сейчас недоступен. Попробуйте позже."
+TEXTS["en"]["password_check_error"] = "⚠️ Password check service is currently unavailable. Try again later."
+
+TEXTS["uz"]["more_breaches"] = "ta yana"
+TEXTS["ru"]["more_breaches"] = "ещё"
+TEXTS["en"]["more_breaches"] = "more"

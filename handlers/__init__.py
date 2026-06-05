@@ -17,15 +17,12 @@ from .commands import (
 from .conversations import (
     scammer_command,
     scammer_receive,
-    privacy_command,
-    privacy_receive,
     report_command,
     report_receive,
     feedback_command,
     feedback_receive,
     cancel_conversation,
     WAITING_SCAMMER_INPUT,
-    WAITING_PRIVACY_INPUT,
     WAITING_REPORT_INPUT,
     WAITING_FEEDBACK_INPUT,
 )
@@ -46,9 +43,9 @@ from .premium import (
 
 from .breach import (
     breach_command,
-    breach_receive_email,
+    breach_receive_input,
     breach_cancel,
-    WAITING_BREACH_EMAIL,
+    WAITING_BREACH_INPUT,
 )
 
 from .private_messages import (

@@ -36,11 +36,10 @@ from handlers import (
     phish_command,
     # Conversation commands (2-step)
     scammer_command, scammer_receive,
-    privacy_command, privacy_receive,
     report_command, report_receive,
     feedback_command, feedback_receive,
     cancel_conversation,
-    WAITING_SCAMMER_INPUT, WAITING_PRIVACY_INPUT,
+    WAITING_SCAMMER_INPUT,
     WAITING_REPORT_INPUT, WAITING_FEEDBACK_INPUT,
     # Premium & payment handlers
     premium_command,
@@ -56,9 +55,9 @@ from handlers import (
     WAITING_PAYNET_RECEIPT,
     # Breach conversation
     breach_command,
-    breach_receive_email,
+    breach_receive_input,
     breach_cancel,
-    WAITING_BREACH_EMAIL,
+    WAITING_BREACH_INPUT,
     # Private message handlers
     check_subscription_callback,
     handle_private_message,
@@ -94,9 +93,8 @@ async def setup_menu(application: Application):
         BotCommand("start", "🚀 Botni ishga tushirish"),
         BotCommand("help", "📖 Barcha buyruqlar ro'yxati"),
         BotCommand("language", "🌐 Tilni o'zgartirish"),
-        BotCommand("breach", "🔐 Email leak tekshiruvi"),
+        BotCommand("breach", "🔐 Email/Parol tekshiruvi"),
         BotCommand("scammer", "👤 Skammer tekshiruvi"),
-        BotCommand("privacy", "🔏 Maxfiylik tahlili"),
         BotCommand("phish", "🎣 Fishing simulyatori"),
         BotCommand("referral", "👥 Do'stlarni taklif qilish"),
         BotCommand("top", "🏆 Liderlar jadvali"),
@@ -181,8 +179,8 @@ def main():
     breach_conv = ConversationHandler(
         entry_points=[CommandHandler("breach", breach_command)],
         states={
-            WAITING_BREACH_EMAIL: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, breach_receive_email)
+            WAITING_BREACH_INPUT: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, breach_receive_input)
             ]
         },
         fallbacks=[CommandHandler("cancel", breach_cancel)],
@@ -210,15 +208,6 @@ def main():
         per_user=True, per_chat=True,
     )
     app.add_handler(scammer_conv)
-
-    # ── Privacy Conversation Handler ──────────────────────────────────────────
-    privacy_conv = ConversationHandler(
-        entry_points=[CommandHandler("privacy", privacy_command)],
-        states={WAITING_PRIVACY_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, privacy_receive)]},
-        fallbacks=[CommandHandler("cancel", cancel_conversation)],
-        per_user=True, per_chat=True,
-    )
-    app.add_handler(privacy_conv)
 
     # ── Report Conversation Handler ───────────────────────────────────────────
     report_conv = ConversationHandler(

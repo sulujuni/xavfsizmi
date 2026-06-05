@@ -35,8 +35,13 @@ from .premium import (
     add_promo_command,
     promo_command,
     payment_gateway_callback,
+    admin_payment_callback,
     pre_checkout,
     payment_success,
+    paynet_receipt_command,
+    paynet_receipt_receive,
+    paynet_receipt_cancel,
+    WAITING_PAYNET_RECEIPT,
 )
 
 from .breach import (

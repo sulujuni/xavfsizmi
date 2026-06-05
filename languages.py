@@ -1083,3 +1083,48 @@ TEXTS["en"]["paynet_receipt_sent"] = "✅ Receipt sent to admin! Premium will be
 TEXTS["uz"]["paynet_rejected"] = "❌ *To'lov rad etildi.*\n\nSizning Paynet to'lovingiz tasdiqlanmadi. Sabablari:\n• Noto'g'ri summa to'langan\n• Kvitansiya raqami noto'g'ri\n\nQayta urinib ko'ring yoki ⭐ Stars orqali to'lang."
 TEXTS["ru"]["paynet_rejected"] = "❌ *Платёж отклонён.*\n\nВаш платёж через Paynet не подтверждён. Причины:\n• Неверная сумма\n• Неверный номер квитанции\n\nПопробуйте снова или оплатите ⭐ Stars."
 TEXTS["en"]["paynet_rejected"] = "❌ *Payment rejected.*\n\nYour Paynet payment was not confirmed. Reasons:\n• Wrong amount paid\n• Invalid receipt number\n\nTry again or pay via ⭐ Stars."
+
+
+
+# ─── SECRETARY MODE TEXTS ─────────────────────────────────────────────────────
+
+TEXTS["uz"]["secretary_enabled"] = (
+    "🤖 *Secretary Mode faollashtirildi!*\n\n"
+    "Endi shaxsiy chatlaringizga kelgan xabarlarni avtomatik tekshiraman:\n"
+    "• 🔗 Havolalar — fishing/virus\n"
+    "• 📱 APK fayllar — zararli kod\n"
+    "• 📸 QR kodlar — ichidagi URL\n"
+    "• 📝 Matn — skam belgilari\n\n"
+    "✅ Xavfsiz → jim turaman\n"
+    "🚨 Xavfli → darhol ogohlantiraman\n"
+    "📱 APK → doim natija ko'rsataman\n\n"
+    "❌ O'chirish: Settings → Business → Chatbots → Olib tashlash"
+)
+TEXTS["ru"]["secretary_enabled"] = (
+    "🤖 *Режим Секретаря активирован!*\n\n"
+    "Теперь я автоматически проверяю сообщения в ваших личных чатах:\n"
+    "• 🔗 Ссылки — фишинг/вирусы\n"
+    "• 📱 APK файлы — вредоносный код\n"
+    "• 📸 QR-коды — URL внутри\n"
+    "• 📝 Текст — признаки мошенничества\n\n"
+    "✅ Безопасно → молчу\n"
+    "🚨 Опасно → сразу предупрежу\n"
+    "📱 APK → всегда показываю результат\n\n"
+    "❌ Отключить: Settings → Business → Chatbots → Удалить"
+)
+TEXTS["en"]["secretary_enabled"] = (
+    "🤖 *Secretary Mode activated!*\n\n"
+    "I will now auto-scan messages in your personal chats:\n"
+    "• 🔗 Links — phishing/malware\n"
+    "• 📱 APK files — malicious code\n"
+    "• 📸 QR codes — URL inside\n"
+    "• 📝 Text — scam patterns\n\n"
+    "✅ Safe → I stay silent\n"
+    "🚨 Dangerous → I alert immediately\n"
+    "📱 APK → I always show results\n\n"
+    "❌ Disable: Settings → Business → Chatbots → Remove"
+)
+
+TEXTS["uz"]["secretary_disabled"] = "🤖 Secretary Mode o'chirildi. Endi xabarlaringizni tekshirmayman."
+TEXTS["ru"]["secretary_disabled"] = "🤖 Режим Секретаря отключён. Больше не проверяю сообщения."
+TEXTS["en"]["secretary_disabled"] = "🤖 Secretary Mode disabled. No longer scanning your messages."

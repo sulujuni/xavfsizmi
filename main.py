@@ -157,27 +157,29 @@ def setup_scheduler(application: Application):
 def main():
     app = Application.builder().token(BOT_TOKEN).post_init(setup_menu).build()
 
-    # ── Command Handlers ──────────────────────────────────────────────────────
+    # ── Command Handlers (work everywhere) ───────────────────────────────────
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("language", language_command))
-    app.add_handler(CommandHandler("promo", promo_command))
-    app.add_handler(CommandHandler("addpromo", add_promo_command))
-    app.add_handler(CommandHandler("report", report_command))
-    app.add_handler(CommandHandler("stats", stats_command))
-    app.add_handler(CommandHandler("referral", referral_command))
     app.add_handler(CommandHandler("premium", premium_command))
-    app.add_handler(CommandHandler("admin", admin_command))
-    app.add_handler(CommandHandler("broadcast", broadcast_command))
-    app.add_handler(CommandHandler("phish", phish_command))
-    app.add_handler(CommandHandler("history", history_command))
-    app.add_handler(CommandHandler("ratelimit", ratelimit_command))
-    app.add_handler(CommandHandler("tips", tips_command))
-    app.add_handler(CommandHandler("top", top_command))
 
-    # ── Breach Conversation Handler ───────────────────────────────────────────
+    # ── Command Handlers (private chat only) ──────────────────────────────────
+    app.add_handler(CommandHandler("promo", promo_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("addpromo", add_promo_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("report", report_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("stats", stats_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("referral", referral_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("admin", admin_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("broadcast", broadcast_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("phish", phish_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("history", history_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("ratelimit", ratelimit_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("tips", tips_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("top", top_command, filters=filters.ChatType.PRIVATE))
+
+    # ── Breach Conversation Handler (private only) ──────────────────────────────
     breach_conv = ConversationHandler(
-        entry_points=[CommandHandler("breach", breach_command)],
+        entry_points=[CommandHandler("breach", breach_command, filters=filters.ChatType.PRIVATE)],
         states={
             WAITING_BREACH_INPUT: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, breach_receive_input)
@@ -188,9 +190,9 @@ def main():
     )
     app.add_handler(breach_conv)
 
-    # ── Paynet Receipt Conversation Handler ───────────────────────────────────
+    # ── Paynet Receipt Conversation Handler (private only) ────────────────────
     receipt_conv = ConversationHandler(
-        entry_points=[CommandHandler("receipt", paynet_receipt_command)],
+        entry_points=[CommandHandler("receipt", paynet_receipt_command, filters=filters.ChatType.PRIVATE)],
         states={WAITING_PAYNET_RECEIPT: [
             MessageHandler(filters.TEXT & ~filters.COMMAND, paynet_receipt_receive),
             MessageHandler(filters.PHOTO, paynet_receipt_receive),
@@ -200,27 +202,27 @@ def main():
     )
     app.add_handler(receipt_conv)
 
-    # ── Scammer Conversation Handler ──────────────────────────────────────────
+    # ── Scammer Conversation Handler (private only) ───────────────────────────
     scammer_conv = ConversationHandler(
-        entry_points=[CommandHandler("scammer", scammer_command)],
+        entry_points=[CommandHandler("scammer", scammer_command, filters=filters.ChatType.PRIVATE)],
         states={WAITING_SCAMMER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, scammer_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
     app.add_handler(scammer_conv)
 
-    # ── Report Conversation Handler ───────────────────────────────────────────
+    # ── Report Conversation Handler (private only) ──────────────────────────────
     report_conv = ConversationHandler(
-        entry_points=[CommandHandler("report", report_command)],
+        entry_points=[CommandHandler("report", report_command, filters=filters.ChatType.PRIVATE)],
         states={WAITING_REPORT_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, report_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
     app.add_handler(report_conv)
 
-    # ── Feedback Conversation Handler ─────────────────────────────────────────
+    # ── Feedback Conversation Handler (private only) ──────────────────────────
     feedback_conv = ConversationHandler(
-        entry_points=[CommandHandler("feedback", feedback_command)],
+        entry_points=[CommandHandler("feedback", feedback_command, filters=filters.ChatType.PRIVATE)],
         states={WAITING_FEEDBACK_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, feedback_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,

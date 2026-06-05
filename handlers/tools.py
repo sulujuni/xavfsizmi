@@ -371,11 +371,58 @@ async def check_social_account(username: str) -> dict:
 
 # ─── PRIVACY SCORE ANALYZER ──────────────────────────────────────────────────
 
-async def check_privacy_score(profile_url: str) -> dict:
+async def check_privacy_score(profile_url: str, lang: str = "uz") -> dict:
     """
     Checks what info is publicly visible on a social media profile.
-    Returns a privacy score 0-100 and recommendations.
+    Returns a privacy score 0-100 and recommendations in user's language.
     """
+    # Translated findings & recommendations
+    PRIVACY_TEXTS = {
+        "uz": {
+            "email_found": "Email ochiq: {count} ta topildi",
+            "email_rec": "Emailingizni yashiring",
+            "phone_found": "Telefon raqam ochiq: {count} ta topildi",
+            "phone_rec": "Telefon raqamni profildan olib tashlang",
+            "location_found": "Manzil/Joylashuv ma'lumoti ko'rinadi",
+            "location_rec": "Aniq manzilingizni yashirishni o'ylab ko'ring",
+            "birthday_found": "Tug'ilgan sana ko'rinishi mumkin",
+            "birthday_rec": "Tug'ilgan sanangizni yashiring",
+            "public_profile": "Profil hammaga ochiq",
+            "no_issues": "Ochiq shaxsiy ma'lumotlar topilmadi",
+            "well_protected": "Profilingiz yaxshi himoyalangan!",
+            "access_error": "Profilga kirish imkoni bo'lmadi",
+        },
+        "ru": {
+            "email_found": "Email открыт: {count} найдено",
+            "email_rec": "Скройте ваш email",
+            "phone_found": "Телефон открыт: {count} найдено",
+            "phone_rec": "Уберите номер телефона из профиля",
+            "location_found": "Информация о местоположении видна",
+            "location_rec": "Скройте точный адрес",
+            "birthday_found": "Дата рождения может быть видна",
+            "birthday_rec": "Скройте дату рождения",
+            "public_profile": "Профиль публичный",
+            "no_issues": "Открытых личных данных не обнаружено",
+            "well_protected": "Ваш профиль хорошо защищён!",
+            "access_error": "Не удалось получить доступ к профилю",
+        },
+        "en": {
+            "email_found": "Email exposed: {count} found",
+            "email_rec": "Hide your email from public view",
+            "phone_found": "Phone numbers exposed: {count} found",
+            "phone_rec": "Remove phone number from public profile",
+            "location_found": "Location/address info may be visible",
+            "location_rec": "Consider hiding your exact location",
+            "birthday_found": "Birth date may be visible",
+            "birthday_rec": "Hide your date of birth",
+            "public_profile": "Profile is publicly accessible",
+            "no_issues": "No obvious personal data exposure detected",
+            "well_protected": "Your profile looks well-protected!",
+            "access_error": "Could not access profile",
+        },
+    }
+
+    pt = PRIVACY_TEXTS.get(lang, PRIVACY_TEXTS["en"])
     score = 100
     findings = []
     recommendations = []
@@ -390,53 +437,48 @@ async def check_privacy_score(profile_url: str) -> dict:
                 timeout=aiohttp.ClientTimeout(total=10)
             ) as resp:
                 if resp.status != 200:
-                    return {"score": -1, "error": "Could not access profile"}
+                    return {"score": -1, "error": pt["access_error"]}
                 text = await resp.text()
         except Exception as e:
-            return {"score": -1, "error": str(e)}
+            return {"score": -1, "error": pt["access_error"]}
 
     # Check for exposed personal info patterns
-    # Email patterns
     emails = re.findall(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text)
     if emails:
         score -= 20
-        findings.append(f"Email exposed: {len(emails)} found")
-        recommendations.append("Hide your email from public view")
+        findings.append(pt["email_found"].format(count=len(emails)))
+        recommendations.append(pt["email_rec"])
 
-    # Phone patterns
     phones = re.findall(r'[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}', text)
     if phones:
         score -= 25
-        findings.append(f"Phone numbers exposed: {len(phones)} found")
-        recommendations.append("Remove phone number from public profile")
+        findings.append(pt["phone_found"].format(count=len(phones)))
+        recommendations.append(pt["phone_rec"])
 
-    # Location/address patterns
     location_keywords = ["street", "avenue", "city", "address", "location",
                          "район", "город", "адрес", "ko'cha", "shahar"]
     for kw in location_keywords:
         if kw.lower() in text.lower():
             score -= 10
-            findings.append("Location/address info may be visible")
-            recommendations.append("Consider hiding your exact location")
+            findings.append(pt["location_found"])
+            recommendations.append(pt["location_rec"])
             break
 
-    # Birth date patterns
     date_patterns = re.findall(r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b', text)
     if date_patterns:
         score -= 15
-        findings.append("Birth date may be visible")
-        recommendations.append("Hide your date of birth")
+        findings.append(pt["birthday_found"])
+        recommendations.append(pt["birthday_rec"])
 
-    # Full name in title/meta
     if '<title>' in text:
-        score -= 5  # Profile is public
-        findings.append("Profile is publicly accessible")
+        score -= 5
+        findings.append(pt["public_profile"])
 
     if not findings:
-        findings.append("No obvious personal data exposure detected")
+        findings.append(pt["no_issues"])
 
     if not recommendations:
-        recommendations.append("Your profile looks well-protected!")
+        recommendations.append(pt["well_protected"])
 
     return {
         "score": max(0, score),

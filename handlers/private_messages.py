@@ -135,6 +135,8 @@ async def check_subscription_callback(update: Update, context: ContextTypes.DEFA
 # ─── Private text/URL handler (with Trust Score + Typosquatting) ──────────────
 
 async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
     user = update.effective_user
     lang = get_user_lang(user.id)
     text = update.message.text or ""
@@ -235,6 +237,8 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 # ─── APK file handler (private) ──────────────────────────────────────────────
 
 async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
     user_id = update.effective_user.id
     lang = get_user_lang(user_id)
     doc = update.message.document
@@ -314,6 +318,8 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ─── Photo/QR handler (private) ──────────────────────────────────────────────
 
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.message:
+        return
     user_id = update.effective_user.id
     lang = get_user_lang(user_id)
 

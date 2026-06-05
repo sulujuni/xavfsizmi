@@ -90,7 +90,7 @@ async def privacy_receive(update: Update, context: ContextTypes.DEFAULT_TYPE):
         profile_url = f"https://{profile_url}"
 
     status_msg = await update.message.reply_text(t(lang, "checking"))
-    result = await check_privacy_score(profile_url)
+    result = await check_privacy_score(profile_url, lang=lang)
 
     if result.get("score", -1) < 0:
         text = f"❌ {t(lang, 'privacy_error')}: {result.get('error', '')}"

@@ -58,10 +58,21 @@ async def breach_receive_input(update: Update, context: ContextTypes.DEFAULT_TYP
     user_input = update.message.text.strip()
 
     has_premium = is_premium(user.id)
-    status_msg = await update.message.reply_text(t(lang, "breach_checking"))
 
     # Detect if it's an email or a password
     is_email = "@" in user_input and "." in user_input.split("@")[-1]
+
+    # If it's a password, delete the user's message immediately for safety
+    if not is_email:
+        try:
+            await update.message.delete()
+        except Exception:
+            pass
+
+    status_msg = await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=t(lang, "breach_checking"),
+    )
 
     try:
         if is_email:

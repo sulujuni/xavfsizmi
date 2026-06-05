@@ -1017,3 +1017,69 @@ TEXTS["en"]["premium_info"] = (
     "💳 Paynet — scan QR code to pay\n\n"
     "👇 *Choose:*"
 )
+
+
+
+# ─── PAYNET PAYMENT FLOW TEXTS ────────────────────────────────────────────────
+
+TEXTS["uz"]["open_paynet"] = "Paynet QR ni ochish"
+TEXTS["ru"]["open_paynet"] = "Открыть Paynet QR"
+TEXTS["en"]["open_paynet"] = "Open Paynet QR"
+
+TEXTS["uz"]["paynet_instructions"] = (
+    "💳 *Paynet orqali to'lov*\n\n"
+    "📋 *Reja:* {duration} — {price}\n\n"
+    "📌 *Qadamlar:*\n"
+    "1️⃣ Pastdagi tugmani bosing va QR kodni skanerlang\n"
+    "2️⃣ *Aynan* `{price}` so'm to'lang\n"
+    "3️⃣ To'lovdan so'ng /receipt buyrug'ini bosing\n"
+    "4️⃣ Kvitansiya raqamini yuboring\n\n"
+    "⚡ *Tavsiya:* Telegram Stars orqali to'lov tezroq va avtomatik!\n\n"
+    "⚠️ *MUHIM OGOHLANTIRISHLAR:*\n"
+    "• Noto'g'ri summa to'langan hollarda pul QAYTARILMAYDI\n"
+    "• Kam summa to'lasangiz Premium BERILMAYDI\n"
+    "• Faqat ko'rsatilgan summani to'lang: `{price}` so'm\n"
+    "• Kvitansiya raqamisiz murojaat qabul qilinmaydi"
+)
+TEXTS["ru"]["paynet_instructions"] = (
+    "💳 *Оплата через Paynet*\n\n"
+    "📋 *План:* {duration} — {price}\n\n"
+    "📌 *Шаги:*\n"
+    "1️⃣ Нажмите кнопку ниже и отсканируйте QR-код\n"
+    "2️⃣ Оплатите *ровно* `{price}` сум\n"
+    "3️⃣ После оплаты нажмите /receipt\n"
+    "4️⃣ Отправьте номер квитанции\n\n"
+    "⚡ *Рекомендация:* Telegram Stars — быстрее и автоматически!\n\n"
+    "⚠️ *ВАЖНЫЕ ПРЕДУПРЕЖДЕНИЯ:*\n"
+    "• При неправильной сумме деньги НЕ ВОЗВРАЩАЮТСЯ\n"
+    "• При недоплате Premium НЕ АКТИВИРУЕТСЯ\n"
+    "• Оплатите ровно указанную сумму: `{price}` сум\n"
+    "• Без номера квитанции обращения не принимаются"
+)
+TEXTS["en"]["paynet_instructions"] = (
+    "💳 *Payment via Paynet*\n\n"
+    "📋 *Plan:* {duration} — {price}\n\n"
+    "📌 *Steps:*\n"
+    "1️⃣ Tap the button below and scan the QR code\n"
+    "2️⃣ Pay *exactly* `{price}` UZS\n"
+    "3️⃣ After payment, tap /receipt\n"
+    "4️⃣ Send the receipt/transaction number\n\n"
+    "⚡ *Tip:* Telegram Stars is faster and automatic!\n\n"
+    "⚠️ *IMPORTANT DISCLAIMERS:*\n"
+    "• Wrong amounts are NON-REFUNDABLE\n"
+    "• Underpayment will NOT activate Premium\n"
+    "• Pay exactly the stated amount: `{price}` UZS\n"
+    "• No receipt number = no support"
+)
+
+TEXTS["uz"]["paynet_send_receipt"] = "🧾 *Kvitansiya Yuborish*\n\nPaynet to'lov kvitansiya raqamini yuboring yoki skrinshot yuboring:"
+TEXTS["ru"]["paynet_send_receipt"] = "🧾 *Отправить Квитанцию*\n\nОтправьте номер квитанции Paynet или скриншот:"
+TEXTS["en"]["paynet_send_receipt"] = "🧾 *Send Receipt*\n\nSend your Paynet receipt/transaction number or screenshot:"
+
+TEXTS["uz"]["paynet_receipt_sent"] = "✅ Kvitansiya adminga yuborildi! Tekshirilgandan so'ng Premium faollashtiriladi.\n\n⏳ Odatda 1-24 soat ichida tasdiqlanadi."
+TEXTS["ru"]["paynet_receipt_sent"] = "✅ Квитанция отправлена админу! После проверки Premium будет активирован.\n\n⏳ Обычно подтверждение занимает 1-24 часа."
+TEXTS["en"]["paynet_receipt_sent"] = "✅ Receipt sent to admin! Premium will be activated after verification.\n\n⏳ Usually confirmed within 1-24 hours."
+
+TEXTS["uz"]["paynet_rejected"] = "❌ *To'lov rad etildi.*\n\nSizning Paynet to'lovingiz tasdiqlanmadi. Sabablari:\n• Noto'g'ri summa to'langan\n• Kvitansiya raqami noto'g'ri\n\nQayta urinib ko'ring yoki ⭐ Stars orqali to'lang."
+TEXTS["ru"]["paynet_rejected"] = "❌ *Платёж отклонён.*\n\nВаш платёж через Paynet не подтверждён. Причины:\n• Неверная сумма\n• Неверный номер квитанции\n\nПопробуйте снова или оплатите ⭐ Stars."
+TEXTS["en"]["paynet_rejected"] = "❌ *Payment rejected.*\n\nYour Paynet payment was not confirmed. Reasons:\n• Wrong amount paid\n• Invalid receipt number\n\nTry again or pay via ⭐ Stars."

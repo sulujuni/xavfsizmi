@@ -47,8 +47,13 @@ from handlers import (
     add_promo_command,
     promo_command,
     payment_gateway_callback,
+    admin_payment_callback,
     pre_checkout,
     payment_success,
+    paynet_receipt_command,
+    paynet_receipt_receive,
+    paynet_receipt_cancel,
+    WAITING_PAYNET_RECEIPT,
     # Breach conversation
     breach_command,
     breach_receive_email,
@@ -185,6 +190,18 @@ def main():
     )
     app.add_handler(breach_conv)
 
+    # ── Paynet Receipt Conversation Handler ───────────────────────────────────
+    receipt_conv = ConversationHandler(
+        entry_points=[CommandHandler("receipt", paynet_receipt_command)],
+        states={WAITING_PAYNET_RECEIPT: [
+            MessageHandler(filters.TEXT & ~filters.COMMAND, paynet_receipt_receive),
+            MessageHandler(filters.PHOTO, paynet_receipt_receive),
+        ]},
+        fallbacks=[CommandHandler("cancel", paynet_receipt_cancel)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(receipt_conv)
+
     # ── Scammer Conversation Handler ──────────────────────────────────────────
     scammer_conv = ConversationHandler(
         entry_points=[CommandHandler("scammer", scammer_command)],
@@ -223,10 +240,11 @@ def main():
 
     # ── Callback Query Handlers ───────────────────────────────────────────────
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_"))
+    app.add_handler(CallbackQueryHandler(admin_payment_callback, pattern="^(approve_|reject_)"))
     app.add_handler(CallbackQueryHandler(language_callback, pattern="^lang_"))
     app.add_handler(CallbackQueryHandler(group_language_callback, pattern="^glang_"))
     app.add_handler(CallbackQueryHandler(check_subscription_callback, pattern="^check_subscription$"))
-    app.add_handler(CallbackQueryHandler(payment_gateway_callback, pattern="^pay_"))
+    app.add_handler(CallbackQueryHandler(payment_gateway_callback, pattern="^pay_|^paynet_"))
 
     # ── Payment Handlers ──────────────────────────────────────────────────────
     app.add_handler(PreCheckoutQueryHandler(pre_checkout))

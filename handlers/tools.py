@@ -95,45 +95,29 @@ def trust_score_emoji(score: int, lang: str = "uz") -> str:
 
 async def get_website_screenshot(url: str) -> str:
     """
-    Submits URL to urlscan.io and returns the screenshot URL.
-    Returns empty string if fails.
+    Gets a website screenshot using free screenshot APIs.
+    Returns the screenshot URL or empty string if fails.
     """
-    if not URLSCAN_API_KEY:
-        return ""
+    if not url.startswith("http"):
+        url = f"https://{url}"
 
-    headers = {"API-Key": URLSCAN_API_KEY, "Content-Type": "application/json"}
-    payload = {"url": url, "visibility": "public"}
-
-    async with aiohttp.ClientSession() as session:
-        try:
-            # Submit scan
-            async with session.post(
-                "https://urlscan.io/api/v1/scan/",
-                headers=headers, json=payload, timeout=aiohttp.ClientTimeout(total=10)
-            ) as resp:
-                if resp.status != 200:
-                    return ""
-                data = await resp.json()
-                scan_uuid = data.get("uuid", "")
-
-            if not scan_uuid:
-                return ""
-
-            # Wait for scan to complete (max 30s)
-            await asyncio.sleep(15)
-
-            # Get result
+    # Try microlink.io (free, fast, no key needed)
+    try:
+        async with aiohttp.ClientSession() as session:
             async with session.get(
-                f"https://urlscan.io/api/v1/result/{scan_uuid}/",
-                timeout=aiohttp.ClientTimeout(total=10)
+                f"https://api.microlink.io/?url={url}&screenshot=true&meta=false&embed=screenshot.url",
+                timeout=aiohttp.ClientTimeout(total=12),
             ) as resp:
                 if resp.status == 200:
-                    result = await resp.json()
-                    return result.get("task", {}).get("screenshotURL", "")
-        except Exception as e:
-            logging.error(f"Screenshot error: {e}")
+                    data = await resp.json()
+                    screenshot = data.get("data", {}).get("screenshot", {}).get("url", "")
+                    if screenshot:
+                        return screenshot
+    except Exception:
+        pass
 
-    return ""
+    # Fallback: thum.io (direct image URL, always works)
+    return f"https://image.thum.io/get/{url}"
 
 
 # ─── SHORT URL EXPANDER ───────────────────────────────────────────────────────

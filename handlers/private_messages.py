@@ -37,6 +37,8 @@ from handlers.tools import (
     calculate_trust_score, trust_score_emoji,
     get_website_screenshot, check_typosquatting,
     is_short_url, expand_short_url,
+    check_security_headers, format_security_headers,
+    detect_technologies, format_technologies,
 )
 from apk_checker import scan_apk
 from qr_checker import extract_qr_url
@@ -217,6 +219,20 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             report += f"📅 *{t(lang, 'domain_age_label')}:* `{age} {t(lang, 'days')}` ({domain_res.get('created', 'N/A')})\n"
             if age < 30:
                 report += f"⚠️ *{t(lang, 'new_domain_warning')}*\n"
+
+        # Security headers check
+        try:
+            headers_result = await check_security_headers(url)
+            report += format_security_headers(headers_result, lang)
+        except Exception:
+            pass
+
+        # Technology detection
+        try:
+            techs = await detect_technologies(url)
+            report += format_technologies(techs, lang)
+        except Exception:
+            pass
 
         # Try to get screenshot (non-blocking, don't wait too long)
         try:

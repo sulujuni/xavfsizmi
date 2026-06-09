@@ -234,10 +234,10 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
 
-        # Try to get screenshot (non-blocking, don't wait too long)
+        # Try to get screenshot
         try:
             screenshot_url = await asyncio.wait_for(
-                get_website_screenshot(url), timeout=5
+                get_website_screenshot(url), timeout=15
             )
             if screenshot_url:
                 report += f"\n📸 [{t(lang, 'screenshot_link')}]({screenshot_url})"

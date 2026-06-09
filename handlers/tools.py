@@ -501,3 +501,159 @@ async def check_privacy_score(profile_url: str, lang: str = "uz") -> dict:
         "recommendations": recommendations,
         "url": profile_url,
     }
+
+
+
+# ─── SECURITY HEADERS CHECK ───────────────────────────────────────────────────
+
+IMPORTANT_HEADERS = {
+    "strict-transport-security": "HSTS",
+    "content-security-policy": "CSP",
+    "x-frame-options": "X-Frame-Options",
+    "x-content-type-options": "X-Content-Type",
+    "x-xss-protection": "XSS Protection",
+    "referrer-policy": "Referrer-Policy",
+    "permissions-policy": "Permissions-Policy",
+}
+
+
+async def check_security_headers(url: str) -> dict:
+    """
+    Checks website security headers.
+    Returns a dict with score, present headers, missing headers.
+    """
+    if not url.startswith("http"):
+        url = f"https://{url}"
+
+    result = {
+        "success": False,
+        "https": False,
+        "headers_present": [],
+        "headers_missing": [],
+        "score": 0,
+    }
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
+            resp = await client.get(url)
+            response_headers = {k.lower(): v for k, v in resp.headers.items()}
+
+            # Check HTTPS
+            result["https"] = str(resp.url).startswith("https")
+            score = 30 if result["https"] else 0
+
+            # Check important security headers
+            for header_key, header_name in IMPORTANT_HEADERS.items():
+                if header_key in response_headers:
+                    result["headers_present"].append(header_name)
+                    score += 10
+                else:
+                    result["headers_missing"].append(header_name)
+
+            result["score"] = min(100, score)
+            result["success"] = True
+
+    except Exception as e:
+        result["error"] = str(e)
+
+    return result
+
+
+def format_security_headers(headers_result: dict, lang: str = "uz") -> str:
+    """Formats the security headers result for the URL report."""
+    if not headers_result.get("success"):
+        return ""
+
+    labels = {
+        "uz": "Xavfsizlik Headerlari",
+        "ru": "Заголовки Безопасности",
+        "en": "Security Headers",
+    }
+    title = labels.get(lang, labels["en"])
+
+    total = len(IMPORTANT_HEADERS) + 1  # +1 for HTTPS
+    present = len(headers_result["headers_present"]) + (1 if headers_result["https"] else 0)
+    text = f"\n🔒 *{title}:* `{present}/{total}`\n"
+
+    # HTTPS
+    if headers_result["https"]:
+        text += f"  ✅ HTTPS\n"
+    else:
+        text += f"  ❌ HTTPS\n"
+
+    # Missing headers
+    for h in headers_result["headers_missing"][:4]:
+        text += f"  ❌ {h}\n"
+
+    # Present headers (first 2)
+    for h in headers_result["headers_present"][:2]:
+        text += f"  ✅ {h}\n"
+
+    if len(headers_result["headers_present"]) > 2:
+        text += f"  ✅ +{len(headers_result['headers_present']) - 2}\n"
+
+    return text
+
+
+# ─── TECHNOLOGY DETECTION ─────────────────────────────────────────────────────
+
+TECH_SIGNATURES = {
+    "wp-content": "WordPress", "wp-includes": "WordPress",
+    "Joomla": "Joomla", "drupal": "Drupal",
+    "wix.com": "Wix", "squarespace": "Squarespace", "shopify": "Shopify",
+    "next/static": "Next.js", "__next": "Next.js", "nuxt": "Nuxt.js",
+    "react": "React", "angular": "Angular", "vue": "Vue.js",
+    "cloudflare": "Cloudflare",
+    "google-analytics": "Google Analytics", "gtag": "Google Analytics",
+    "facebook.net/en_US/fbevents": "Facebook Pixel",
+    "mc.yandex.ru/metrika": "Yandex Metrika",
+}
+
+
+async def detect_technologies(url: str) -> list:
+    """Detects technologies used by a website."""
+    if not url.startswith("http"):
+        url = f"https://{url}"
+
+    detected = set()
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
+            resp = await client.get(url)
+            html = resp.text.lower()
+
+            for signature, tech_name in TECH_SIGNATURES.items():
+                if signature.lower() in html:
+                    detected.add(tech_name)
+
+            server = resp.headers.get("server", "").lower()
+            if "nginx" in server:
+                detected.add("Nginx")
+            elif "apache" in server:
+                detected.add("Apache")
+            elif "cloudflare" in server:
+                detected.add("Cloudflare")
+
+            powered_by = resp.headers.get("x-powered-by", "").lower()
+            if "php" in powered_by:
+                detected.add("PHP")
+            elif "express" in powered_by:
+                detected.add("Express.js")
+            elif "asp.net" in powered_by:
+                detected.add("ASP.NET")
+
+    except Exception:
+        pass
+
+    return list(detected)[:6]
+
+
+def format_technologies(techs: list, lang: str = "uz") -> str:
+    """Formats detected technologies for the URL report."""
+    if not techs:
+        return ""
+
+    labels = {"uz": "Texnologiyalar", "ru": "Технологии", "en": "Technologies"}
+    title = labels.get(lang, labels["en"])
+    tech_str = ", ".join([f"`{t}`" for t in techs])
+    return f"🛠 *{title}:* {tech_str}\n"

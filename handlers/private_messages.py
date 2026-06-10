@@ -234,13 +234,17 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
 
-        # Try to get screenshot
+        # Send screenshot as actual photo (separate message after report)
         try:
             screenshot_url = await asyncio.wait_for(
                 get_website_screenshot(url), timeout=15
             )
             if screenshot_url:
-                report += f"\n📸 [{t(lang, 'screenshot_link')}]({screenshot_url})"
+                await context.bot.send_photo(
+                    chat_id=update.effective_chat.id,
+                    photo=screenshot_url,
+                    caption=f"📸 {t(lang, 'screenshot_link')}: {url}",
+                )
         except (asyncio.TimeoutError, Exception):
             pass
 

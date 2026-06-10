@@ -237,15 +237,18 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         # Send the text report first
         await status_msg.edit_text(text=report, parse_mode="Markdown", disable_web_page_preview=True)
 
-        # Then send screenshot as photo (separate message after report)
+        # Send screenshot as actual photo
         try:
-            screenshot_url = await get_website_screenshot(url)
-            if screenshot_url:
-                await context.bot.send_photo(
-                    chat_id=update.effective_chat.id,
-                    photo=screenshot_url,
-                    caption=f"📸 {t(lang, 'screenshot_link')}",
-                )
+            screenshot_path = await get_website_screenshot(url)
+            if screenshot_path:
+                import os
+                with open(screenshot_path, "rb") as photo_file:
+                    await context.bot.send_photo(
+                        chat_id=update.effective_chat.id,
+                        photo=photo_file,
+                        caption=f"📸 {t(lang, 'screenshot_link')}",
+                    )
+                os.unlink(screenshot_path)  # Clean up temp file
         except Exception as e:
             logging.debug(f"Screenshot failed: {e}")
     except Exception as e:

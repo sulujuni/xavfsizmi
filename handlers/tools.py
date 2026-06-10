@@ -95,14 +95,44 @@ def trust_score_emoji(score: int, lang: str = "uz") -> str:
 
 async def get_website_screenshot(url: str) -> str:
     """
-    Gets a website screenshot URL that Telegram can send as a photo.
-    Uses thum.io (always works, instant, free, no key).
+    Gets a website screenshot by downloading it first, then returning the bytes path.
+    Uses pikwy.com free screenshot API.
+    Returns URL string or empty string if fails.
     """
     if not url.startswith("http"):
         url = f"https://{url}"
 
-    # thum.io returns a direct image URL — Telegram can send it as photo
-    return f"https://image.thum.io/get/width/1280/{url}"
+    from urllib.parse import quote
+    encoded = quote(url, safe="")
+
+    # Use multiple free screenshot services, try until one works
+    services = [
+        f"https://api.pikwy.com/web/screenshot?url={encoded}&w=1280&h=800&format=png",
+        f"https://shot.screenshotapi.net/screenshot?url={encoded}&output=image&file_type=png&wait_for_event=load",
+    ]
+
+    async with aiohttp.ClientSession() as session:
+        for service_url in services:
+            try:
+                async with session.get(
+                    service_url,
+                    timeout=aiohttp.ClientTimeout(total=15),
+                ) as resp:
+                    if resp.status == 200:
+                        content_type = resp.headers.get("content-type", "")
+                        if "image" in content_type:
+                            # Download image bytes and save temporarily
+                            image_data = await resp.read()
+                            if len(image_data) > 5000:  # Valid image should be > 5KB
+                                import tempfile, os
+                                tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+                                tmp.write(image_data)
+                                tmp.close()
+                                return tmp.name
+            except Exception:
+                continue
+
+    return ""
 
 
 # ─── SHORT URL EXPANDER ───────────────────────────────────────────────────────

@@ -95,29 +95,14 @@ def trust_score_emoji(score: int, lang: str = "uz") -> str:
 
 async def get_website_screenshot(url: str) -> str:
     """
-    Gets a website screenshot using free screenshot APIs.
-    Returns the screenshot URL or empty string if fails.
+    Gets a website screenshot URL that Telegram can send as a photo.
+    Uses thum.io (always works, instant, free, no key).
     """
     if not url.startswith("http"):
         url = f"https://{url}"
 
-    # Try microlink.io (free, fast, no key needed)
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f"https://api.microlink.io/?url={url}&screenshot=true&meta=false&embed=screenshot.url",
-                timeout=aiohttp.ClientTimeout(total=12),
-            ) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    screenshot = data.get("data", {}).get("screenshot", {}).get("url", "")
-                    if screenshot:
-                        return screenshot
-    except Exception:
-        pass
-
-    # Fallback: thum.io (direct image URL, always works)
-    return f"https://image.thum.io/get/{url}"
+    # thum.io returns a direct image URL — Telegram can send it as photo
+    return f"https://image.thum.io/get/width/1280/{url}"
 
 
 # ─── SHORT URL EXPANDER ───────────────────────────────────────────────────────

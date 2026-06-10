@@ -234,21 +234,20 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
 
-        # Send screenshot as actual photo (separate message after report)
+        # Send the text report first
+        await status_msg.edit_text(text=report, parse_mode="Markdown", disable_web_page_preview=True)
+
+        # Then send screenshot as photo (separate message after report)
         try:
-            screenshot_url = await asyncio.wait_for(
-                get_website_screenshot(url), timeout=15
-            )
+            screenshot_url = await get_website_screenshot(url)
             if screenshot_url:
                 await context.bot.send_photo(
                     chat_id=update.effective_chat.id,
                     photo=screenshot_url,
-                    caption=f"📸 {t(lang, 'screenshot_link')}: {url}",
+                    caption=f"📸 {t(lang, 'screenshot_link')}",
                 )
-        except (asyncio.TimeoutError, Exception):
-            pass
-
-        await status_msg.edit_text(text=report, parse_mode="Markdown", disable_web_page_preview=True)
+        except Exception as e:
+            logging.debug(f"Screenshot failed: {e}")
     except Exception as e:
         logging.error(f"Havolani tekshirishda xatolik: {e}")
         await status_msg.edit_text("❌ Havolani tahlil qilish jarayonida xatolik yuz berdi.")

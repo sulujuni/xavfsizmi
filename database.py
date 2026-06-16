@@ -543,3 +543,102 @@ def is_group_limit_reached(chat_id: int) -> bool:
     if is_group_premium(chat_id):
         return False
     return get_group_checks(chat_id) >= GROUP_DAILY_FREE_LIMIT
+
+
+
+# ─── DATA BREACH MONITOR (premium multi-email) ───────────────────────────────
+
+def get_monitored_emails(user_id: int) -> list:
+    """Returns list of {email, last_breach_count} dicts for a user."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return []
+    return db[user_key].get("monitored_emails", [])
+
+
+def add_monitored_email(user_id: int, email: str, breach_count: int = 0):
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+    monitored = db[user_key].get("monitored_emails", [])
+    # Avoid duplicates
+    if not any(e.get("email") == email for e in monitored):
+        monitored.append({"email": email, "last_breach_count": breach_count})
+    db[user_key]["monitored_emails"] = monitored
+    save_db(db)
+
+
+def remove_monitored_email(user_id: int, email: str):
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return
+    monitored = db[user_key].get("monitored_emails", [])
+    monitored = [e for e in monitored if e.get("email") != email]
+    db[user_key]["monitored_emails"] = monitored
+    save_db(db)
+
+
+def update_monitored_email_count(user_id: int, email: str, new_count: int):
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return
+    monitored = db[user_key].get("monitored_emails", [])
+    for e in monitored:
+        if e.get("email") == email:
+            e["last_breach_count"] = new_count
+            break
+    db[user_key]["monitored_emails"] = monitored
+    save_db(db)
+
+
+def get_all_monitoring_users() -> list:
+    """Returns user IDs who have at least one monitored email."""
+    db = load_db()
+    users = []
+    for k in db.keys():
+        if k.isdigit() and db[k].get("monitored_emails"):
+            users.append(int(k))
+    return users
+
+
+# ─── WEEKLY STATS (for weekly personal report) ───────────────────────────────
+
+def record_check(user_id: int, is_dangerous: bool):
+    """Increment weekly check counters for a user."""
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        db[user_key] = {"date": str(date.today()), "checks": 0, "lang": "uz"}
+    week = db[user_key].get("week_stats", {"checks": 0, "dangerous": 0})
+    week["checks"] = week.get("checks", 0) + 1
+    if is_dangerous:
+        week["dangerous"] = week.get("dangerous", 0) + 1
+    db[user_key]["week_stats"] = week
+    save_db(db)
+
+
+def get_weekly_stats(user_id: int) -> dict:
+    db = load_db()
+    user_key = str(user_id)
+    if user_key not in db:
+        return {"checks": 0, "dangerous": 0}
+    return db[user_key].get("week_stats", {"checks": 0, "dangerous": 0})
+
+
+def reset_weekly_stats():
+    """Reset all users' weekly counters (called after weekly report sent)."""
+    db = load_db()
+    for k in db.keys():
+        if k.isdigit() and "week_stats" in db[k]:
+            db[k]["week_stats"] = {"checks": 0, "dangerous": 0}
+    save_db(db)
+
+
+def get_all_active_users() -> list:
+    """Returns all real user IDs (for weekly reports)."""
+    db = load_db()
+    return [int(k) for k in db.keys() if k.isdigit()]

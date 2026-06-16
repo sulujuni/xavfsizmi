@@ -26,7 +26,7 @@ from telegram.constants import ChatMemberStatus
 from config import REQUIRED_CHANNEL_ID, CHANNEL_INVITE_LINK, DAILY_FREE_LIMIT
 from database import (
     get_user_lang, is_premium, get_user_checks, increment_user_checks,
-    add_to_history, is_rate_limited, update_rate_limit,
+    add_to_history, is_rate_limited, update_rate_limit, record_check,
 )
 from languages import t
 from checker import (
@@ -41,6 +41,7 @@ from handlers.tools import (
     detect_technologies, format_technologies,
 )
 from apk_checker import scan_apk
+from file_scanner import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
 from qr_checker import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
@@ -194,6 +195,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         is_dangerous = trust_score < 50
         status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user.id, url, status_str)
+        record_check(user.id, is_dangerous)
 
         # Check typosquatting
         typo_result = check_typosquatting(url)
@@ -234,6 +236,21 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
 
+        # AI plain-language verdict
+        try:
+            from handlers.ai import ai_link_verdict
+            verdict = await ai_link_verdict(url, {
+                "trust_score": trust_score,
+                "vt_malicious": vt_res.get("malicious", 0),
+                "gsb_dangerous": gsb_res.get("dangerous", False),
+                "domain_age": domain_age,
+                "typosquat": typo_result.get("is_typosquat", False),
+            }, lang)
+            if verdict:
+                report += f"\n🤖 *{t(lang, 'ai_verdict_label')}:*\n{verdict}\n"
+        except Exception as e:
+            logging.debug(f"AI verdict failed: {e}")
+
         # Send the text report first
         await status_msg.edit_text(text=report, parse_mode="Markdown", disable_web_page_preview=True)
 
@@ -256,17 +273,24 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         await status_msg.edit_text("❌ Havolani tahlil qilish jarayonida xatolik yuz berdi.")
 
 
-# ─── APK file handler (private) ──────────────────────────────────────────────
+# ─── Document handler (private) — scans ALL file types ───────────────────────
 
 async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Scans any supported file type (APK, PDF, DOC, ZIP, EXE, etc.)."""
     if not update.message:
         return
     user_id = update.effective_user.id
     lang = get_user_lang(user_id)
     doc = update.message.document
+    file_name = doc.file_name or ""
 
-    if not (doc.file_name or "").lower().endswith(".apk"):
+    # Check if file type is scannable
+    file_type = get_file_type(file_name)
+    if not file_type:
+        await update.message.reply_text(t(lang, "file_type_unsupported"))
         return
+
+    is_apk = file_name.lower().endswith(".apk")
 
     # React to every message
     await react_to_message(update.message)
@@ -282,59 +306,71 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     update_rate_limit(user_id)
 
-    # Daily limit check (shared across URL/APK/QR)
+    # Daily limit check (shared across URL/file/QR)
     if not check_and_consume_limit(user_id):
         await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
         return
 
     # Max size check (32 MB)
-    if doc.file_size > 32 * 1024 * 1024:
+    if doc.file_size > MAX_FILE_SIZE:
         await update.message.reply_text(t(lang, "too_large"))
         return
 
     status_msg = await update.message.reply_text(
-        "🔍 *APK fayl tahlil qilinmoqda, kuting...*", parse_mode="Markdown"
+        t(lang, "file_scanning", type=file_type), parse_mode="Markdown"
     )
     try:
         file = await context.bot.get_file(doc.file_id)
         file_bytes = await file.download_as_bytearray()
-        result = await scan_apk(bytes(file_bytes), doc.file_name)
+
+        # APK uses the specialized scanner (includes permissions/behavior)
+        if is_apk:
+            result = await scan_apk(bytes(file_bytes), file_name)
+        else:
+            result = await scan_file(bytes(file_bytes), file_name)
 
         if result.get("success"):
             mal = result.get("malicious", 0)
             sus = result.get("suspicious", 0)
             total = result.get("total", 0)
 
-            report = f"📱 *APK Tahlil Hisoboti:*\n\n"
-            report += f"📦 *Fayl:* `{doc.file_name}`\n"
+            report = f"📄 *{t(lang, 'file_report_title')}:*\n\n"
+            report += f"📦 *{t(lang, 'file_name_label')}:* `{file_name}`\n"
+            report += f"🗂 *{t(lang, 'file_type_label')}:* {file_type}\n"
 
+            is_dangerous = mal > 0
             if mal > 0:
-                report += f"🚨 *Holat:* ZARARLI (Virus)\n"
-                report += f"🔍 *Aniqlovchilar:* `{mal}/{total}`\n"
+                report += f"🚨 *{t(lang, 'status_label')}:* {t(lang, 'status_malicious')}\n"
+                report += f"🔍 `{mal}/{total}`\n"
             elif sus > 0:
-                report += f"⚠️ *Holat:* SHUBHALI\n"
-                report += f"🔍 *Shubhali:* `{sus}/{total}`\n"
+                report += f"⚠️ *{t(lang, 'status_label')}:* {t(lang, 'status_suspicious')}\n"
+                report += f"🔍 `{sus}/{total}`\n"
             else:
-                report += f"✅ *Holat:* XAVFSIZ\n"
-                report += f"🔍 *Tekshiruvchilar:* `{total}` ta dvigatel\n"
+                report += f"✅ *{t(lang, 'status_label')}:* {t(lang, 'status_safe')}\n"
+                report += f"🔍 `{total}` {t(lang, 'engines_word')}\n"
 
-            # Behavioral analysis (permissions, network)
-            if result.get("permissions"):
+            # APK behavioral analysis (permissions, network)
+            if is_apk and result.get("permissions"):
                 perms = result["permissions"][:8]
-                report += f"\n📋 *Ruxsatlar ({len(result['permissions'])} ta):*\n"
+                report += f"\n📋 *{t(lang, 'permissions_label')} ({len(result['permissions'])}):*\n"
                 for p in perms:
                     emoji = "🔴" if "DANGEROUS" in p.get("level", "") else "🟢"
                     report += f"  {emoji} `{p.get('name', '')}`\n"
+            if is_apk and result.get("network_calls"):
+                report += f"\n🌐 *{t(lang, 'network_calls_label')}:* {len(result['network_calls'])}\n"
 
-            if result.get("network_calls"):
-                report += f"\n🌐 *Tarmoq so'rovlari:* {len(result['network_calls'])} ta\n"
-
+            record_check(user_id, is_dangerous)
             await status_msg.edit_text(report, parse_mode="Markdown")
+        elif result.get("timeout"):
+            await status_msg.edit_text(t(lang, "file_timeout"))
         else:
-            await status_msg.edit_text("❌ VirusTotal API orqali APK faylni tekshirib bo'lmadi.")
+            await status_msg.edit_text(t(lang, "file_scan_error"))
     except Exception as e:
-        logging.error(f"APK error: {e}")
-        await status_msg.edit_text("❌ APK tahlili jarayonida xatolik yuz berdi.")
+        logging.error(f"File scan error: {e}")
+        await status_msg.edit_text(t(lang, "file_scan_error"))
+
+
+
 
 
 # ─── Photo/QR handler (private) ──────────────────────────────────────────────
@@ -399,6 +435,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user_id, url, status_str)
+        record_check(user_id, is_dangerous)
 
         report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n"
         report += f"🔗 `{url}`\n\n"

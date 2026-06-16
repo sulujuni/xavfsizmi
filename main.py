@@ -75,6 +75,17 @@ from handlers import (
     send_daily_tips,
     top_command,
     reward_top_referrers,
+    # AI features
+    ask_command, ask_receive,
+    analyze_command, analyze_receive,
+    ai_cancel,
+    WAITING_ASK_INPUT, WAITING_ANALYZE_INPUT,
+    # Breach monitor (premium)
+    monitor_command, monitor_receive_email,
+    monitor_remove_callback, check_monitored_emails,
+    WAITING_MONITOR_EMAIL,
+    # Weekly report
+    send_weekly_reports,
 )
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────
@@ -94,6 +105,9 @@ async def setup_menu(application: Application):
         BotCommand("help", "📖 Barcha buyruqlar ro'yxati"),
         BotCommand("language", "🌐 Tilni o'zgartirish"),
         BotCommand("breach", "🔐 Email/Parol tekshiruvi"),
+        BotCommand("monitor", "📡 Email monitoring (Premium)"),
+        BotCommand("ask", "🤖 AI yordamchidan so'rash"),
+        BotCommand("analyze", "🔍 Shubhali xabarni tahlil qilish"),
         BotCommand("scammer", "👤 Skammer tekshiruvi"),
         BotCommand("phish", "🎣 Fishing simulyatori"),
         BotCommand("referral", "👥 Do'stlarni taklif qilish"),
@@ -146,6 +160,16 @@ def setup_scheduler(application: Application):
     scheduler.add_job(
         send_limit_warnings, CronTrigger(hour="*/4", minute=0),
         args=[application], id="rate_limit_check", replace_existing=True,
+    )
+    # Breach monitor — check monitored emails daily at 10:00
+    scheduler.add_job(
+        check_monitored_emails, CronTrigger(hour=10, minute=0),
+        args=[application], id="breach_monitor", replace_existing=True,
+    )
+    # Weekly personal report — Monday 10:00
+    scheduler.add_job(
+        send_weekly_reports, CronTrigger(day_of_week="mon", hour=10, minute=0),
+        args=[application], id="weekly_report", replace_existing=True,
     )
 
     scheduler.start()
@@ -229,9 +253,37 @@ def main():
     )
     app.add_handler(feedback_conv)
 
+    # ── AI Ask Conversation Handler (private only) ────────────────────────────
+    ask_conv = ConversationHandler(
+        entry_points=[CommandHandler("ask", ask_command, filters=filters.ChatType.PRIVATE)],
+        states={WAITING_ASK_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_receive)]},
+        fallbacks=[CommandHandler("cancel", ai_cancel)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(ask_conv)
+
+    # ── AI Analyze Conversation Handler (private only) ────────────────────────
+    analyze_conv = ConversationHandler(
+        entry_points=[CommandHandler("analyze", analyze_command, filters=filters.ChatType.PRIVATE)],
+        states={WAITING_ANALYZE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, analyze_receive)]},
+        fallbacks=[CommandHandler("cancel", ai_cancel)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(analyze_conv)
+
+    # ── Breach Monitor Conversation Handler (private only) ────────────────────
+    monitor_conv = ConversationHandler(
+        entry_points=[CommandHandler("monitor", monitor_command, filters=filters.ChatType.PRIVATE)],
+        states={WAITING_MONITOR_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, monitor_receive_email)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(monitor_conv)
+
     # ── Callback Query Handlers ───────────────────────────────────────────────
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_"))
     app.add_handler(CallbackQueryHandler(admin_payment_callback, pattern="^(approve_|reject_)"))
+    app.add_handler(CallbackQueryHandler(monitor_remove_callback, pattern="^monrm_"))
     app.add_handler(CallbackQueryHandler(language_callback, pattern="^lang_"))
     app.add_handler(CallbackQueryHandler(group_language_callback, pattern="^glang_"))
     app.add_handler(CallbackQueryHandler(check_subscription_callback, pattern="^check_subscription$"))

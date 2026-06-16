@@ -544,34 +544,46 @@ TEXTS["en"]["leaderboard_footer"] = "⭐ Top 3 get 30 days free Premium at the e
 
 TEXTS["uz"]["start"] = (
     "👋 Salom, *{name}*! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
-    "🛡 Shubhali havolani yuboring — men tekshiraman.\n\n"
-    "📱 APK fayl yuboring — viruslarni aniqlayman.\n"
-    "📸 QR kod rasmini yuboring — ichidagi URL ni tekshiraman.\n\n"
+    "🛡 Shubhali havolani yuboring — chuqur tahlil + AI xulosasi\n"
+    "📄 Fayl yuboring (APK, PDF, DOC, ZIP, EXE...) — virusga tekshiraman\n"
+    "📸 QR kod rasmini yuboring — ichidagi URL ni tekshiraman\n\n"
+    "🤖 /ask — AI xavfsizlik yordamchisi\n"
+    "🔍 /analyze — shubhali xabarni tahlil qilish\n"
+    "🔐 /breach — email/parol sizganini tekshirish\n"
+    "📡 /monitor — emailni doimiy kuzatish (Premium)\n\n"
     "📊 Kunlik limit: {limit} ta bepul tekshiruv\n"
-    "⭐ Cheksiz: /premium\n\n"
-    "📖 Barcha buyruqlar: /help\n"
+    "⭐ Cheksiz: /premium\n"
+    "📖 Barcha buyruqlar: /help\n\n"
     "🌐 Tilni tanlang:"
 )
 
 TEXTS["ru"]["start"] = (
     "👋 Привет, *{name}*! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
-    "🛡 Отправьте ссылку — проверю на безопасность.\n\n"
-    "📱 Отправьте APK файл — просканирую на вирусы.\n"
-    "📸 Отправьте фото QR-кода — проверю ссылку внутри.\n\n"
+    "🛡 Отправьте ссылку — глубокий анализ + вердикт AI\n"
+    "📄 Отправьте файл (APK, PDF, DOC, ZIP, EXE...) — проверю на вирусы\n"
+    "📸 Отправьте фото QR-кода — проверю ссылку внутри\n\n"
+    "🤖 /ask — AI помощник по безопасности\n"
+    "🔍 /analyze — анализ подозрительного сообщения\n"
+    "🔐 /breach — проверка утечки email/пароля\n"
+    "📡 /monitor — постоянный мониторинг email (Премиум)\n\n"
     "📊 Дневной лимит: {limit} бесплатных проверок\n"
-    "⭐ Безлимит: /premium\n\n"
-    "📖 Все команды: /help\n"
+    "⭐ Безлимит: /premium\n"
+    "📖 Все команды: /help\n\n"
     "🌐 Выберите язык:"
 )
 
 TEXTS["en"]["start"] = (
     "👋 Hello, *{name}*! Welcome to *Xavfsizmi? Bot*!\n\n"
-    "🛡 Send a suspicious link — I'll scan it.\n\n"
-    "📱 Send an APK file — I'll check for malware.\n"
-    "📸 Send a QR code photo — I'll scan the URL inside.\n\n"
+    "🛡 Send a suspicious link — deep analysis + AI verdict\n"
+    "📄 Send a file (APK, PDF, DOC, ZIP, EXE...) — I'll scan for malware\n"
+    "📸 Send a QR code photo — I'll scan the URL inside\n\n"
+    "🤖 /ask — AI security assistant\n"
+    "🔍 /analyze — analyze a suspicious message\n"
+    "🔐 /breach — check if email/password was leaked\n"
+    "📡 /monitor — continuous email monitoring (Premium)\n\n"
     "📊 Daily limit: {limit} free checks\n"
-    "⭐ Unlimited: /premium\n\n"
-    "📖 All commands: /help\n"
+    "⭐ Unlimited: /premium\n"
+    "📖 All commands: /help\n\n"
     "🌐 Choose language:"
 )
 
@@ -1174,3 +1186,293 @@ TEXTS["en"]["password_check_error"] = "⚠️ Password check service is currentl
 TEXTS["uz"]["more_breaches"] = "ta yana"
 TEXTS["ru"]["more_breaches"] = "ещё"
 TEXTS["en"]["more_breaches"] = "more"
+
+
+
+# ─── AI FEATURES (ask / analyze / verdict) ────────────────────────────────────
+
+TEXTS["uz"]["ai_thinking"] = "🤖 O'ylayapman..."
+TEXTS["ru"]["ai_thinking"] = "🤖 Думаю..."
+TEXTS["en"]["ai_thinking"] = "🤖 Thinking..."
+
+TEXTS["uz"]["ai_unavailable"] = "⚠️ AI yordamchi hozir ishlamayapti. Keyinroq urinib ko'ring."
+TEXTS["ru"]["ai_unavailable"] = "⚠️ AI-помощник сейчас недоступен. Попробуйте позже."
+TEXTS["en"]["ai_unavailable"] = "⚠️ AI assistant is currently unavailable. Try again later."
+
+TEXTS["uz"]["ask_prompt"] = "🤖 *AI Xavfsizlik Yordamchisi*\n\nKiberxavfsizlik bo'yicha savolingizni yozing (parollar, fishing, viruslar, maxfiylik va h.k.):"
+TEXTS["ru"]["ask_prompt"] = "🤖 *AI Помощник по Безопасности*\n\nНапишите ваш вопрос по кибербезопасности (пароли, фишинг, вирусы, приватность и т.д.):"
+TEXTS["en"]["ask_prompt"] = "🤖 *AI Security Assistant*\n\nWrite your cybersecurity question (passwords, phishing, viruses, privacy, etc.):"
+
+TEXTS["uz"]["analyze_prompt"] = "🔍 *Shubhali Xabar Tahlili*\n\nSizga kelgan shubhali xabarni (SMS, email, Telegram) shu yerga nusxalab yuboring. AI uni firibgarlikka tekshiradi:"
+TEXTS["ru"]["analyze_prompt"] = "🔍 *Анализ Подозрительного Сообщения*\n\nСкопируйте сюда подозрительное сообщение (SMS, email, Telegram). AI проверит его на мошенничество:"
+TEXTS["en"]["analyze_prompt"] = "🔍 *Suspicious Message Analysis*\n\nPaste the suspicious message you received (SMS, email, Telegram) here. AI will check it for scams:"
+
+TEXTS["uz"]["analyze_result_title"] = "AI Tahlil Natijasi"
+TEXTS["ru"]["analyze_result_title"] = "Результат AI Анализа"
+TEXTS["en"]["analyze_result_title"] = "AI Analysis Result"
+
+TEXTS["uz"]["ai_verdict_label"] = "AI Xulosasi"
+TEXTS["ru"]["ai_verdict_label"] = "Вердикт AI"
+TEXTS["en"]["ai_verdict_label"] = "AI Verdict"
+
+# ─── FILE SCANNER ─────────────────────────────────────────────────────────────
+
+TEXTS["uz"]["file_type_unsupported"] = "❌ Bu fayl turi qo'llab-quvvatlanmaydi.\n\n✅ Mumkin: APK, EXE, PDF, DOC(X), XLS(X), ZIP, RAR, JS, JAR va boshqalar."
+TEXTS["ru"]["file_type_unsupported"] = "❌ Этот тип файла не поддерживается.\n\n✅ Доступно: APK, EXE, PDF, DOC(X), XLS(X), ZIP, RAR, JS, JAR и др."
+TEXTS["en"]["file_type_unsupported"] = "❌ This file type is not supported.\n\n✅ Allowed: APK, EXE, PDF, DOC(X), XLS(X), ZIP, RAR, JS, JAR and more."
+
+TEXTS["uz"]["file_scanning"] = "🔍 *{type}* tahlil qilinmoqda, kuting..."
+TEXTS["ru"]["file_scanning"] = "🔍 *{type}* проверяется, подождите..."
+TEXTS["en"]["file_scanning"] = "🔍 Scanning *{type}*, please wait..."
+
+TEXTS["uz"]["file_report_title"] = "Fayl Tahlil Hisoboti"
+TEXTS["ru"]["file_report_title"] = "Отчёт по Файлу"
+TEXTS["en"]["file_report_title"] = "File Scan Report"
+
+TEXTS["uz"]["file_name_label"] = "Fayl"
+TEXTS["ru"]["file_name_label"] = "Файл"
+TEXTS["en"]["file_name_label"] = "File"
+
+TEXTS["uz"]["file_type_label"] = "Tur"
+TEXTS["ru"]["file_type_label"] = "Тип"
+TEXTS["en"]["file_type_label"] = "Type"
+
+TEXTS["uz"]["status_label"] = "Holat"
+TEXTS["ru"]["status_label"] = "Статус"
+TEXTS["en"]["status_label"] = "Status"
+
+TEXTS["uz"]["status_malicious"] = "ZARARLI (Virus)"
+TEXTS["ru"]["status_malicious"] = "ВРЕДОНОСНЫЙ (Вирус)"
+TEXTS["en"]["status_malicious"] = "MALICIOUS (Virus)"
+
+TEXTS["uz"]["status_suspicious"] = "SHUBHALI"
+TEXTS["ru"]["status_suspicious"] = "ПОДОЗРИТЕЛЬНЫЙ"
+TEXTS["en"]["status_suspicious"] = "SUSPICIOUS"
+
+TEXTS["uz"]["status_safe"] = "XAVFSIZ"
+TEXTS["ru"]["status_safe"] = "БЕЗОПАСНЫЙ"
+TEXTS["en"]["status_safe"] = "SAFE"
+
+TEXTS["uz"]["engines_word"] = "ta dvigatel tekshirdi"
+TEXTS["ru"]["engines_word"] = "антивирусов проверили"
+TEXTS["en"]["engines_word"] = "engines checked"
+
+TEXTS["uz"]["permissions_label"] = "Ruxsatlar"
+TEXTS["ru"]["permissions_label"] = "Разрешения"
+TEXTS["en"]["permissions_label"] = "Permissions"
+
+TEXTS["uz"]["network_calls_label"] = "Tarmoq so'rovlari"
+TEXTS["ru"]["network_calls_label"] = "Сетевые запросы"
+TEXTS["en"]["network_calls_label"] = "Network calls"
+
+TEXTS["uz"]["file_timeout"] = "⏳ VirusTotal javob bermadi. Keyinroq urinib ko'ring."
+TEXTS["ru"]["file_timeout"] = "⏳ VirusTotal не ответил. Попробуйте позже."
+TEXTS["en"]["file_timeout"] = "⏳ VirusTotal timed out. Try again later."
+
+TEXTS["uz"]["file_scan_error"] = "❌ Faylni tekshirishda xatolik yuz berdi."
+TEXTS["ru"]["file_scan_error"] = "❌ Ошибка при проверке файла."
+TEXTS["en"]["file_scan_error"] = "❌ An error occurred while scanning the file."
+
+# ─── BREACH MONITOR (premium) ─────────────────────────────────────────────────
+
+TEXTS["uz"]["monitor_premium_required"] = (
+    "📡 *Email Monitoring — Premium imkoniyat*\n\n"
+    "Bir nechta emailingizni qo'shing — bot ularni muntazam tekshiradi va "
+    "YANGI ma'lumot sizishi aniqlansa, sizni darhol ogohlantiradi.\n\n"
+    "⭐ Bu funksiya faqat Premium foydalanuvchilar uchun."
+)
+TEXTS["ru"]["monitor_premium_required"] = (
+    "📡 *Мониторинг Email — Премиум функция*\n\n"
+    "Добавьте несколько email — бот будет регулярно их проверять и "
+    "сразу предупредит, если обнаружится НОВАЯ утечка.\n\n"
+    "⭐ Эта функция только для Премиум пользователей."
+)
+TEXTS["en"]["monitor_premium_required"] = (
+    "📡 *Email Monitoring — Premium feature*\n\n"
+    "Add multiple emails — the bot regularly re-checks them and alerts you "
+    "immediately if a NEW breach is detected.\n\n"
+    "⭐ This feature is for Premium users only."
+)
+
+TEXTS["uz"]["monitor_empty"] = "📡 *Email Monitoring*\n\nHozircha kuzatilayotgan email yo'q.\n\nQo'shish uchun emailni yuboring yoki `/monitor add email@example.com`"
+TEXTS["ru"]["monitor_empty"] = "📡 *Мониторинг Email*\n\nПока нет отслеживаемых email.\n\nЧтобы добавить, отправьте email или `/monitor add email@example.com`"
+TEXTS["en"]["monitor_empty"] = "📡 *Email Monitoring*\n\nNo monitored emails yet.\n\nTo add one, send an email or `/monitor add email@example.com`"
+
+TEXTS["uz"]["monitor_list_title"] = "📡 *Kuzatilayotgan Emaillar:*"
+TEXTS["ru"]["monitor_list_title"] = "📡 *Отслеживаемые Email:*"
+TEXTS["en"]["monitor_list_title"] = "📡 *Monitored Emails:*"
+
+TEXTS["uz"]["breaches_word"] = "ta sizish"
+TEXTS["ru"]["breaches_word"] = "утечек"
+TEXTS["en"]["breaches_word"] = "breaches"
+
+TEXTS["uz"]["monitor_add_hint"] = "➕ Yana qo'shish uchun emailni yuboring."
+TEXTS["ru"]["monitor_add_hint"] = "➕ Отправьте email, чтобы добавить ещё."
+TEXTS["en"]["monitor_add_hint"] = "➕ Send an email to add another."
+
+TEXTS["uz"]["monitor_invalid_email"] = "❌ Noto'g'ri email format. Masalan: `user@gmail.com`"
+TEXTS["ru"]["monitor_invalid_email"] = "❌ Неверный формат email. Например: `user@gmail.com`"
+TEXTS["en"]["monitor_invalid_email"] = "❌ Invalid email format. Example: `user@gmail.com`"
+
+TEXTS["uz"]["monitor_limit"] = "❌ Maksimal {limit} ta email kuzatish mumkin."
+TEXTS["ru"]["monitor_limit"] = "❌ Можно отслеживать максимум {limit} email."
+TEXTS["en"]["monitor_limit"] = "❌ You can monitor up to {limit} emails."
+
+TEXTS["uz"]["monitor_already_added"] = "ℹ️ Bu email allaqachon kuzatilmoqda."
+TEXTS["ru"]["monitor_already_added"] = "ℹ️ Этот email уже отслеживается."
+TEXTS["en"]["monitor_already_added"] = "ℹ️ This email is already being monitored."
+
+TEXTS["uz"]["monitor_added_safe"] = "✅ `{email}` qo'shildi va kuzatilmoqda.\n\nHozircha hech qanday sizish topilmadi. Yangi sizish aniqlansa, sizni ogohlantiraman."
+TEXTS["ru"]["monitor_added_safe"] = "✅ `{email}` добавлен и отслеживается.\n\nПока утечек не найдено. Я предупрежу вас при новой утечке."
+TEXTS["en"]["monitor_added_safe"] = "✅ `{email}` added and monitored.\n\nNo breaches found yet. I'll alert you if a new one appears."
+
+TEXTS["uz"]["monitor_added_breached"] = "⚠️ `{email}` qo'shildi.\n\n🔴 Diqqat: bu email allaqachon *{count}* ta sizishda topilgan! Parollaringizni yangilang."
+TEXTS["ru"]["monitor_added_breached"] = "⚠️ `{email}` добавлен.\n\n🔴 Внимание: этот email уже найден в *{count}* утечках! Смените пароли."
+TEXTS["en"]["monitor_added_breached"] = "⚠️ `{email}` added.\n\n🔴 Warning: this email is already in *{count}* breaches! Update your passwords."
+
+TEXTS["uz"]["monitor_removed"] = "🗑 `{email}` kuzatuvdan olib tashlandi."
+TEXTS["ru"]["monitor_removed"] = "🗑 `{email}` удалён из мониторинга."
+TEXTS["en"]["monitor_removed"] = "🗑 `{email}` removed from monitoring."
+
+TEXTS["uz"]["monitor_new_breach_alert"] = (
+    "🚨 *YANGI SIZISH ANIQLANDI!*\n\n"
+    "📧 `{email}` yangi ma'lumotlar sizishida topildi!\n"
+    "🔴 Yangi: +{new} | Jami: {total} ta sizish\n\n"
+    "⚠️ Zudlik bilan ushbu email bilan bog'liq parollarni o'zgartiring!"
+)
+TEXTS["ru"]["monitor_new_breach_alert"] = (
+    "🚨 *ОБНАРУЖЕНА НОВАЯ УТЕЧКА!*\n\n"
+    "📧 `{email}` найден в новой утечке данных!\n"
+    "🔴 Новых: +{new} | Всего: {total} утечек\n\n"
+    "⚠️ Срочно смените пароли, связанные с этим email!"
+)
+TEXTS["en"]["monitor_new_breach_alert"] = (
+    "🚨 *NEW BREACH DETECTED!*\n\n"
+    "📧 `{email}` was found in a new data breach!\n"
+    "🔴 New: +{new} | Total: {total} breaches\n\n"
+    "⚠️ Change passwords linked to this email immediately!"
+)
+
+# ─── WEEKLY REPORT ────────────────────────────────────────────────────────────
+
+TEXTS["uz"]["weekly_report"] = (
+    "📊 *Haftalik Hisobotingiz*\n\n"
+    "Bu hafta siz:\n"
+    "🔍 Jami tekshiruvlar: *{total}*\n"
+    "🟢 Xavfsiz: *{safe}*\n"
+    "🔴 Xavfli aniqlandi: *{dangerous}*\n\n"
+    "🛡 Xavfsizligingiz uchun rahmat! Hushyor bo'ling."
+)
+TEXTS["ru"]["weekly_report"] = (
+    "📊 *Ваш Недельный Отчёт*\n\n"
+    "На этой неделе вы:\n"
+    "🔍 Всего проверок: *{total}*\n"
+    "🟢 Безопасных: *{safe}*\n"
+    "🔴 Обнаружено опасных: *{dangerous}*\n\n"
+    "🛡 Спасибо за заботу о безопасности! Будьте бдительны."
+)
+TEXTS["en"]["weekly_report"] = (
+    "📊 *Your Weekly Report*\n\n"
+    "This week you:\n"
+    "🔍 Total checks: *{total}*\n"
+    "🟢 Safe: *{safe}*\n"
+    "🔴 Dangerous found: *{dangerous}*\n\n"
+    "🛡 Thanks for staying safe! Stay vigilant."
+)
+
+
+
+# ─── UPDATED HELP MESSAGE (with all new features) ─────────────────────────────
+
+TEXTS["uz"]["help_message"] = (
+    "📖 *Xavfsizmi? Bot — Barcha Buyruqlar:*\n\n"
+    "━━━ *Asosiy Tekshiruvlar* ━━━\n"
+    "🔗 *Havola yuborish* — chuqur tahlil + Trust Score + AI xulosa\n"
+    "📄 *Fayl yuborish* — APK, PDF, DOC, ZIP, EXE va boshqalarni skanerlash\n"
+    "📸 *QR kod rasmi* — ichidagi URL ni topib tekshirish\n\n"
+    "━━━ *AI Buyruqlar* ━━━\n"
+    "/ask — Kiberxavfsizlik bo'yicha savolingizga AI javob beradi\n"
+    "/analyze — Shubhali xabar/SMS ni AI ga tahlil qildirish\n\n"
+    "━━━ *Tekshiruv Buyruqlar* ━━━\n"
+    "/breach — Email yoki parol sizib chiqqanini tekshirish\n"
+    "/monitor — Emaillarni doimiy kuzatish, yangi sizishda ogohlantirish (Premium)\n"
+    "/scammer @username — Foydalanuvchi skammer emasligini tekshirish\n\n"
+    "━━━ *Boshqa Buyruqlar* ━━━\n"
+    "/phish — Do'stlaringizni fishing testi bilan sinash\n"
+    "/tips — Kunlik xavfsizlik maslahatlari (on/off)\n"
+    "/top — Referral liderlar jadvali\n"
+    "/referral — Do'stlarni taklif qilish\n"
+    "/premium — Premium xarid / Promokod\n"
+    "/history — Oxirgi tekshiruvlar tarixi\n"
+    "/report — Xavfli link haqida xabar\n"
+    "/feedback — Taklif/shikoyat yuborish\n"
+    "/language — Tilni o'zgartirish\n\n"
+    "━━━ *Har bir havola tekshiruvida avtomatik* ━━━\n"
+    "🎯 Trust Score (0-100) | 🔒 SSL sertifikat | 🔤 Typosquatting\n"
+    "🔀 Qisqa havola kengaytirish | 🛠 Texnologiya aniqlash\n"
+    "📸 Sayt skrinshoti | 🤖 AI xulosa\n\n"
+    "━━━ *Secretary Mode* ━━━\n"
+    "🤖 Telegram Business orqali botni ulang → shaxsiy chatlaringiz avtomatik himoyalanadi."
+)
+
+TEXTS["ru"]["help_message"] = (
+    "📖 *Xavfsizmi? Bot — Все Команды:*\n\n"
+    "━━━ *Основные Проверки* ━━━\n"
+    "🔗 *Отправить ссылку* — глубокий анализ + Trust Score + вердикт AI\n"
+    "📄 *Отправить файл* — APK, PDF, DOC, ZIP, EXE и др. на вирусы\n"
+    "📸 *Фото QR-кода* — извлечение и проверка URL\n\n"
+    "━━━ *AI Команды* ━━━\n"
+    "/ask — AI ответит на вопрос по кибербезопасности\n"
+    "/analyze — AI проанализирует подозрительное сообщение/SMS\n\n"
+    "━━━ *Проверки* ━━━\n"
+    "/breach — Проверка утечки email или пароля\n"
+    "/monitor — Постоянный мониторинг email, оповещение при утечке (Премиум)\n"
+    "/scammer @username — Проверка аккаунта на мошенничество\n\n"
+    "━━━ *Другие Команды* ━━━\n"
+    "/phish — Тест друзей на фишинг\n"
+    "/tips — Ежедневные советы (on/off)\n"
+    "/top — Таблица лидеров рефералов\n"
+    "/referral — Пригласить друзей\n"
+    "/premium — Купить Premium / Промокод\n"
+    "/history — История проверок\n"
+    "/report — Сообщить об опасной ссылке\n"
+    "/feedback — Обратная связь\n"
+    "/language — Сменить язык\n\n"
+    "━━━ *При каждой проверке ссылки автоматически* ━━━\n"
+    "🎯 Trust Score (0-100) | 🔒 SSL | 🔤 Тайпосквоттинг\n"
+    "🔀 Раскрытие коротких ссылок | 🛠 Определение технологий\n"
+    "📸 Скриншот сайта | 🤖 Вердикт AI\n\n"
+    "━━━ *Режим Секретаря* ━━━\n"
+    "🤖 Подключите через Telegram Business → личные чаты автоматически защищены."
+)
+
+TEXTS["en"]["help_message"] = (
+    "📖 *Xavfsizmi? Bot — All Commands:*\n\n"
+    "━━━ *Core Scans* ━━━\n"
+    "🔗 *Send a link* — deep analysis + Trust Score + AI verdict\n"
+    "📄 *Send a file* — APK, PDF, DOC, ZIP, EXE etc. malware scan\n"
+    "📸 *QR code photo* — extract and scan URL inside\n\n"
+    "━━━ *AI Commands* ━━━\n"
+    "/ask — AI answers your cybersecurity questions\n"
+    "/analyze — AI analyzes a suspicious message/SMS\n\n"
+    "━━━ *Checks* ━━━\n"
+    "/breach — Check if email or password was leaked\n"
+    "/monitor — Continuous email monitoring, alerts on new breach (Premium)\n"
+    "/scammer @username — Check if an account is a scammer\n\n"
+    "━━━ *Other Commands* ━━━\n"
+    "/phish — Test your friends with phishing sim\n"
+    "/tips — Daily security tips (on/off)\n"
+    "/top — Referral leaderboard\n"
+    "/referral — Get your invite link\n"
+    "/premium — Buy Premium / Promo code\n"
+    "/history — Check history\n"
+    "/report — Report dangerous link\n"
+    "/feedback — Send feedback\n"
+    "/language — Change language\n\n"
+    "━━━ *Auto-included in every link scan* ━━━\n"
+    "🎯 Trust Score (0-100) | 🔒 SSL cert | 🔤 Typosquatting\n"
+    "🔀 Short URL expansion | 🛠 Tech detection\n"
+    "📸 Website screenshot | 🤖 AI verdict\n\n"
+    "━━━ *Secretary Mode* ━━━\n"
+    "🤖 Connect via Telegram Business → personal chats auto-protected."
+)

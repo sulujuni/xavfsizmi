@@ -172,6 +172,20 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
+    # Ask new users to subscribe to the required channel (private chat only)
+    if update.effective_chat.type == "private":
+        from handlers.private_messages import is_user_subscribed
+        if not await is_user_subscribed(context.application, user.id):
+            sub_keyboard = [
+                [InlineKeyboardButton(t(lang, "sub_button"), url=CHANNEL_INVITE_LINK)],
+                [InlineKeyboardButton(t(lang, "sub_check_btn"), callback_data="check_subscription")],
+            ]
+            await update.message.reply_text(
+                text=t(lang, "sub_required"),
+                reply_markup=InlineKeyboardMarkup(sub_keyboard),
+                parse_mode="Markdown",
+            )
+
 
 # ─── /help (detailed command list) ───────────────────────────────────────────
 

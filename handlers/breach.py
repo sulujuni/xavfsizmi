@@ -1,10 +1,8 @@
 """
-Breach & Password Check conversation handler:
-/breach → asks for email OR password → checks against leak databases
+Breach, Password & Dark Web Check — unified /breach command.
 
-Email: uses XposedOrNot API (free)
-Password: uses HaveIBeenPwned k-anonymity API (free, safe — only sends
-           first 5 chars of SHA1 hash, never the full password)
+User sends email → checks breaches + dark web mentions
+User sends password → checks HaveIBeenPwned (k-anonymity, safe)
 """
 import hashlib
 from telegram import (
@@ -19,6 +17,7 @@ from database import (
     get_user_lang, is_premium, get_referral_credits, consume_referral_credit,
 )
 from languages import t
+from handlers.tools import check_dark_web_mentions
 
 # Conversation states
 WAITING_BREACH_INPUT = 1
@@ -76,7 +75,7 @@ async def breach_receive_input(update: Update, context: ContextTypes.DEFAULT_TYP
 
     try:
         if is_email:
-            result = await _check_email_breach(user_input, lang)
+            result = await _check_email_full(user_input, lang)
         else:
             result = await _check_password_breach(user_input, lang)
 
@@ -91,33 +90,70 @@ async def breach_receive_input(update: Update, context: ContextTypes.DEFAULT_TYP
     return ConversationHandler.END
 
 
-# ─── Email breach check (XposedOrNot API) ────────────────────────────────────
+# ─── Combined email check: breaches + dark web ────────────────────────────────
 
-async def _check_email_breach(email: str, lang: str) -> str:
-    """Check if email has been in data breaches."""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"https://api.xposedornot.com/v1/check-email/{email}",
-            timeout=aiohttp.ClientTimeout(total=10),
-        ) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-                raw = data.get("breaches", [])
-                breaches_list = raw[0] if raw and isinstance(raw[0], list) else raw
-                if breaches_list:
-                    breaches_text = "\n".join([f"• *{b}*" for b in breaches_list[:5]])
-                    extra = ""
-                    if len(breaches_list) > 5:
-                        extra = f"\n... +{len(breaches_list) - 5} {t(lang, 'more_breaches')}"
-                    return t(
-                        lang, "breach_compromised",
-                        email=email, count=len(breaches_list),
-                        breaches=breaches_text + extra,
-                    )
-                else:
-                    return t(lang, "breach_safe", email=email)
-            else:
-                return t(lang, "breach_safe", email=email)
+async def _check_email_full(email: str, lang: str) -> str:
+    """Check email in both breach databases AND dark web sources."""
+    import asyncio
+
+    # Run both checks in parallel
+    breach_result, darkweb_result = await asyncio.gather(
+        _get_breach_data(email),
+        check_dark_web_mentions(email),
+    )
+
+    # Build combined report
+    breaches_list = breach_result.get("breaches", [])
+    darkweb_mentions = darkweb_result.get("total_mentions", 0)
+    darkweb_sources = darkweb_result.get("found_in", [])
+
+    # Determine overall status
+    is_compromised = bool(breaches_list) or darkweb_mentions > 0
+
+    if is_compromised:
+        report = f"🚨 *{t(lang, 'breach_result_danger')}*\n\n"
+        report += f"📧 `{email}`\n\n"
+
+        # Breach section
+        if breaches_list:
+            breaches_text = "\n".join([f"  • *{b}*" for b in breaches_list[:5]])
+            if len(breaches_list) > 5:
+                breaches_text += f"\n  ... +{len(breaches_list) - 5} {t(lang, 'more_breaches')}"
+            report += f"🔓 *{t(lang, 'breach_section')}:* {len(breaches_list)}\n{breaches_text}\n\n"
+
+        # Dark web section
+        if darkweb_mentions > 0:
+            sources_text = ", ".join(darkweb_sources)
+            report += f"🕸 *{t(lang, 'darkweb_section')}:* {darkweb_mentions}\n"
+            report += f"  📋 {sources_text}\n\n"
+
+        report += f"⚠️ {t(lang, 'breach_action_required')}"
+    else:
+        report = f"✅ *{t(lang, 'breach_result_safe')}*\n\n"
+        report += f"📧 `{email}`\n\n"
+        report += f"🔓 {t(lang, 'breach_section')}: 0\n"
+        report += f"🕸 {t(lang, 'darkweb_section')}: 0\n\n"
+        report += f"✅ {t(lang, 'breach_all_clear')}"
+
+    return report
+
+
+async def _get_breach_data(email: str) -> dict:
+    """Get breach list for an email. Returns {breaches: [list]}."""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://api.xposedornot.com/v1/check-email/{email}",
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    raw = data.get("breaches", [])
+                    breaches_list = raw[0] if raw and isinstance(raw[0], list) else raw
+                    return {"breaches": breaches_list if breaches_list else []}
+    except Exception:
+        pass
+    return {"breaches": []}
 
 
 # ─── Password breach check (HaveIBeenPwned k-anonymity) ──────────────────────
@@ -127,7 +163,6 @@ async def _check_password_breach(password: str, lang: str) -> str:
     Check if password has been leaked using k-anonymity.
     Only sends first 5 chars of SHA1 hash — password NEVER leaves the device.
     """
-    # Hash the password
     sha1_hash = hashlib.sha1(password.encode("utf-8")).hexdigest().upper()
     prefix = sha1_hash[:5]
     suffix = sha1_hash[5:]
@@ -139,10 +174,8 @@ async def _check_password_breach(password: str, lang: str) -> str:
         ) as resp:
             if resp.status != 200:
                 return t(lang, "password_check_error")
-
             text = await resp.text()
 
-    # Search for our suffix in the response
     times_found = 0
     for line in text.splitlines():
         parts = line.strip().split(":")

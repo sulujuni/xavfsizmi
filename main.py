@@ -75,6 +75,7 @@ from handlers import (
     # Daily tips & leaderboard
     tips_command,
     send_daily_tips,
+    tips_toggle_callback,
     top_command,
     reward_top_referrers,
     # AI features
@@ -296,6 +297,7 @@ def main():
     app.add_handler(CallbackQueryHandler(admin_callback, pattern="^admin_"))
     app.add_handler(CallbackQueryHandler(admin_payment_callback, pattern="^(approve_|reject_)"))
     app.add_handler(CallbackQueryHandler(monitor_remove_callback, pattern="^monrm_"))
+    app.add_handler(CallbackQueryHandler(tips_toggle_callback, pattern="^tips_"))
     app.add_handler(CallbackQueryHandler(language_callback, pattern="^lang_"))
     app.add_handler(CallbackQueryHandler(group_language_callback, pattern="^glang_"))
     app.add_handler(CallbackQueryHandler(check_subscription_callback, pattern="^check_subscription$"))

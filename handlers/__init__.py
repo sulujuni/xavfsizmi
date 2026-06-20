@@ -21,10 +21,13 @@ from .conversations import (
     report_receive,
     feedback_command,
     feedback_receive,
+    darkweb_command,
+    darkweb_receive,
     cancel_conversation,
     WAITING_SCAMMER_INPUT,
     WAITING_REPORT_INPUT,
     WAITING_FEEDBACK_INPUT,
+    WAITING_DARKWEB_INPUT,
 )
 
 from .premium import (

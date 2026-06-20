@@ -39,6 +39,8 @@ from handlers.tools import (
     is_short_url, expand_short_url,
     check_security_headers, format_security_headers,
     detect_technologies, format_technologies,
+    check_homoglyphs, format_homoglyph_warning,
+    explain_permissions,
 )
 from apk_checker import scan_apk
 from file_scanner import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
@@ -204,12 +206,17 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             match = typo_result["matches"][0]
             typo_warning = f"\n⚠️ *TYPOSQUATTING:* {t(lang, 'typo_warning', domain=match['similar_to'])}\n"
 
+        # Check homoglyphs (unicode lookalike characters)
+        homoglyph_result = check_homoglyphs(url)
+        homoglyph_warning = format_homoglyph_warning(homoglyph_result, lang)
+
         # Build report
         report = expanded_info
         report += t(lang, "scan_header") + "\n\n"
         report += f"🔗 *URL:* `{url}`\n"
         report += f"🎯 *{t(lang, 'trust_score_label')}:* {score_display}\n"
         report += typo_warning
+        report += homoglyph_warning
         report += f"\n"
         report += f"🔍 *VirusTotal:* `{vt_res.get('malicious', 0)}/{vt_res.get('total', 0)}` {t(lang, 'threats')}\n"
         report += f"🌐 *Google Safe Browsing:* {'❌ ' + t(lang, 'dangerous') if gsb_res.get('dangerous') else '✅ ' + t(lang, 'clean')}\n"
@@ -349,13 +356,18 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 report += f"✅ *{t(lang, 'status_label')}:* {t(lang, 'status_safe')}\n"
                 report += f"🔍 `{total}` {t(lang, 'engines_word')}\n"
 
-            # APK behavioral analysis (permissions, network)
+            # APK behavioral analysis (permissions, network) — Premium gets explanations
             if is_apk and result.get("permissions"):
-                perms = result["permissions"][:8]
-                report += f"\n📋 *{t(lang, 'permissions_label')} ({len(result['permissions'])}):*\n"
-                for p in perms:
-                    emoji = "🔴" if "DANGEROUS" in p.get("level", "") else "🟢"
-                    report += f"  {emoji} `{p.get('name', '')}`\n"
+                perms = result["permissions"]
+                if is_premium(user_id):
+                    # Premium: detailed explanation of each permission
+                    perm_text, danger_count = explain_permissions(perms, lang)
+                    report += f"\n📋 *{t(lang, 'permissions_label')} ({len(perms)}, 🔴{danger_count}):*\n"
+                    report += perm_text
+                else:
+                    # Free: just show count
+                    report += f"\n📋 *{t(lang, 'permissions_label')}:* {len(perms)}\n"
+                    report += f"⭐ {t(lang, 'perm_premium_hint')}\n"
             if is_apk and result.get("network_calls"):
                 report += f"\n🌐 *{t(lang, 'network_calls_label')}:* {len(result['network_calls'])}\n"
 

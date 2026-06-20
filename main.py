@@ -38,9 +38,11 @@ from handlers import (
     scammer_command, scammer_receive,
     report_command, report_receive,
     feedback_command, feedback_receive,
+    darkweb_command, darkweb_receive,
     cancel_conversation,
     WAITING_SCAMMER_INPUT,
     WAITING_REPORT_INPUT, WAITING_FEEDBACK_INPUT,
+    WAITING_DARKWEB_INPUT,
     # Premium & payment handlers
     premium_command,
     add_promo_command,
@@ -109,6 +111,7 @@ async def setup_menu(application: Application):
         BotCommand("ask", "🤖 AI yordamchidan so'rash"),
         BotCommand("analyze", "🔍 Shubhali xabarni tahlil qilish"),
         BotCommand("scammer", "👤 Skammer tekshiruvi"),
+        BotCommand("darkweb", "🕸 Dark web tekshiruvi"),
         BotCommand("phish", "🎣 Fishing simulyatori"),
         BotCommand("referral", "👥 Do'stlarni taklif qilish"),
         BotCommand("top", "🏆 Liderlar jadvali"),
@@ -252,6 +255,15 @@ def main():
         per_user=True, per_chat=True,
     )
     app.add_handler(feedback_conv)
+
+    # ── Dark Web Check Conversation Handler (private only) ────────────────────
+    darkweb_conv = ConversationHandler(
+        entry_points=[CommandHandler("darkweb", darkweb_command, filters=filters.ChatType.PRIVATE)],
+        states={WAITING_DARKWEB_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, darkweb_receive)]},
+        fallbacks=[CommandHandler("cancel", cancel_conversation)],
+        per_user=True, per_chat=True,
+    )
+    app.add_handler(darkweb_conv)
 
     # ── AI Ask Conversation Handler (private only) ────────────────────────────
     ask_conv = ConversationHandler(

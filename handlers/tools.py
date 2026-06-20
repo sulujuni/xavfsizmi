@@ -656,3 +656,201 @@ def format_technologies(techs: list, lang: str = "uz") -> str:
     title = labels.get(lang, labels["en"])
     tech_str = ", ".join([f"`{t}`" for t in techs])
     return f"🛠 *{title}:* {tech_str}\n"
+
+
+
+# ─── HOMOGLYPH DETECTOR ──────────────────────────────────────────────────────
+
+# Map of Unicode characters that look like ASCII but aren't
+HOMOGLYPHS = {
+    '\u0430': 'a', '\u0435': 'e', '\u043e': 'o', '\u0440': 'p',
+    '\u0441': 'c', '\u0443': 'y', '\u0445': 'x', '\u0455': 's',
+    '\u0456': 'i', '\u0458': 'j', '\u0501': 'd', '\u0261': 'g',
+    '\u03bd': 'v', '\u1d0d': 'm', '\u1d0f': 'o', '\u1d1b': 't',
+    '\u2113': 'l', '\u2170': 'i',
+    '\u200b': '', '\u200c': '', '\u200d': '', '\ufeff': '',
+}
+
+
+def check_homoglyphs(url: str) -> dict:
+    """Detects Unicode lookalike characters in URLs (homoglyph attack)."""
+    parsed = urlparse(url if url.startswith("http") else f"https://{url}")
+    domain = (parsed.netloc or parsed.path).lower()
+
+    found_homoglyphs = []
+    has_zero_width = False
+    cleaned_domain = ""
+
+    for char in domain:
+        if char in HOMOGLYPHS:
+            replacement = HOMOGLYPHS[char]
+            if replacement == "":
+                has_zero_width = True
+            else:
+                found_homoglyphs.append({"char": char, "looks_like": replacement, "unicode": f"U+{ord(char):04X}"})
+            cleaned_domain += replacement
+        else:
+            cleaned_domain += char
+
+    return {
+        "is_homoglyph": len(found_homoglyphs) > 0 or has_zero_width,
+        "domain": domain,
+        "cleaned_domain": cleaned_domain if (found_homoglyphs or has_zero_width) else domain,
+        "found": found_homoglyphs[:5],
+        "has_zero_width": has_zero_width,
+    }
+
+
+def format_homoglyph_warning(result: dict, lang: str = "uz") -> str:
+    """Formats homoglyph detection result for the URL report."""
+    if not result.get("is_homoglyph"):
+        return ""
+    labels = {
+        "uz": ("YASHIRIN BELGILAR ANIQLANDI", "Soxta belgilar ishlatilgan", "Aslida", "Ko'rinmas belgilar bor"),
+        "ru": ("СКРЫТЫЕ СИМВОЛЫ ОБНАРУЖЕНЫ", "Использованы поддельные символы", "На самом деле", "Есть невидимые символы"),
+        "en": ("HIDDEN CHARACTERS DETECTED", "Fake lookalike characters used", "Actually", "Contains invisible chars"),
+    }
+    l = labels.get(lang, labels["en"])
+    text = f"\n🚨 *{l[0]}!*\n⚠️ {l[1]}!\n"
+    if result["found"]:
+        text += f"🔤 {l[2]}: `{result['cleaned_domain']}`\n"
+    if result["has_zero_width"]:
+        text += f"👻 {l[3]}!\n"
+    return text
+
+
+# ─── DARK WEB MENTION CHECKER ─────────────────────────────────────────────────
+
+async def check_dark_web_mentions(query: str) -> dict:
+    """Checks if email/username appears in dark web databases."""
+    results = {"query": query, "found_in": [], "total_mentions": 0, "sources_checked": 0}
+
+    async with aiohttp.ClientSession() as session:
+        # XposedOrNot breach + paste check
+        if "@" in query:
+            try:
+                async with session.get(
+                    f"https://api.xposedornot.com/v1/breach-analytics?email={query}",
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as resp:
+                    results["sources_checked"] += 1
+                    if resp.status == 200:
+                        data = await resp.json()
+                        breaches = data.get("BreachesSummary", {}).get("site", "")
+                        if breaches:
+                            results["found_in"].append("Data Breaches")
+                            results["total_mentions"] += len(breaches.split(";")) if breaches else 0
+                        pastes = data.get("PastesSummary", {}).get("cnt", 0)
+                        if pastes and int(pastes) > 0:
+                            results["found_in"].append("Paste Sites")
+                            results["total_mentions"] += int(pastes)
+            except Exception:
+                pass
+
+        # LeakCheck public API
+        try:
+            async with session.get(
+                f"https://leakcheck.io/api/public?check={query}",
+                timeout=aiohttp.ClientTimeout(total=8),
+            ) as resp:
+                results["sources_checked"] += 1
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("found"):
+                        results["found_in"].append("Leak Databases")
+                        results["total_mentions"] += data.get("found", 0)
+        except Exception:
+            pass
+
+    return results
+
+
+# ─── APK PERMISSION EXPLAINER (Premium) ───────────────────────────────────────
+
+DANGEROUS_PERMISSIONS = {
+    "READ_CONTACTS", "CAMERA", "RECORD_AUDIO", "READ_SMS", "SEND_SMS",
+    "ACCESS_FINE_LOCATION", "READ_PHONE_STATE", "READ_EXTERNAL_STORAGE",
+    "SYSTEM_ALERT_WINDOW", "REQUEST_INSTALL_PACKAGES",
+    "BIND_ACCESSIBILITY_SERVICE", "BIND_DEVICE_ADMIN", "READ_CALL_LOG",
+}
+
+PERMISSION_EXPLANATIONS = {
+    "uz": {
+        "INTERNET": ("🌐 Internet", "Internetga ulanadi — normal"),
+        "READ_CONTACTS": ("📇 Kontaktlar", "Barcha kontaktlaringizni ko'radi!"),
+        "CAMERA": ("📷 Kamera", "Kamerangizni yoqishi mumkin!"),
+        "RECORD_AUDIO": ("🎙 Mikrofon", "Tinglashi mumkin!"),
+        "READ_SMS": ("💬 SMS o'qish", "SMS larni o'qiydi!"),
+        "SEND_SMS": ("📤 SMS yuborish", "Nomingizdan SMS yuboradi!"),
+        "ACCESS_FINE_LOCATION": ("📍 Aniq joy", "GPS joylashuvingizni biladi!"),
+        "ACCESS_COARSE_LOCATION": ("📍 Taxminiy joy", "Taxminiy joylashuvni biladi"),
+        "READ_PHONE_STATE": ("📱 Telefon", "Raqam va IMEI ni o'qiydi!"),
+        "WRITE_EXTERNAL_STORAGE": ("💾 Yozish", "Fayllar yozadi"),
+        "READ_EXTERNAL_STORAGE": ("💾 O'qish", "Barcha fayllarni ko'radi!"),
+        "RECEIVE_BOOT_COMPLETED": ("🔄 Avtostart", "O'zi ishga tushadi"),
+        "SYSTEM_ALERT_WINDOW": ("🪟 Ustidan", "Boshqa ilovalar ustida!"),
+        "REQUEST_INSTALL_PACKAGES": ("📦 O'rnatish", "Boshqa ilovalar o'rnatadi!"),
+        "BIND_ACCESSIBILITY_SERVICE": ("♿ Accessibility", "Hammani o'qiydi!"),
+        "BIND_DEVICE_ADMIN": ("🔐 Admin", "Telefonni boshqaradi!"),
+        "READ_CALL_LOG": ("📞 Qo'ng'iroqlar", "Kim bilan gaplashganingizni biladi!"),
+    },
+    "ru": {
+        "INTERNET": ("🌐 Интернет", "Подключается к интернету — нормально"),
+        "READ_CONTACTS": ("📇 Контакты", "Видит все контакты!"),
+        "CAMERA": ("📷 Камера", "Может включить камеру!"),
+        "RECORD_AUDIO": ("🎙 Микрофон", "Может слушать!"),
+        "READ_SMS": ("💬 Чтение SMS", "Читает все SMS!"),
+        "SEND_SMS": ("📤 Отправка SMS", "Отправляет SMS от вас!"),
+        "ACCESS_FINE_LOCATION": ("📍 Точное место", "Знает GPS координаты!"),
+        "ACCESS_COARSE_LOCATION": ("📍 Примерное место", "Знает примерное место"),
+        "READ_PHONE_STATE": ("📱 Телефон", "Читает номер и IMEI!"),
+        "WRITE_EXTERNAL_STORAGE": ("💾 Запись", "Записывает файлы"),
+        "READ_EXTERNAL_STORAGE": ("💾 Чтение", "Видит все файлы!"),
+        "RECEIVE_BOOT_COMPLETED": ("🔄 Автозапуск", "Запускается сам"),
+        "SYSTEM_ALERT_WINDOW": ("🪟 Поверх", "Поверх других приложений!"),
+        "REQUEST_INSTALL_PACKAGES": ("📦 Установка", "Устанавливает другие приложения!"),
+        "BIND_ACCESSIBILITY_SERVICE": ("♿ Accessibility", "Читает всё на экране!"),
+        "BIND_DEVICE_ADMIN": ("🔐 Админ", "Управляет телефоном!"),
+        "READ_CALL_LOG": ("📞 Звонки", "Знает кому вы звонили!"),
+    },
+    "en": {
+        "INTERNET": ("🌐 Internet", "Connects to internet — normal"),
+        "READ_CONTACTS": ("📇 Contacts", "Can see all contacts!"),
+        "CAMERA": ("📷 Camera", "Can activate camera!"),
+        "RECORD_AUDIO": ("🎙 Microphone", "Can listen through mic!"),
+        "READ_SMS": ("💬 Read SMS", "Reads all your texts!"),
+        "SEND_SMS": ("📤 Send SMS", "Sends SMS as you!"),
+        "ACCESS_FINE_LOCATION": ("📍 Exact Location", "Knows GPS location!"),
+        "ACCESS_COARSE_LOCATION": ("📍 Approx Location", "Knows approximate location"),
+        "READ_PHONE_STATE": ("📱 Phone State", "Reads number and IMEI!"),
+        "WRITE_EXTERNAL_STORAGE": ("💾 Write Storage", "Writes files"),
+        "READ_EXTERNAL_STORAGE": ("💾 Read Storage", "Sees all files!"),
+        "RECEIVE_BOOT_COMPLETED": ("🔄 Auto-start", "Starts on boot"),
+        "SYSTEM_ALERT_WINDOW": ("🪟 Overlay", "Displays over other apps!"),
+        "REQUEST_INSTALL_PACKAGES": ("📦 Install", "Installs other apps!"),
+        "BIND_ACCESSIBILITY_SERVICE": ("♿ Accessibility", "Reads everything on screen!"),
+        "BIND_DEVICE_ADMIN": ("🔐 Device Admin", "Controls your phone!"),
+        "READ_CALL_LOG": ("📞 Call Log", "Knows who you called!"),
+    },
+}
+
+
+def explain_permissions(permissions: list, lang: str = "uz") -> tuple:
+    """Premium: explains what each APK permission actually does. Returns (text, dangerous_count)."""
+    explanations = PERMISSION_EXPLANATIONS.get(lang, PERMISSION_EXPLANATIONS["en"])
+    text = ""
+    dangerous_count = 0
+
+    for perm in permissions[:12]:
+        perm_name = perm.get("name", "").upper()
+        if perm_name in explanations:
+            label, desc = explanations[perm_name]
+            is_dangerous = perm_name in DANGEROUS_PERMISSIONS
+            emoji = "🔴" if is_dangerous else "🟢"
+            text += f"  {emoji} *{label}*\n      {desc}\n"
+            if is_dangerous:
+                dangerous_count += 1
+        else:
+            text += f"  ⚪ `{perm.get('name', perm_name)}`\n"
+
+    return text, dangerous_count

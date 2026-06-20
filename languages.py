@@ -1597,3 +1597,43 @@ TEXTS["en"]["start"] = (
     "⭐ Unlimited: /premium | 📖 /help\n\n"
     "🌐 Choose language:"
 )
+
+
+
+# ─── REMAINING HARDCODED STRINGS FIX ──────────────────────────────────────────
+
+TEXTS["uz"]["ai_generating"] = "💡 Maslahat generatsiya qilinmoqda..."
+TEXTS["ru"]["ai_generating"] = "💡 Генерирую совет..."
+TEXTS["en"]["ai_generating"] = "💡 Generating tip..."
+
+TEXTS["uz"]["admin_premium_off"] = "🔓 Admin Premium o'chirildi. Test mode."
+TEXTS["ru"]["admin_premium_off"] = "🔓 Admin Premium отключён. Тестовый режим."
+TEXTS["en"]["admin_premium_off"] = "🔓 Admin Premium disabled. Test mode."
+
+TEXTS["uz"]["admin_premium_on"] = "🔒 Admin Premium qayta yoqildi."
+TEXTS["ru"]["admin_premium_on"] = "🔒 Admin Premium восстановлен."
+TEXTS["en"]["admin_premium_on"] = "🔒 Admin Premium restored."
+
+TEXTS["uz"]["api_error"] = "⚠️ API xatoligi: {error}"
+TEXTS["ru"]["api_error"] = "⚠️ Ошибка API: {error}"
+TEXTS["en"]["api_error"] = "⚠️ API error: {error}"
+
+TEXTS["uz"]["qr_scan_error"] = "❌ QR-kodni tahlil qilib o'qishda xatolik yuz berdi."
+TEXTS["ru"]["qr_scan_error"] = "❌ Ошибка при чтении QR-кода."
+TEXTS["en"]["qr_scan_error"] = "❌ Error reading QR code."
+
+TEXTS["uz"]["tips_header"] = "💡 *Kunlik Maslahatlar:* {status}"
+TEXTS["ru"]["tips_header"] = "💡 *Ежедневные Советы:* {status}"
+TEXTS["en"]["tips_header"] = "💡 *Daily Tips:* {status}"
+
+TEXTS["uz"]["tip_of_day"] = "💡 *Kunlik Xavfsizlik Maslahati:*"
+TEXTS["ru"]["tip_of_day"] = "💡 *Совет Дня по Безопасности:*"
+TEXTS["en"]["tip_of_day"] = "💡 *Daily Security Tip:*"
+
+TEXTS["uz"]["group_apk_dangerous"] = "🚨 *XAVFLI APK ANIQLANDI!*\n\n👤 {mention}\n📱 Fayl: `{name}`\n{mal}/{total} antivirus xavfli deb topdi!\n⚠️ Bu ilovani O'RNATMANG!"
+TEXTS["ru"]["group_apk_dangerous"] = "🚨 *ОБНАРУЖЕН ОПАСНЫЙ APK!*\n\n👤 {mention}\n📱 Файл: `{name}`\n{mal}/{total} антивирусов нашли угрозу!\n⚠️ НЕ устанавливайте!"
+TEXTS["en"]["group_apk_dangerous"] = "🚨 *DANGEROUS APK DETECTED!*\n\n👤 {mention}\n📱 File: `{name}`\n{mal}/{total} engines flagged it!\n⚠️ DO NOT install!"
+
+TEXTS["uz"]["group_qr_dangerous"] = "🚨 *XAVFLI QR KOD ANIQLANDI!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Bu QR kodga ishonmang!"
+TEXTS["ru"]["group_qr_dangerous"] = "🚨 *ОПАСНЫЙ QR-КОД ОБНАРУЖЕН!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Не доверяйте этому QR-коду!"
+TEXTS["en"]["group_qr_dangerous"] = "🚨 *DANGEROUS QR CODE DETECTED!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Don't trust this QR code!"

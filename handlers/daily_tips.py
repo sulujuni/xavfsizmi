@@ -216,7 +216,7 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status = "✅" if enabled else "❌"
 
         # Try AI tip first, fallback to pre-written
-        status_msg = await update.message.reply_text("💡 Maslahat generatsiya qilinmoqda...")
+        status_msg = await update.message.reply_text(t(lang, "ai_generating"))
         ai_tip = await generate_ai_tip(lang)
 
         if ai_tip:
@@ -228,7 +228,7 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             source = "📝"
 
         await status_msg.edit_text(
-            f"💡 *Kunlik Maslahatlar:* {status}\n\n"
+            f"{t(lang, 'tips_header', status=status)}\n\n"
             f"{source} *Bugungi maslahat:*\n{tip_text}\n\n"
             f"O'chirish: `/tips off`\nYoqish: `/tips on`",
             parse_mode="Markdown",
@@ -264,7 +264,7 @@ async def send_daily_tips(application: Application):
     for user_id in subscribers:
         lang = get_user_lang(user_id)
         tip_text = tips_by_lang.get(lang, tips_by_lang.get("uz", ""))
-        message = f"💡 *Kunlik Xavfsizlik Maslahati:*\n\n{tip_text}"
+        message = f"{t(lang, 'tip_of_day')}\n\n{tip_text}"
 
         try:
             await application.bot.send_message(

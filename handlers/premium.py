@@ -61,11 +61,11 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 db[key].pop("premium_until", None)
                 db[key].pop("premium", None)
                 save_db(db)
-            await update.message.reply_text("🔓 Admin Premium o'chirildi. Test mode.")
+            await update.message.reply_text(t(lang, "admin_premium_off"))
             return
         elif arg == "on":
             set_premium(user_id, days=9999)
-            await update.message.reply_text("🔒 Admin Premium qayta yoqildi.")
+            await update.message.reply_text(t(lang, "admin_premium_on"))
             return
 
     if is_group_chat:
@@ -143,7 +143,8 @@ async def add_promo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         days = int(context.args[1])
     except ValueError:
-        await update.message.reply_text("❌ Days must be an integer.")
+        await update.message.reply_text("❌")
+        return
         return
 
     usage_type = context.args[2].strip().lower()

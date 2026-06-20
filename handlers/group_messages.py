@@ -129,13 +129,7 @@ async def handle_group_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if mal > 0:
         await context.bot.send_message(
             chat_id=chat_id,
-            text=(
-                f"🚨 *XAVFLI APK ANIQLANDI!*\n\n"
-                f"👤 {mention}\n"
-                f"📱 Fayl: `{file_name}`\n"
-                f"{mal}/{total} antivirus xavfli deb topdi!\n"
-                f"⚠️ Bu ilovani O'RNATMANG!"
-            ),
+            text=gt(lang, "group_apk_dangerous", mention=mention, name=file_name, mal=mal, total=total),
             parse_mode="Markdown",
         )
     elif sus > 0:
@@ -193,12 +187,7 @@ async def handle_group_photo(update: Update, context: ContextTypes.DEFAULT_TYPE)
         if is_dangerous:
             await context.bot.send_message(
                 chat_id=chat_id,
-                text=(
-                    f"🚨 *XAVFLI QR KOD ANIQLANDI!*\n\n"
-                    f"👤 {mention}\n"
-                    f"🔗 URL: `{url}`\n"
-                    f"⚠️ Bu QR kodga ishonmang!"
-                ),
+                text=gt(lang, "group_qr_dangerous", mention=mention, url=url),
                 parse_mode="Markdown",
             )
         else:

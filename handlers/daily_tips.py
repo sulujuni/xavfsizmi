@@ -4,7 +4,7 @@ Daily Security Tips system powered by Groq AI (free llama3).
 - Falls back to pre-written tips if API fails.
 - Users toggle with /tips on or /tips off.
 """
-from telegram import Update
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, Application
 from telegram.error import TelegramError
 import random
@@ -195,7 +195,7 @@ def get_all_tips_subscribers() -> list:
 # ─── /tips command ────────────────────────────────────────────────────────────
 
 async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Toggle daily tips on/off. Usage: /tips on or /tips off"""
+    """Toggle daily tips on/off with inline buttons."""
     user = update.effective_user
     lang = get_user_lang(user.id)
 
@@ -206,16 +206,23 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if context.args and context.args[0].lower() in ("off", "0", "no", "yoq"):
         set_tips_enabled(user.id, False)
-        await update.message.reply_text(t(lang, "tips_disabled"))
+        keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_on_btn"), callback_data="tips_on")]]
+        await update.message.reply_text(
+            t(lang, "tips_disabled"),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
     elif context.args and context.args[0].lower() in ("on", "1", "yes", "ha"):
         set_tips_enabled(user.id, True)
-        await update.message.reply_text(t(lang, "tips_enabled"))
+        keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_off_btn"), callback_data="tips_off")]]
+        await update.message.reply_text(
+            t(lang, "tips_enabled"),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
     else:
         # Show current status and generate a tip
         enabled = get_tips_enabled(user.id)
         status = "✅" if enabled else "❌"
 
-        # Try AI tip first, fallback to pre-written
         status_msg = await update.message.reply_text(t(lang, "ai_generating"))
         ai_tip = await generate_ai_tip(lang)
 
@@ -227,12 +234,34 @@ async def tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             tip_text = tip.get(lang, tip["uz"])
             source = "📝"
 
+        if enabled:
+            keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_off_btn"), callback_data="tips_off")]]
+        else:
+            keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_on_btn"), callback_data="tips_on")]]
+
         await status_msg.edit_text(
             f"{t(lang, 'tips_header', status=status)}\n\n"
-            f"{source} *Bugungi maslahat:*\n{tip_text}\n\n"
-            f"O'chirish: `/tips off`\nYoqish: `/tips on`",
+            f"{source} {t(lang, 'tips_today')}:\n{tip_text}",
             parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(keyboard),
         )
+
+
+async def tips_toggle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle tips_on / tips_off inline button press."""
+    query = update.callback_query
+    await query.answer()
+    user = query.from_user
+    lang = get_user_lang(user.id)
+
+    if query.data == "tips_on":
+        set_tips_enabled(user.id, True)
+        keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_off_btn"), callback_data="tips_off")]]
+        await query.edit_message_text(t(lang, "tips_enabled"), reply_markup=InlineKeyboardMarkup(keyboard))
+    elif query.data == "tips_off":
+        set_tips_enabled(user.id, False)
+        keyboard = [[InlineKeyboardButton(t(lang, "tips_turn_on_btn"), callback_data="tips_on")]]
+        await query.edit_message_text(t(lang, "tips_disabled"), reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 # ─── Daily tips sender (called by scheduler) ─────────────────────────────────

@@ -1637,3 +1637,19 @@ TEXTS["en"]["group_apk_dangerous"] = "🚨 *DANGEROUS APK DETECTED!*\n\n👤 {me
 TEXTS["uz"]["group_qr_dangerous"] = "🚨 *XAVFLI QR KOD ANIQLANDI!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Bu QR kodga ishonmang!"
 TEXTS["ru"]["group_qr_dangerous"] = "🚨 *ОПАСНЫЙ QR-КОД ОБНАРУЖЕН!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Не доверяйте этому QR-коду!"
 TEXTS["en"]["group_qr_dangerous"] = "🚨 *DANGEROUS QR CODE DETECTED!*\n\n👤 {mention}\n🔗 URL: `{url}`\n⚠️ Don't trust this QR code!"
+
+
+
+# ─── TIPS TOGGLE BUTTONS & LABELS ─────────────────────────────────────────────
+
+TEXTS["uz"]["tips_turn_on_btn"] = "✅ Yoqish"
+TEXTS["ru"]["tips_turn_on_btn"] = "✅ Включить"
+TEXTS["en"]["tips_turn_on_btn"] = "✅ Turn On"
+
+TEXTS["uz"]["tips_turn_off_btn"] = "❌ O'chirish"
+TEXTS["ru"]["tips_turn_off_btn"] = "❌ Отключить"
+TEXTS["en"]["tips_turn_off_btn"] = "❌ Turn Off"
+
+TEXTS["uz"]["tips_today"] = "Bugungi maslahat"
+TEXTS["ru"]["tips_today"] = "Совет дня"
+TEXTS["en"]["tips_today"] = "Today's tip"

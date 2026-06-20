@@ -71,7 +71,7 @@ from .secretary import (
     handle_business_message,
 )
 
-from .daily_tips import tips_command, send_daily_tips
+from .daily_tips import tips_command, send_daily_tips, tips_toggle_callback
 from .leaderboard import top_command, reward_top_referrers
 
 from .ai import (

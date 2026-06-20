@@ -3,7 +3,7 @@ Conversation handlers for commands that need a 2-step flow:
 1. User sends command → bot asks for input
 2. User sends input → bot processes
 
-Commands: /scammer, /privacy, /report, /feedback
+Commands: /scammer, /report, /feedback, /darkweb
 """
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
@@ -11,13 +11,14 @@ from telegram.ext import ContextTypes, ConversationHandler
 from config import ADMIN_ID
 from database import get_user_lang, add_report
 from languages import t
-from handlers.tools import check_social_account
+from handlers.tools import check_social_account, check_dark_web_mentions
 from handlers.private_messages import require_subscription, react_to_message
 
 # Conversation states
 WAITING_SCAMMER_INPUT = 10
 WAITING_REPORT_INPUT = 12
 WAITING_FEEDBACK_INPUT = 13
+WAITING_DARKWEB_INPUT = 14
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -139,4 +140,42 @@ async def feedback_receive(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cancel_conversation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_user_lang(update.effective_user.id)
     await update.message.reply_text(t(lang, "breach_cancel"))
+    return ConversationHandler.END
+
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# /darkweb conversation
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def darkweb_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Step 1: Ask for email/username to check."""
+    await react_to_message(update.message)
+    if not await require_subscription(update, context):
+        return ConversationHandler.END
+
+    lang = get_user_lang(update.effective_user.id)
+    await update.message.reply_text(t(lang, "darkweb_ask"), parse_mode="Markdown")
+    return WAITING_DARKWEB_INPUT
+
+
+async def darkweb_receive(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Step 2: Check dark web mentions."""
+    user = update.effective_user
+    lang = get_user_lang(user.id)
+    query = update.message.text.strip()
+
+    status_msg = await update.message.reply_text(t(lang, "checking"))
+    result = await check_dark_web_mentions(query)
+
+    if result["total_mentions"] > 0:
+        sources_text = "\n".join([f"  🔴 {s}" for s in result["found_in"]])
+        text = t(lang, "darkweb_found",
+                 query=query, count=result["total_mentions"],
+                 sources=sources_text)
+    else:
+        text = t(lang, "darkweb_safe", query=query,
+                 checked=result["sources_checked"])
+
+    await status_msg.edit_text(text, parse_mode="Markdown")
     return ConversationHandler.END

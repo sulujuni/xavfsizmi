@@ -1476,3 +1476,43 @@ TEXTS["en"]["help_message"] = (
     "━━━ *Secretary Mode* ━━━\n"
     "🤖 Connect via Telegram Business → personal chats auto-protected."
 )
+
+
+
+# ─── DARK WEB CHECK ───────────────────────────────────────────────────────────
+
+TEXTS["uz"]["darkweb_ask"] = "🕸 *Dark Web Tekshiruvi*\n\nEmail yoki username yuboring — dark web bazalarida borligini tekshiraman:"
+TEXTS["ru"]["darkweb_ask"] = "🕸 *Проверка Dark Web*\n\nОтправьте email или username — проверю наличие в базах dark web:"
+TEXTS["en"]["darkweb_ask"] = "🕸 *Dark Web Check*\n\nSend an email or username — I'll check dark web databases:"
+
+TEXTS["uz"]["darkweb_found"] = (
+    "🕸🚨 *DARK WEB DA TOPILDI!*\n\n"
+    "🔍 Tekshirilgan: `{query}`\n"
+    "🔴 Topildi: *{count}* ta manbada\n\n"
+    "📋 *Topilgan joylar:*\n{sources}\n\n"
+    "⚠️ Zudlik bilan parollaringizni o'zgartiring va 2FA yoqing!"
+)
+TEXTS["ru"]["darkweb_found"] = (
+    "🕸🚨 *НАЙДЕНО В DARK WEB!*\n\n"
+    "🔍 Проверено: `{query}`\n"
+    "🔴 Найдено: в *{count}* источниках\n\n"
+    "📋 *Где найдено:*\n{sources}\n\n"
+    "⚠️ Срочно смените пароли и включите 2FA!"
+)
+TEXTS["en"]["darkweb_found"] = (
+    "🕸🚨 *FOUND ON DARK WEB!*\n\n"
+    "🔍 Checked: `{query}`\n"
+    "🔴 Found: in *{count}* sources\n\n"
+    "📋 *Found in:*\n{sources}\n\n"
+    "⚠️ Immediately change your passwords and enable 2FA!"
+)
+
+TEXTS["uz"]["darkweb_safe"] = "🕸✅ *Dark Web Tekshiruvi*\n\n`{query}` dark web bazalarida topilmadi.\n📊 Tekshirilgan: {checked} ta baza\n\n✅ Hozircha xavfsiz. Lekin parollarni muntazam yangilab turing!"
+TEXTS["ru"]["darkweb_safe"] = "🕸✅ *Проверка Dark Web*\n\n`{query}` не найдено в базах dark web.\n📊 Проверено: {checked} баз\n\n✅ Пока безопасно. Но регулярно обновляйте пароли!"
+TEXTS["en"]["darkweb_safe"] = "🕸✅ *Dark Web Check*\n\n`{query}` was not found in dark web databases.\n📊 Checked: {checked} databases\n\n✅ Safe for now. But keep updating your passwords!"
+
+# ─── PERMISSION EXPLAINER (Premium hint for free users) ───────────────────────
+
+TEXTS["uz"]["perm_premium_hint"] = "Batafsil tushuntirish uchun Premium kerak (/premium)"
+TEXTS["ru"]["perm_premium_hint"] = "Для подробного объяснения нужен Premium (/premium)"
+TEXTS["en"]["perm_premium_hint"] = "Detailed explanation requires Premium (/premium)"

@@ -1516,3 +1516,84 @@ TEXTS["en"]["darkweb_safe"] = "🕸✅ *Dark Web Check*\n\n`{query}` was not fou
 TEXTS["uz"]["perm_premium_hint"] = "Batafsil tushuntirish uchun Premium kerak (/premium)"
 TEXTS["ru"]["perm_premium_hint"] = "Для подробного объяснения нужен Premium (/premium)"
 TEXTS["en"]["perm_premium_hint"] = "Detailed explanation requires Premium (/premium)"
+
+
+
+# ─── BREACH COMBINED REPORT LABELS ────────────────────────────────────────────
+
+TEXTS["uz"]["breach_result_danger"] = "EMAIL XAVF OSTIDA!"
+TEXTS["ru"]["breach_result_danger"] = "EMAIL В ОПАСНОСТИ!"
+TEXTS["en"]["breach_result_danger"] = "EMAIL COMPROMISED!"
+
+TEXTS["uz"]["breach_result_safe"] = "EMAIL XAVFSIZ"
+TEXTS["ru"]["breach_result_safe"] = "EMAIL В БЕЗОПАСНОСТИ"
+TEXTS["en"]["breach_result_safe"] = "EMAIL SAFE"
+
+TEXTS["uz"]["breach_section"] = "Ma'lumot sizishlari"
+TEXTS["ru"]["breach_section"] = "Утечки данных"
+TEXTS["en"]["breach_section"] = "Data breaches"
+
+TEXTS["uz"]["darkweb_section"] = "Dark Web"
+TEXTS["ru"]["darkweb_section"] = "Dark Web"
+TEXTS["en"]["darkweb_section"] = "Dark Web"
+
+TEXTS["uz"]["breach_action_required"] = "Zudlik bilan parollaringizni o'zgartiring va 2FA yoqing!"
+TEXTS["ru"]["breach_action_required"] = "Срочно смените пароли и включите 2FA!"
+TEXTS["en"]["breach_action_required"] = "Change your passwords immediately and enable 2FA!"
+
+TEXTS["uz"]["breach_all_clear"] = "Hech qanday sizish yoki dark web mention topilmadi."
+TEXTS["ru"]["breach_all_clear"] = "Утечек и упоминаний в dark web не найдено."
+TEXTS["en"]["breach_all_clear"] = "No breaches or dark web mentions found."
+
+# ─── UPDATED WELCOME MESSAGE (with all features) ─────────────────────────────
+
+TEXTS["uz"]["start"] = (
+    "👋 Salom, *{name}*! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
+    "🛡 *Nima qila olaman:*\n"
+    "🔗 Havola yuboring → Trust Score + AI xulosa + homoglyph aniqlash\n"
+    "📄 Fayl yuboring (APK/PDF/DOC/ZIP/EXE) → virus tekshiruvi\n"
+    "📸 QR kod rasmini yuboring → ichidagi URL tekshiruvi\n\n"
+    "🤖 /ask — AI xavfsizlik yordamchisi\n"
+    "🔍 /analyze — shubhali xabar/SMS tahlili\n"
+    "🔐 /breach — email + parol + dark web tekshiruvi\n"
+    "📡 /monitor — email doimiy kuzatuv (Premium)\n"
+    "🕸 /darkweb — dark web da borligini tekshirish\n"
+    "👤 /scammer — akkaunt skammer emasligini tekshirish\n\n"
+    "📊 Kunlik limit: {limit} ta bepul tekshiruv\n"
+    "⭐ Cheksiz: /premium | 📖 /help\n\n"
+    "🌐 Tilni tanlang:"
+)
+
+TEXTS["ru"]["start"] = (
+    "👋 Привет, *{name}*! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
+    "🛡 *Что я умею:*\n"
+    "🔗 Отправьте ссылку → Trust Score + вердикт AI + обнаружение подмен\n"
+    "📄 Отправьте файл (APK/PDF/DOC/ZIP/EXE) → проверка на вирусы\n"
+    "📸 Отправьте фото QR-кода → проверка URL внутри\n\n"
+    "🤖 /ask — AI помощник по безопасности\n"
+    "🔍 /analyze — анализ подозрительного сообщения\n"
+    "🔐 /breach — проверка email + пароль + dark web\n"
+    "📡 /monitor — постоянный мониторинг email (Премиум)\n"
+    "🕸 /darkweb — проверка в базах dark web\n"
+    "👤 /scammer — проверка аккаунта на мошенничество\n\n"
+    "📊 Дневной лимит: {limit} бесплатных проверок\n"
+    "⭐ Безлимит: /premium | 📖 /help\n\n"
+    "🌐 Выберите язык:"
+)
+
+TEXTS["en"]["start"] = (
+    "👋 Hello, *{name}*! Welcome to *Xavfsizmi? Bot*!\n\n"
+    "🛡 *What I can do:*\n"
+    "🔗 Send a link → Trust Score + AI verdict + homoglyph detection\n"
+    "📄 Send a file (APK/PDF/DOC/ZIP/EXE) → malware scan\n"
+    "📸 Send QR code photo → scan URL inside\n\n"
+    "🤖 /ask — AI security assistant\n"
+    "🔍 /analyze — analyze suspicious message/SMS\n"
+    "🔐 /breach — email + password + dark web check\n"
+    "📡 /monitor — continuous email monitoring (Premium)\n"
+    "🕸 /darkweb — check dark web databases\n"
+    "👤 /scammer — check if account is a scammer\n\n"
+    "📊 Daily limit: {limit} free checks\n"
+    "⭐ Unlimited: /premium | 📖 /help\n\n"
+    "🌐 Choose language:"
+)

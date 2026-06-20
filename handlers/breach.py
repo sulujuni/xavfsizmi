@@ -85,7 +85,7 @@ async def breach_receive_input(update: Update, context: ContextTypes.DEFAULT_TYP
         if not has_premium:
             consume_referral_credit(user.id)
     except Exception as e:
-        await status_msg.edit_text(f"⚠️ API xatoligi: {str(e)}")
+        await status_msg.edit_text(t(lang, "api_error", error=str(e)[:100]))
 
     return ConversationHandler.END
 

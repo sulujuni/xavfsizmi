@@ -458,4 +458,4 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.edit_text(report, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"QR error: {e}")
-        await update.message.reply_text("❌ QR-kodni tahlil qilib o'qishda xatolik yuz berdi.")
+        await update.message.reply_text(t(lang, "qr_scan_error"))

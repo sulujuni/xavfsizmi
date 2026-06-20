@@ -98,11 +98,17 @@ async def is_user_subscribed(application: Application, user_id: int) -> bool:
 
 async def require_subscription(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
     """
-    Checks subscription. If not subscribed, sends subscription prompt and returns False.
-    Returns True if user is subscribed.
+    Checks subscription and ban status. If not subscribed or banned, handles it.
+    Returns True if user can proceed.
     """
     user = update.effective_user
     lang = get_user_lang(user.id)
+
+    # Check if user is banned
+    from admin import is_banned
+    if is_banned(user.id):
+        await update.message.reply_text("🚫")
+        return False
 
     if await is_user_subscribed(context.application, user.id):
         return True

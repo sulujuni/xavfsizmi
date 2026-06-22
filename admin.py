@@ -1,21 +1,21 @@
+"""
+Phase 2 Admin Module — async database + metrics integration.
+"""
+
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 from config import ADMIN_ID
-from database import get_stats, load_db
+from database import get_stats, get_all_user_ids, get_url_cache_size, clear_url_cache, get_recent_reports
+from logger import get_logger, metrics, health
+from cache_manager import cache
+
+logger = get_logger("admin")
+
 
 def is_admin(user_id: int) -> bool:
     return user_id == ADMIN_ID
 
-def get_all_user_ids() -> list:
-    """Get all real user IDs from the database"""
-    db = load_db()
-    return [
-        int(k) for k in db.keys()
-        if not k.startswith("group_")
-        and k not in ("reports", "url_cache")
-        and k.isdigit()
-    ]
 
 # ─── ADMIN PANEL ─────────────────────────────────────────────────────────────
 
@@ -26,23 +26,24 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Bu buyruq faqat admin uchun.")
         return
 
-    stats = get_stats()
-    db = load_db()
-    reports = db.get("reports", [])
-    all_users = get_all_user_ids()
+    stats = await get_stats()
+    cache_size = await get_url_cache_size()
+    cache_stats = cache.get_stats()
 
     text = (
         "🔐 *ADMIN PANEL*\n\n"
         f"👥 Jami foydalanuvchi: `{stats['total_users']}`\n"
         f"⭐ Premium: `{stats['total_premium']}`\n"
         f"🚨 Hisobotlar: `{stats['total_reports']}`\n"
-        f"🔗 URL Cache: `{len(db.get('url_cache', {}))}`\n\n"
+        f"🗄 URL Cache (DB): `{cache_size}`\n"
+        f"💾 Cache Backend: `{cache_stats['backend']}` (hit rate: {cache_stats['hit_rate_percent']}%)\n\n"
         "Quyidagi bo'limlardan birini tanlang:"
     )
 
     keyboard = [
         [InlineKeyboardButton("🚨 So'nggi hisobotlar", callback_data="admin_reports")],
         [InlineKeyboardButton("👥 Foydalanuvchilar", callback_data="admin_users")],
+        [InlineKeyboardButton("📊 Metrics & Health", callback_data="admin_metrics")],
         [InlineKeyboardButton("🗑 Cache'ni tozalash", callback_data="admin_clear_cache")],
     ]
 
@@ -52,6 +53,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+
 async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -59,36 +61,49 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(query.from_user.id):
         return
 
-    db = load_db()
     action = query.data
 
     if action == "admin_reports":
-        reports = db.get("reports", [])
+        reports = await get_recent_reports(limit=10)
         if not reports:
             await query.edit_message_text("📭 Hech qanday hisobot yo'q.")
             return
-        # Show last 10 reports
         text = "🚨 *So'nggi hisobotlar:*\n\n"
-        for r in reports[-10:][::-1]:
+        for r in reports:
             text += f"• `{r['url']}`\n  📅 {r['date']} | 👤 {r['user_id']}\n\n"
         await query.edit_message_text(text, parse_mode="Markdown")
 
     elif action == "admin_users":
-        users = get_all_user_ids()
-        premium_users = [k for k in db.keys() if k.isdigit() and db[k].get("premium")]
+        stats = await get_stats()
         text = (
             f"👥 *Foydalanuvchilar:*\n\n"
-            f"Jami: `{len(users)}`\n"
-            f"Premium: `{len(premium_users)}`\n"
-            f"Bepul: `{len(users) - len(premium_users)}`"
+            f"Jami: `{stats['total_users']}`\n"
+            f"Premium: `{stats['total_premium']}`\n"
+            f"Bepul: `{stats['total_users'] - stats['total_premium']}`"
         )
         await query.edit_message_text(text, parse_mode="Markdown")
 
+    elif action == "admin_metrics":
+        # Show metrics and health report
+        metrics_text = await metrics.get_formatted_report()
+        health_text = health.get_formatted_status()
+        cache_stats = cache.get_stats()
+
+        text = f"{metrics_text}\n\n{health_text}\n"
+        text += f"\n💾 *Cache Stats:*\n"
+        text += f"• Backend: `{cache_stats['backend']}`\n"
+        text += f"• Hit Rate: `{cache_stats['hit_rate_percent']}%`\n"
+        text += f"• Hits: `{cache_stats['hits']}` | Misses: `{cache_stats['misses']}`\n"
+        text += f"• Errors: `{cache_stats['errors']}`\n"
+
+        await query.edit_message_text(text, parse_mode="Markdown")
+
     elif action == "admin_clear_cache":
-        db["url_cache"] = {}
-        from database import save_db
-        save_db(db)
-        await query.edit_message_text("✅ URL cache tozalandi!")
+        await clear_url_cache()
+        await cache.clear_all()
+        await query.edit_message_text("✅ URL cache (DB + Redis/Memory) tozalandi!")
+        logger.info("Admin cleared all caches")
+
 
 # ─── BROADCAST ───────────────────────────────────────────────────────────────
 
@@ -111,7 +126,7 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_text = " ".join(context.args)
     broadcast_msg = f"📢 *SafeLink Bot xabari:*\n\n{message_text}"
 
-    all_users = get_all_user_ids()
+    all_users = await get_all_user_ids()
     status_msg = await update.message.reply_text(
         f"📤 Yuborilmoqda... 0/{len(all_users)}"
     )
@@ -128,7 +143,7 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             success += 1
         except TelegramError:
-            failed += 1  # User blocked the bot or account deleted
+            failed += 1
 
         # Update progress every 10 users
         if (success + failed) % 10 == 0:
@@ -136,7 +151,7 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await status_msg.edit_text(
                     f"📤 Yuborilmoqda... {success + failed}/{len(all_users)}"
                 )
-            except:
+            except Exception:
                 pass
 
     await status_msg.edit_text(
@@ -145,3 +160,5 @@ async def broadcast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"❌ Muvaffaqiyatsiz: `{failed}` (bot bloklangan yoki o'chirilgan)",
         parse_mode="Markdown"
     )
+    logger.info("Broadcast completed: %d success, %d failed", success, failed)
+    await metrics.record_event("broadcast", count=1)

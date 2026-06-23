@@ -12,7 +12,8 @@ from typing import Optional
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
 
-DB_PATH = os.getenv("DB_PATH", "/data/safelink.db") if os.path.exists("/data") else "safelink.db"
+# Honor explicit DB_PATH env var first; otherwise use /data volume if present, else local file.
+DB_PATH = os.getenv("DB_PATH") or ("/data/safelink.db" if os.path.exists("/data") else "safelink.db")
 RATE_LIMIT_SECONDS = 30
 CACHE_EXPIRE_HOURS = 24
 

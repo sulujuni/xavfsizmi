@@ -86,6 +86,13 @@ async def migrate(json_path: str, db_path: str, dry_run: bool = False):
 
     # Migrate data
     async with aiosqlite.connect(db_path) as db:
+        # Make migration idempotent: history & reports use autoincrement IDs and would
+        # duplicate on re-run. Clear them first since they're fully repopulated from JSON.
+        # (users/groups/url_cache/promocodes use INSERT OR REPLACE and are already safe.)
+        await db.execute("DELETE FROM history")
+        await db.execute("DELETE FROM reports")
+        await db.commit()
+
         # --- USERS ---
         print(f"\n👥 Migrating {len(users)} users...")
         user_count = 0

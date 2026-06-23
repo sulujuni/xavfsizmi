@@ -21,6 +21,7 @@ from database import (
     get_premium_expiry, is_premium, get_user_lang,
     get_history, get_referral_count,
 )
+from cache import cache
 
 
 def is_admin(user_id: int) -> bool:
@@ -153,7 +154,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🚫 Banned: `{banned_count}`\n"
         f"👥 Guruhlar: `{groups_count}`\n"
         f"🚨 Hisobotlar: `{stats['total_reports']}`\n"
-        f"🔗 URL Cache: `{len(db.get('url_cache', {}))}`\n"
+        f"🔗 Cache: `{cache.backend}` ({cache.stats()['memory_entries']} entries)\n"
         f"💳 Pending payments: `{len(pending_payments)}`\n\n"
         "━━━ *Buyruqlar* ━━━\n"
         "`/admin user <id>` — User ma'lumotlari\n"
@@ -161,6 +162,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`/admin unban <id>` — Blokdan chiqarish\n"
         "`/admin premium <id> <days>` — Premium berish\n"
         "`/admin export` — Bazani yuklab olish\n"
+        "`/dbinfo` — Database va cache holati\n"
         "`/ratelimit` — API limitlar\n"
     )
 
@@ -177,7 +179,10 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("🚫 Banned list", callback_data="admin_banned"),
             InlineKeyboardButton("🗑 Cache clear", callback_data="admin_clear_cache"),
         ],
-        [InlineKeyboardButton("📊 Revenue", callback_data="admin_revenue")],
+        [
+            InlineKeyboardButton("📊 Revenue", callback_data="admin_revenue"),
+            InlineKeyboardButton("🗄 DB & Cache", callback_data="admin_dbinfo"),
+        ],
     ]
 
     await update.message.reply_text(
@@ -280,9 +285,11 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(text, parse_mode="Markdown")
 
     elif action == "admin_clear_cache":
-        db["url_cache"] = {}
-        save_db(db)
+        cache.clear_prefix("url:")
         await query.edit_message_text("✅ URL cache tozalandi!")
+
+    elif action == "admin_dbinfo":
+        await query.edit_message_text(_build_dbinfo_text(), parse_mode="Markdown")
 
     elif action.startswith("admin_give_prem_"):
         uid = int(action.replace("admin_give_prem_", ""))
@@ -380,17 +387,72 @@ async def _admin_user_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE,
 async def _admin_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send the database file to admin."""
     import os
-    from database import DB_FILE
+    from database import DB_PATH
 
-    if os.path.exists(DB_FILE):
+    if os.path.exists(DB_PATH):
         await context.bot.send_document(
             chat_id=update.effective_chat.id,
-            document=open(DB_FILE, "rb"),
-            filename=f"xavfsizmi_backup_{date.today()}.json",
-            caption="📦 Database export",
+            document=open(DB_PATH, "rb"),
+            filename=f"xavfsizmi_backup_{date.today()}.db",
+            caption="📦 Database export (SQLite)",
         )
     else:
         await update.message.reply_text("❌ Database file not found.")
+
+
+# ─── /dbinfo — Database & Cache status ────────────────────────────────────────
+
+def _build_dbinfo_text() -> str:
+    """Build the database + cache status report (used by command and button)."""
+    import os
+    from database import DB_PATH
+
+    stats = get_stats()
+    db = load_db()
+    groups = sum(1 for k in db.keys() if k.startswith("group_"))
+    promos = len(db.get("promocodes", {}))
+
+    # Database file
+    if os.path.exists(DB_PATH):
+        size_kb = os.path.getsize(DB_PATH) / 1024
+        size_text = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
+        db_status = "✅ OK"
+    else:
+        size_text = "—"
+        db_status = "⚠️ not created yet"
+
+    # Cache layer
+    c = cache.stats()
+    backend_emoji = "🟢" if c["backend"] == "redis" else "🟡"
+
+    text = (
+        "🗄 *Database & Cache Status*\n\n"
+        "━━━ *Database (SQLite)* ━━━\n"
+        f"{db_status}\n"
+        f"📁 Path: `{DB_PATH}`\n"
+        f"💾 Size: `{size_text}`\n"
+        f"👥 Users: `{stats['total_users']}`\n"
+        f"👥 Groups: `{groups}`\n"
+        f"⭐ Premium: `{stats['total_premium']}`\n"
+        f"🎟 Promo codes: `{promos}`\n"
+        f"🚨 Reports: `{stats['total_reports']}`\n\n"
+        "━━━ *Cache layer* ━━━\n"
+        f"{backend_emoji} Backend: `{c['backend']}`\n"
+        f"📊 Hit rate: `{c['hit_rate_percent']}%`\n"
+        f"✅ Hits: `{c['hits']}` | ❌ Misses: `{c['misses']}`\n"
+        f"⚠️ Errors: `{c['errors']}`\n"
+        f"🧠 Memory entries: `{c['memory_entries']}`\n"
+    )
+    if c["backend"] == "memory":
+        text += "\n_ℹ️ Redis emas — REDIS_URL o'rnatilmagan (bitta instans uchun normal)._"
+    return text
+
+
+async def dbinfo_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show database backend and cache status to admin."""
+    if not is_admin(update.effective_user.id):
+        return
+    await update.message.reply_text(_build_dbinfo_text(), parse_mode="Markdown")
 
 
 # ─── Rate Limit Dashboard ─────────────────────────────────────────────────────

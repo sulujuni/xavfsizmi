@@ -19,7 +19,8 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from config import BOT_TOKEN, ADMIN_ID, USE_WEBHOOK, WEBHOOK_URL, WEBHOOK_PORT
-from admin import admin_command, admin_callback, broadcast_command, ratelimit_command
+from admin import admin_command, admin_callback, broadcast_command, ratelimit_command, dbinfo_command
+from database import init_db
 from error_handler import error_handler
 from rate_tracker import send_limit_warnings
 
@@ -103,6 +104,10 @@ logging.basicConfig(
 
 async def setup_menu(application: Application):
     """Configure bot menu buttons and commands on startup."""
+    # Initialize the database (SQLite) and cache (Redis/memory). This connects
+    # Redis if REDIS_URL is set and auto-migrates a legacy users.json on first run.
+    init_db()
+
     public_commands = [
         BotCommand("start", "🚀 Botni ishga tushirish"),
         BotCommand("help", "📖 Barcha buyruqlar ro'yxati"),
@@ -136,6 +141,7 @@ async def setup_menu(application: Application):
         BotCommand("admin", "🔐 Admin panel"),
         BotCommand("addpromo", "🔑 Promokod yaratish"),
         BotCommand("ratelimit", "📉 API limit dashboard"),
+        BotCommand("dbinfo", "🗄 Database va cache holati"),
     ]
     try:
         await application.bot.set_my_commands(
@@ -202,6 +208,7 @@ def main():
     app.add_handler(CommandHandler("phish", phish_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("history", history_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("ratelimit", ratelimit_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("dbinfo", dbinfo_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("tips", tips_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("top", top_command, filters=filters.ChatType.PRIVATE))
 

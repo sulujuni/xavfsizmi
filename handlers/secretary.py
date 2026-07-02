@@ -60,7 +60,7 @@ async def handle_business_connection(update: Update, context: ContextTypes.DEFAU
 
     user_id = connection.user.id
     connection_id = connection.id
-    is_enabled = not connection.is_disabled
+    is_enabled = connection.is_enabled
 
     save_business_connection(user_id, connection_id, is_enabled)
     lang = get_user_lang(user_id)

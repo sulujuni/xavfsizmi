@@ -89,13 +89,48 @@ MENU_COMMANDS = {
 }
 
 
+ADMIN_MENU_COMMANDS = {
+    "uz": [
+        ("stats", "📊 Bot statistikasi"),
+        ("broadcast", "📢 Hammaga xabar yuborish"),
+        ("admin", "🔐 Admin panel"),
+        ("addpromo", "🔑 Promokod yaratish"),
+        ("ratelimit", "📉 API limit dashboard"),
+        ("dbinfo", "🗄 Database va cache holati"),
+    ],
+    "ru": [
+        ("stats", "📊 Статистика бота"),
+        ("broadcast", "📢 Рассылка всем"),
+        ("admin", "🔐 Админ панель"),
+        ("addpromo", "🔑 Создать промокод"),
+        ("ratelimit", "📉 Лимиты API"),
+        ("dbinfo", "🗄 Статус БД и кеша"),
+    ],
+    "en": [
+        ("stats", "📊 Bot statistics"),
+        ("broadcast", "📢 Broadcast to all"),
+        ("admin", "🔐 Admin panel"),
+        ("addpromo", "🔑 Create promo code"),
+        ("ratelimit", "📉 API rate limits"),
+        ("dbinfo", "🗄 Database & cache status"),
+    ],
+}
+
+
 async def _set_user_menu_commands(context, user_id: int, lang: str):
-    """Set translated menu commands for a specific user."""
+    """Set translated menu commands for a specific user (includes admin commands for admin)."""
     from telegram import BotCommand, BotCommandScopeChat
     commands_list = MENU_COMMANDS.get(lang, MENU_COMMANDS["en"])
+    all_commands = list(commands_list)
+
+    # If user is admin, append admin-specific commands
+    if is_admin(user_id):
+        admin_extras = ADMIN_MENU_COMMANDS.get(lang, ADMIN_MENU_COMMANDS["en"])
+        all_commands.extend(admin_extras)
+
     try:
         await context.bot.set_my_commands(
-            commands=[BotCommand(cmd, desc) for cmd, desc in commands_list],
+            commands=[BotCommand(cmd, desc) for cmd, desc in all_commands],
             scope=BotCommandScopeChat(chat_id=user_id),
         )
     except Exception:

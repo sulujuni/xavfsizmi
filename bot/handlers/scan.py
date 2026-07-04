@@ -105,7 +105,7 @@ async def require_subscription(update: Update, context: ContextTypes.DEFAULT_TYP
     lang = get_user_lang(user.id)
 
     # Check if user is banned
-    from admin import is_banned
+    from bot.handlers.admin import is_banned
     if is_banned(user.id):
         await update.message.reply_text("🚫")
         return False

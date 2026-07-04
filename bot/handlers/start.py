@@ -296,7 +296,7 @@ async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await react_to_message(update.message)
     if update.effective_user.id != ADMIN_ID:
         return
-    from database import get_stats
+    from bot.core.database import get_stats
     try:
         stats_data = get_stats()
         text = (

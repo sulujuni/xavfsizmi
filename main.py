@@ -3,7 +3,7 @@ Xavfsizmi? Bot — Main Entry Point
 All handler logic is split into the handlers/ package.
 """
 import logging
-from telegram import MenuButtonCommands, BotCommand, BotCommandScopeChat, Update
+from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -20,6 +20,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from config import BOT_TOKEN, ADMIN_ID, USE_WEBHOOK, WEBHOOK_URL, WEBHOOK_PORT
 from admin import admin_command, admin_callback, broadcast_command, ratelimit_command, dbinfo_command
+from menu import apply_startup_menus
 from database import init_db
 from error_handler import error_handler
 from rate_tracker import send_limit_warnings
@@ -98,6 +99,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
+logger = logging.getLogger("safelink.main")
 
 
 # ─── BOT MENU SETUP (post_init) ──────────────────────────────────────────────
@@ -108,49 +110,12 @@ async def setup_menu(application: Application):
     # Redis if REDIS_URL is set and auto-migrates a legacy users.json on first run.
     init_db()
 
-    public_commands = [
-        BotCommand("start", "🚀 Botni ishga tushirish"),
-        BotCommand("help", "📖 Barcha buyruqlar ro'yxati"),
-        BotCommand("language", "🌐 Tilni o'zgartirish"),
-        BotCommand("breach", "🔐 Email/Parol tekshiruvi"),
-        BotCommand("monitor", "📡 Email monitoring (Premium)"),
-        BotCommand("ask", "🤖 AI yordamchidan so'rash"),
-        BotCommand("analyze", "🔍 Shubhali xabarni tahlil qilish"),
-        BotCommand("scammer", "👤 Skammer tekshiruvi"),
-        BotCommand("darkweb", "🕸 Dark web tekshiruvi"),
-        BotCommand("phish", "🎣 Fishing simulyatori"),
-        BotCommand("referral", "👥 Do'stlarni taklif qilish"),
-        BotCommand("top", "🏆 Liderlar jadvali"),
-        BotCommand("tips", "💡 Kunlik maslahatlar"),
-        BotCommand("premium", "⭐ Premium xarid qilish"),
-        BotCommand("history", "🕒 Tekshiruvlar tarixi"),
-        BotCommand("feedback", "📩 Taklif va shikoyatlar"),
-        BotCommand("report", "🚨 Xavfli link xabar berish"),
-    ]
-    await application.bot.set_my_commands(public_commands)
-
+    # All menu definitions live in menu.py (single source of truth).
     try:
-        await application.bot.set_my_default_menu_button(menu_button=MenuButtonCommands())
+        await apply_startup_menus(application.bot, ADMIN_ID)
+        logger.info("Bot menyulari muvaffaqiyatli yuklandi!")
     except Exception as e:
-        print(f"⚠️ Menu button: {e}")
-
-    # Admin gets extra commands
-    admin_commands = public_commands + [
-        BotCommand("stats", "📊 Bot statistikasi"),
-        BotCommand("broadcast", "📢 Hammaga xabar yuborish"),
-        BotCommand("admin", "🔐 Admin panel"),
-        BotCommand("addpromo", "🔑 Promokod yaratish"),
-        BotCommand("ratelimit", "📉 API limit dashboard"),
-        BotCommand("dbinfo", "🗄 Database va cache holati"),
-    ]
-    try:
-        await application.bot.set_my_commands(
-            commands=admin_commands,
-            scope=BotCommandScopeChat(chat_id=ADMIN_ID),
-        )
-        print("✅ Bot menyulari muvaffaqiyatli yuklandi!")
-    except Exception as e:
-        print(f"⚠️ Menyu sozlashda xatolik: {e}")
+        logger.warning("Menyu sozlashda xatolik: %s", e)
 
 
 # ─── SCHEDULER SETUP ──────────────────────────────────────────────────────────
@@ -183,7 +148,7 @@ def setup_scheduler(application: Application):
     )
 
     scheduler.start()
-    print("⏰ Scheduler ishga tushdi")
+    logger.info("Scheduler ishga tushdi")
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
@@ -334,14 +299,14 @@ def main():
 
     # ── Start Bot ─────────────────────────────────────────────────────────────
     if USE_WEBHOOK and WEBHOOK_URL:
-        print(f"🌐 Webhook mode: {WEBHOOK_URL}")
+        logger.info("Webhook mode: %s", WEBHOOK_URL)
         app.run_webhook(
             listen="0.0.0.0", port=WEBHOOK_PORT, url_path="webhook",
             webhook_url=f"{WEBHOOK_URL}/webhook",
             allowed_updates=["message", "callback_query", "pre_checkout_query", "business_connection", "business_message", "edited_business_message"],
         )
     else:
-        print("🚀 Xavfsizmi? Bot ishga tushdi!")
+        logger.info("Xavfsizmi? Bot ishga tushdi!")
         app.run_polling(allowed_updates=["message", "callback_query", "pre_checkout_query", "business_connection", "business_message", "edited_business_message"])
 
 

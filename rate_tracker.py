@@ -5,7 +5,7 @@ Warns when approaching limits.
 """
 import json
 import os
-from datetime import date, datetime
+from datetime import date
 
 TRACKER_FILE = "/data/rate_tracker.json" if os.path.exists("/data") else "rate_tracker.json"
 
@@ -69,7 +69,7 @@ def get_usage_dashboard() -> str:
     usage = get_daily_usage()
     today = str(date.today())
 
-    text = f"📊 *API Rate Limit Dashboard*\n"
+    text = "📊 *API Rate Limit Dashboard*\n"
     text += f"📅 Sana: `{today}`\n\n"
 
     for api_name, limit in API_LIMITS.items():
@@ -93,7 +93,7 @@ def get_usage_dashboard() -> str:
 
     # Total calls today
     total = sum(usage.values())
-    text += f"━━━━━━━━━━━━━━━━\n"
+    text += "━━━━━━━━━━━━━━━━\n"
     text += f"📈 *Jami bugungi so'rovlar:* `{total}`"
 
     return text

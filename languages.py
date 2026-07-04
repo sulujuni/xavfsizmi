@@ -73,7 +73,6 @@ TEXTS = {
         "group_welcome": "🔰 *Xavfsizmi? guruh himoyasi faollashtirildi!* Bot guruhdagi xavfli havolalarni avtomatik o'chiradi.",
         "group_malicious_removed": "🚨 *Xavfli havola o'chirildi!*\n👤 Foydalanuvchi: {user}\n⚠️ Sabab: Malicious Link.",
         "rate_limited": "⏳ Juda ko'p so'rov yuborildi. Biroz kuting.",
-        "breach_premium_required": "⭐ *Premium imkoniyat!* Email ma'lumotlar sizib chiqishini tekshirish faqat premium foydalanuvchilar uchun ochiq.\n\nPremium sotib olish uchun /premium buyrug'idan foydalaning yoki Promokod kiriting: `/promo KOD_NOMI`",
         "promo_usage": "⌨️ *Promokoddan foydalanish:* `/promo KOD_NOMI`",
         "promo_invalid": "❌ Bunday promokod mavjud emas yoki xato kiritilgan.",
         "promo_already_used": "❌ Siz ushbu promokoddan foydalanib bo'lgansiz!",
@@ -99,7 +98,7 @@ TEXTS = {
         "2️⃣ To'liq va cheksiz Premium sotib oling: /premium"
         ),
     },
-    
+
     "ru": {
         "choose_language": "🌐 Выберите язык / Choose language / Tilni tanlang:",
         "language_set": "✅ Язык изменен на русский!",
@@ -188,7 +187,6 @@ TEXTS = {
         "group_welcome": "🔰 *Защита групп Xavfsizmi? включена!* Бот автоматически удаляет опасные ссылки в чате.",
         "group_malicious_removed": "🚨 *Опасная ссылка удалена!*\n👤 Пользователь: {user}\n⚠️ Причина: Вредоносная ссылка.",
         "rate_limited": "⏳ Слишком много запросов. Подождите немного.",
-        "breach_premium_required": "⭐ *Премиум функция!* Проверка утечки данных электронной почты доступна только для Премиум пользователей.\n\nИспользуйте команду /premium для покупки или введите промокод: `/promo НАЗВАНИЕ_КОДА`",
         "promo_usage": "⌨️ *Использование промокода:* `/promo НАЗВАНИЕ_КОДА`",
         "promo_invalid": "❌ Такого промокода не существует или он введен неверно.",
         "promo_already_used": "❌ Вы уже использовали этот промокод!",
@@ -284,7 +282,6 @@ TEXTS = {
         "group_welcome": "🔰 *Xavfsizmi? group armor active!* Auto-purging links containing unsafe structures.",
         "group_malicious_removed": "🚨 *Malicious Link Extracted!*\n👤 Identity: {user}\n⚠️ Reason: Failed safety profile criteria.",
         "rate_limited": "⏳ Flood warning. Calm down your inputs.",
-        "breach_premium_required": "⭐ *Premium Feature!* Email breach scanning is restricted to Premium subscribers.\n\nUse /premium to upgrade or claim via a promotional code: `/promo CODE_NAME`",
         "promo_usage": "⌨️ *Promocode usage syntax:* `/promo CODE_NAME`",
         "promo_invalid": "❌ This promotional code does not exist or is structurally invalid.",
         "promo_already_used": "❌ You have already redeemed this promotional code!",

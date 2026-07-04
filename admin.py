@@ -8,8 +8,7 @@ Admin Panel — comprehensive bot management:
 - Broadcast
 - Rate limit dashboard
 """
-import json
-from datetime import datetime, date, timedelta
+from datetime import date
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
@@ -19,7 +18,7 @@ from config import ADMIN_ID
 from database import (
     get_stats, load_db, save_db, set_premium,
     get_premium_expiry, is_premium, get_user_lang,
-    get_history, get_referral_count,
+    get_history, get_referral_count, get_dau_trend,
 )
 from cache import cache
 
@@ -156,6 +155,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🚨 Hisobotlar: `{stats['total_reports']}`\n"
         f"🔗 Cache: `{cache.backend}` ({cache.stats()['memory_entries']} entries)\n"
         f"💳 Pending payments: `{len(pending_payments)}`\n\n"
+        f"{_build_dau_trend_text()}\n"
         "━━━ *Buyruqlar* ━━━\n"
         "`/admin user <id>` — User ma'lumotlari\n"
         "`/admin ban <id>` — Bloklash\n"
@@ -262,13 +262,11 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = "🚫 *Banned Users:*\n\n"
         for uid in banned[:20]:
             text += f"• `{uid}`\n"
-        text += f"\nUnban: `/admin unban <id>`"
+        text += "\nUnban: `/admin unban <id>`"
         await query.edit_message_text(text, parse_mode="Markdown")
 
     elif action == "admin_revenue":
-        # Count successful payments from database
-        total_stars = 0
-        total_paynet = 0
+        # Count premium users to estimate revenue.
         premium_users = []
         for k in db.keys():
             if k.isdigit() and db[k].get("premium_until"):
@@ -401,6 +399,25 @@ async def _admin_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ─── /dbinfo — Database & Cache status ────────────────────────────────────────
+
+def _build_dau_trend_text(days: int = 7) -> str:
+    """Build a compact daily-active-users trend (last N days) with a sparkline."""
+    trend = get_dau_trend(days)
+    counts = [c for _, c in trend]
+    if not any(counts):
+        return "━━━ *Faollik (7 kun)* ━━━\n📉 Hali ma'lumot yo'q\n"
+
+    blocks = "▁▂▃▄▅▆▇█"
+    peak = max(counts) or 1
+    spark = "".join(blocks[min(len(blocks) - 1, int(c / peak * (len(blocks) - 1)))] for c in counts)
+    today_count = counts[-1]
+    total = sum(counts)
+    return (
+        "━━━ *Faollik (7 kun)* ━━━\n"
+        f"`{spark}`\n"
+        f"📅 Bugun: `{today_count}` | 📊 Jami: `{total}` | 🔝 Peak: `{peak}`\n"
+    )
+
 
 def _build_dbinfo_text() -> str:
     """Build the database + cache status report (used by command and button)."""

@@ -15,7 +15,7 @@ from telegram.error import TelegramError
 
 from config import ADMIN_ID, DAILY_FREE_LIMIT, CHANNEL_INVITE_LINK
 from database import (
-    get_user_lang, set_user_lang, get_group_lang, set_group_lang,
+    get_user_lang, set_user_lang, set_group_lang,
     get_history, add_referral, get_referral_count, ensure_user_exists,
 )
 from languages import t, gt
@@ -38,103 +38,13 @@ async def _require_sub(update, context):
     return await require_subscription(update, context)
 
 
-# ─── Translated menu commands per user language ───────────────────────────────
-
-MENU_COMMANDS = {
-    "uz": [
-        ("start", "🚀 Botni ishga tushirish"),
-        ("help", "📖 Barcha buyruqlar"),
-        ("language", "🌐 Tilni o'zgartirish"),
-        ("breach", "🔐 Email/Parol tekshiruvi"),
-        ("scammer", "👤 Skammer tekshiruvi"),
-        ("phish", "🎣 Fishing simulyatori"),
-        ("referral", "👥 Do'stlarni taklif qilish"),
-        ("top", "🏆 Liderlar jadvali"),
-        ("tips", "💡 Kunlik maslahatlar"),
-        ("premium", "⭐ Premium xarid"),
-        ("history", "🕒 Tekshiruvlar tarixi"),
-        ("feedback", "📩 Taklif/shikoyat"),
-        ("report", "🚨 Xavfli link xabar"),
-    ],
-    "ru": [
-        ("start", "🚀 Запустить бота"),
-        ("help", "📖 Все команды"),
-        ("language", "🌐 Сменить язык"),
-        ("breach", "🔐 Проверка email/пароля"),
-        ("scammer", "👤 Проверка скаммера"),
-        ("phish", "🎣 Симулятор фишинга"),
-        ("referral", "👥 Пригласить друзей"),
-        ("top", "🏆 Таблица лидеров"),
-        ("tips", "💡 Ежедневные советы"),
-        ("premium", "⭐ Купить Premium"),
-        ("history", "🕒 История проверок"),
-        ("feedback", "📩 Обратная связь"),
-        ("report", "🚨 Сообщить о ссылке"),
-    ],
-    "en": [
-        ("start", "🚀 Start the bot"),
-        ("help", "📖 All commands"),
-        ("language", "🌐 Change language"),
-        ("breach", "🔐 Email/Password check"),
-        ("scammer", "👤 Scammer check"),
-        ("phish", "🎣 Phishing simulator"),
-        ("referral", "👥 Invite friends"),
-        ("top", "🏆 Leaderboard"),
-        ("tips", "💡 Daily tips"),
-        ("premium", "⭐ Buy Premium"),
-        ("history", "🕒 Check history"),
-        ("feedback", "📩 Send feedback"),
-        ("report", "🚨 Report link"),
-    ],
-}
-
-
-ADMIN_MENU_COMMANDS = {
-    "uz": [
-        ("stats", "📊 Bot statistikasi"),
-        ("broadcast", "📢 Hammaga xabar yuborish"),
-        ("admin", "🔐 Admin panel"),
-        ("addpromo", "🔑 Promokod yaratish"),
-        ("ratelimit", "📉 API limit dashboard"),
-        ("dbinfo", "🗄 Database va cache holati"),
-    ],
-    "ru": [
-        ("stats", "📊 Статистика бота"),
-        ("broadcast", "📢 Рассылка всем"),
-        ("admin", "🔐 Админ панель"),
-        ("addpromo", "🔑 Создать промокод"),
-        ("ratelimit", "📉 Лимиты API"),
-        ("dbinfo", "🗄 Статус БД и кеша"),
-    ],
-    "en": [
-        ("stats", "📊 Bot statistics"),
-        ("broadcast", "📢 Broadcast to all"),
-        ("admin", "🔐 Admin panel"),
-        ("addpromo", "🔑 Create promo code"),
-        ("ratelimit", "📉 API rate limits"),
-        ("dbinfo", "🗄 Database & cache status"),
-    ],
-}
-
+# ─── Menu commands (single source of truth lives in menu.py) ──────────────────
 
 async def _set_user_menu_commands(context, user_id: int, lang: str):
-    """Set translated menu commands for a specific user (includes admin commands for admin)."""
-    from telegram import BotCommand, BotCommandScopeChat
-    commands_list = MENU_COMMANDS.get(lang, MENU_COMMANDS["en"])
-    all_commands = list(commands_list)
-
-    # If user is admin, append admin-specific commands
-    if is_admin(user_id):
-        admin_extras = ADMIN_MENU_COMMANDS.get(lang, ADMIN_MENU_COMMANDS["en"])
-        all_commands.extend(admin_extras)
-
-    try:
-        await context.bot.set_my_commands(
-            commands=[BotCommand(cmd, desc) for cmd, desc in all_commands],
-            scope=BotCommandScopeChat(chat_id=user_id),
-        )
-    except Exception:
-        pass
+    """Set translated menu commands for a specific user in their language.
+    Admin users also get the admin-only commands appended."""
+    from menu import set_user_menu
+    await set_user_menu(context.bot, user_id, lang, is_admin_user=is_admin(user_id))
 
 
 # ─── /start (short welcome) ──────────────────────────────────────────────────

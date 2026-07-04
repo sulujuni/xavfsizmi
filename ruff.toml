@@ -1,0 +1,18 @@
+# Ruff configuration for the Xavfsizmi bot.
+# Focused on catching real bugs (pyflakes F-codes) and import hygiene, while
+# tolerating the project's existing style (long Markdown strings, etc.).
+
+line-length = 140
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line too long — many long translated Markdown strings
+    "E741",  # ambiguous variable names (legacy code)
+]
+
+[lint.per-file-ignores]
+# handlers/__init__.py re-exports the package's public API for main.py.
+"handlers/__init__.py" = ["F401", "F403"]
+# conftest sets env vars before importing app modules on purpose.
+"tests/conftest.py" = ["E402"]

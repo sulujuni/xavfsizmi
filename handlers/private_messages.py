@@ -43,7 +43,7 @@ from handlers.tools import (
     explain_permissions,
 )
 from apk_checker import scan_apk
-from file_scanner import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
+from file_scanner import scan_file, get_file_type, MAX_FILE_SIZE
 from qr_checker import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
@@ -223,7 +223,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         report += f"🎯 *{t(lang, 'trust_score_label')}:* {score_display}\n"
         report += typo_warning
         report += homoglyph_warning
-        report += f"\n"
+        report += "\n"
         report += f"🔍 *VirusTotal:* `{vt_res.get('malicious', 0)}/{vt_res.get('total', 0)}` {t(lang, 'threats')}\n"
         report += f"🌐 *Google Safe Browsing:* {'❌ ' + t(lang, 'dangerous') if gsb_res.get('dangerous') else '✅ ' + t(lang, 'clean')}\n"
         report += f"👽 *AlienVault OTX:* `{alien_res.get('pulses_count', 0)}` {t(lang, 'threat_groups')}\n"
@@ -455,7 +455,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         add_to_history(user_id, url, status_str)
         record_check(user_id, is_dangerous)
 
-        report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n"
+        report = "🛡 *QR-kod ichidagi havola hisoboti:*\n\n"
         report += f"🔗 `{url}`\n\n"
         report += f"🎯 *Ishonch Darajasi:* {score_display}\n"
         report += f"🔍 *VirusTotal:* {vt_res.get('malicious', 0)} ta dvigatel xavf aniqladi\n"

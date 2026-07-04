@@ -6,7 +6,7 @@ async def check_email_breach(email: str) -> dict:
     100% Free API, no authentication needed!
     """
     url = f"https://api.xposedornot.com/v1/check-email/{email}"
-    
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=10) as resp:

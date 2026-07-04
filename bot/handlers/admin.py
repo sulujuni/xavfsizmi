@@ -444,7 +444,7 @@ def _build_dbinfo_text() -> str:
         f"🧠 Memory entries: `{c['memory_entries']}`\n"
     )
     if c["backend"] == "memory":
-        text += "\n_ℹ️ Redis emas — REDIS_URL o'rnatilmagan (bitta instans uchun normal)._"
+        text += "\nℹ️ Redis emas — REDIS\\_URL o'rnatilmagan (bitta instans uchun normal)."
     return text
 
 

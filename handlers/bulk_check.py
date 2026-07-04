@@ -14,7 +14,7 @@ from database import get_user_lang, is_premium, get_user_checks, increment_user_
 from config import DAILY_FREE_LIMIT
 from languages import t
 from checker import check_virustotal, check_google_safe_browsing
-from handlers.tools import calculate_trust_score, trust_score_emoji
+from handlers.tools import calculate_trust_score
 from handlers.private_messages import require_subscription, react_to_message
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')

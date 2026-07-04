@@ -4,7 +4,7 @@ Also tracks API rate limit usage.
 """
 import logging
 import traceback
-from datetime import date, datetime
+from datetime import datetime
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -24,7 +24,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error("Exception while handling an update:", exc_info=context.error)
 
     # Build error message for admin
-    error_text = f"🚨 *BOT ERROR REPORT*\n\n"
+    error_text = "🚨 *BOT ERROR REPORT*\n\n"
     error_text += f"⏰ *Vaqt:* `{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}`\n"
 
     # Add update info if available

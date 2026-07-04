@@ -11,16 +11,13 @@ Advanced security tool utilities:
 """
 import ssl
 import socket
-import re
 import asyncio
-import logging
 from urllib.parse import urlparse
 from datetime import datetime
 
 import httpx
 import aiohttp
 
-from config import URLSCAN_API_KEY, VIRUSTOTAL_API_KEY
 
 # ─── POPULAR DOMAINS for typosquatting detection ──────────────────────────────
 
@@ -124,7 +121,7 @@ async def get_website_screenshot(url: str) -> str:
                             # Download image bytes and save temporarily
                             image_data = await resp.read()
                             if len(image_data) > 5000:  # Valid image should be > 5KB
-                                import tempfile, os
+                                import tempfile
                                 tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                                 tmp.write(image_data)
                                 tmp.close()
@@ -576,9 +573,9 @@ def format_security_headers(headers_result: dict, lang: str = "uz") -> str:
 
     # HTTPS
     if headers_result["https"]:
-        text += f"  ✅ HTTPS\n"
+        text += "  ✅ HTTPS\n"
     else:
-        text += f"  ❌ HTTPS\n"
+        text += "  ❌ HTTPS\n"
 
     # Missing headers
     for h in headers_result["headers_missing"][:4]:

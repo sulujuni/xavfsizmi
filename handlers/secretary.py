@@ -60,7 +60,7 @@ async def handle_business_connection(update: Update, context: ContextTypes.DEFAU
 
     user_id = connection.user.id
     connection_id = connection.id
-    is_enabled = not connection.is_disabled
+    is_enabled = connection.is_enabled
 
     save_business_connection(user_id, connection_id, is_enabled)
     lang = get_user_lang(user_id)
@@ -117,7 +117,7 @@ async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_
     # Check for URLs
     urls_found = URL_REGEX.findall(text)
 
-    # Check for scam text patterns
+    # Check for scam text patterns (fast regex first-pass)
     scam_detected = any(pattern.search(text) for pattern in SCAM_REGEX)
 
     # If no URLs and no scam patterns — stay silent
@@ -141,12 +141,18 @@ async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_
             except Exception as e:
                 logging.error(f"Secretary URL check error: {e}")
 
+    # AI second opinion: since regex only matches a fixed set of phrases, ask the
+    # LLM to classify the message. This catches scams the patterns miss and adds
+    # a short human-readable reason. Only runs when a Groq key is configured.
+    ai_is_scam, ai_reason = await _ai_scam_verdict(text)
+    scam_flagged = scam_detected or ai_is_scam
+
     # If nothing dangerous — stay silent
-    if not dangerous_urls and not scam_detected:
+    if not dangerous_urls and not scam_flagged:
         return
 
     # Build alert
-    alert = f"🚨🤖 *SECRETARY OGOHLANTIRISH!*\n\n"
+    alert = "🚨🤖 *SECRETARY OGOHLANTIRISH!*\n\n"
     alert += f"👤 *Kimdan:* {sender_name}\n"
 
     if dangerous_urls:
@@ -154,12 +160,52 @@ async def handle_business_message(update: Update, context: ContextTypes.DEFAULT_
         for d in dangerous_urls:
             alert += f"  • `{d['url']}` — {d['malicious_count']} antivirus xavf aniqladi\n"
 
-    if scam_detected:
+    if scam_flagged:
         alert += "\n⚠️ *Skam/Firibgarlik belgilari topildi!*\n"
+        if ai_reason:
+            alert += f"🤖 *AI tahlili:* {ai_reason}\n"
 
     alert += "\n💡 Bu havolalarni BOSMANG va shaxsiy ma'lumot bermang."
 
     await _send_via_business(context, business_connection_id, chat.id, alert)
+
+
+async def _ai_scam_verdict(text: str):
+    """
+    Ask the LLM whether a message looks like a scam/phishing attempt.
+
+    Returns (is_scam: bool, reason: str). Falls back to (False, "") when the
+    AI is unavailable or the response can't be parsed, so it never blocks the
+    faster regex-based detection.
+    """
+    from config import GROQ_API_KEY
+    if not GROQ_API_KEY:
+        return False, ""
+
+    # Keep the prompt cheap and bounded.
+    snippet = text[:1500]
+    system = (
+        "You are a scam/phishing detector for Telegram messages. "
+        "Reply with EXACTLY one line in this format: VERDICT | short reason. "
+        "VERDICT must be one of SCAM, SUSPICIOUS, or SAFE. "
+        "Write the short reason in Uzbek, max 15 words."
+    )
+    try:
+        from handlers.ai import ask_groq
+        raw = await ask_groq(system, f"Message:\n{snippet}", max_tokens=60, temperature=0.2)
+    except Exception as e:
+        logging.error(f"Secretary AI verdict error: {e}")
+        return False, ""
+
+    if not raw:
+        return False, ""
+
+    first_line = raw.strip().splitlines()[0]
+    parts = first_line.split("|", 1)
+    verdict = parts[0].strip().upper()
+    reason = parts[1].strip() if len(parts) > 1 else ""
+    is_scam = verdict.startswith("SCAM") or verdict.startswith("SUSPIC")
+    return is_scam, (reason if is_scam else "")
 
 
 # ─── Secretary APK Handler ────────────────────────────────────────────────────

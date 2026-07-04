@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import io
 
 def extract_qr_url(image_bytes: bytes) -> str:
     """

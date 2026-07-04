@@ -6,29 +6,28 @@ TEXTS = {
         "choose_language": "🌐 Tilni tanlang / Choose language / Выберите язык:",
         "language_set": "✅ Til o'zbekchaga o'zgartirildi!",
         "start": (
-            "👋 Salom, {name}! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
-            "🛡 Men sizga internetdagi xavflardan himoyalanishga yordam beraman.\n\n"
+            "👋 Salom, {name}!\n\n"
+            "🛡 *Xavfsizmi?* — sizning shaxsiy kiberxavfsizlik yordamchingiz.\n\n"
+            "Menga havola, fayl yoki QR kod yuboring — xavfsizligini tekshirib beraman.\n\n"
+            "━━━ *Buyruqlar* ━━━\n"
+            "/help — Barcha buyruqlar\n"
+            "/breach — Email/parol tekshirish\n"
+            "/ask — AI ga savol berish\n"
+            "/analyze — Shubhali xabarni tahlil qilish\n"
+            "/scammer — Akkaunt tekshirish\n"
+            "/darkweb — Dark web tekshiruvi\n"
+            "/monitor — Email monitoring (Premium)\n"
+            "/phish — Fishing simulyatori\n"
+            "/referral — Do'stlarni taklif qilish\n"
+            "/top — Liderlar jadvali\n"
+            "/tips — Kunlik maslahatlar\n"
+            "/premium — Premium olish\n"
+            "/history — Tekshiruvlar tarixi\n"
+            "/language — Tilni o'zgartirish\n\n"
             "━━━━━━━━━━━━━━━━\n"
-            "⚙️ *MEN NIMALAR QILA OLAMAN?*\n\n"
-            "🔗 *Havolalarni tekshirish*\n"
-            "└ Istalgan URL yoki linkni yuboring → Ko'p qatlamli xavfsizlik tahlili\n\n"
-            "📱 *APK fayllarni tekshirish*\n"
-            "└ .APK faylni yuboring (maks 32MB) → VirusTotal orqali skanerlash\n\n"
-            "📸 *QR kodlarni tekshirish*\n"
-            "└ QR kod rasmini yuboring → ichidagi URL xavfsizligini aniqlaydi\n\n"
-            "🔐 *Email Breach* (Premium/Referral)\n"
-            "└ /breach → Email sizib chiqqanini tekshirish\n\n"
-            "🎣 *Fishing Simulyator*\n"
-            "└ /phish → Do'stlaringizni xavfsizlik bo'yicha sinab ko'ring\n\n"
-            "🤖 *Secretary Rejimi* ⭐\n"
-            "└ Telegram Business orqali botni ulang → Shaxsiy chatlardagi\n"
-            "  kiruvchi xabarlarni avtomatik skanerlaydi. Xavfli bo'lsa —\n"
-            "  ogohlantiradi, xavfsiz bo'lsa — jim turadi.\n"
-            "└ Yoqish: Telegram Settings → Business → Chatbots → Bu bot\n\n"
-            "━━━━━━━━━━━━━━━━\n"
-            "📊 *Kunlik limit:* {limit} ta bepul tekshiruv (URL + APK + QR)\n"
-            "⭐ Cheksiz foydalanish → /premium\n"
-            "🌐 Tilni o'zgartirish → /language"
+            "📊 Kunlik limit: {limit} ta bepul tekshiruv\n"
+            "⭐ Cheksiz → /premium\n"
+            "🤖 Secretary rejimi: Telegram → Business → Chatbots"
         ),
         "checking": "🔄 Tekshirilmoqda...",
         "gsb_safe": "✅ *Google Safe Browsing:* Toza\n",
@@ -73,7 +72,6 @@ TEXTS = {
         "group_welcome": "🔰 *Xavfsizmi? guruh himoyasi faollashtirildi!* Bot guruhdagi xavfli havolalarni avtomatik o'chiradi.",
         "group_malicious_removed": "🚨 *Xavfli havola o'chirildi!*\n👤 Foydalanuvchi: {user}\n⚠️ Sabab: Malicious Link.",
         "rate_limited": "⏳ Juda ko'p so'rov yuborildi. Biroz kuting.",
-        "breach_premium_required": "⭐ *Premium imkoniyat!* Email ma'lumotlar sizib chiqishini tekshirish faqat premium foydalanuvchilar uchun ochiq.\n\nPremium sotib olish uchun /premium buyrug'idan foydalaning yoki Promokod kiriting: `/promo KOD_NOMI`",
         "promo_usage": "⌨️ *Promokoddan foydalanish:* `/promo KOD_NOMI`",
         "promo_invalid": "❌ Bunday promokod mavjud emas yoki xato kiritilgan.",
         "promo_already_used": "❌ Siz ushbu promokoddan foydalanib bo'lgansiz!",
@@ -99,34 +97,33 @@ TEXTS = {
         "2️⃣ To'liq va cheksiz Premium sotib oling: /premium"
         ),
     },
-    
+
     "ru": {
         "choose_language": "🌐 Выберите язык / Choose language / Tilni tanlang:",
         "language_set": "✅ Язык изменен на русский!",
         "start": (
-            "👋 Привет, {name}! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
-            "🛡 Я помогу вам защититься от угроз в интернете.\n\n"
+            "👋 Привет, {name}!\n\n"
+            "🛡 *Xavfsizmi?* — ваш личный помощник по кибербезопасности.\n\n"
+            "Отправьте мне ссылку, файл или QR-код — проверю на безопасность.\n\n"
+            "━━━ *Команды* ━━━\n"
+            "/help — Все команды\n"
+            "/breach — Проверка email/пароля\n"
+            "/ask — Задать вопрос AI\n"
+            "/analyze — Анализ подозрительного сообщения\n"
+            "/scammer — Проверка аккаунта\n"
+            "/darkweb — Проверка в dark web\n"
+            "/monitor — Мониторинг email (Премиум)\n"
+            "/phish — Симулятор фишинга\n"
+            "/referral — Пригласить друзей\n"
+            "/top — Таблица лидеров\n"
+            "/tips — Ежедневные советы\n"
+            "/premium — Купить Премиум\n"
+            "/history — История проверок\n"
+            "/language — Сменить язык\n\n"
             "━━━━━━━━━━━━━━━━\n"
-            "⚙️ *ЧТО Я УМЕЮ?*\n\n"
-            "🔗 *Проверка ссылок*\n"
-            "└ Отправьте любой URL → Многоуровневый анализ безопасности\n\n"
-            "📱 *Проверка APK файлов*\n"
-            "└ Отправьте .APK файл (макс 32MB) → Сканирование через VirusTotal\n\n"
-            "📸 *Сканирование QR-кодов*\n"
-            "└ Отправьте фото QR-кода → Проверим ссылку внутри\n\n"
-            "🔐 *Утечки Email* (Премиум/Реферал)\n"
-            "└ /breach → Проверка утечки данных\n\n"
-            "🎣 *Симулятор Фишинга*\n"
-            "└ /phish → Проверьте бдительность ваших друзей\n\n"
-            "🤖 *Режим Секретаря* ⭐\n"
-            "└ Подключите бота через Telegram Business → Автоматическое\n"
-            "  сканирование входящих сообщений. Опасно — предупредит,\n"
-            "  безопасно — молчит.\n"
-            "└ Включить: Telegram Settings → Business → Chatbots → Этот бот\n\n"
-            "━━━━━━━━━━━━━━━━\n"
-            "📊 *Дневной лимит:* {limit} бесплатных проверок (URL + APK + QR)\n"
+            "📊 Дневной лимит: {limit} бесплатных проверок\n"
             "⭐ Безлимит → /premium\n"
-            "🌐 Сменить язык → /language"
+            "🤖 Режим секретаря: Telegram → Business → Chatbots"
         ),
         "checking": "🔄 Проверяется...",
         "gsb_safe": "✅ *Google Safe Browsing:* Чисто\n",
@@ -188,7 +185,6 @@ TEXTS = {
         "group_welcome": "🔰 *Защита групп Xavfsizmi? включена!* Бот автоматически удаляет опасные ссылки в чате.",
         "group_malicious_removed": "🚨 *Опасная ссылка удалена!*\n👤 Пользователь: {user}\n⚠️ Причина: Вредоносная ссылка.",
         "rate_limited": "⏳ Слишком много запросов. Подождите немного.",
-        "breach_premium_required": "⭐ *Премиум функция!* Проверка утечки данных электронной почты доступна только для Премиум пользователей.\n\nИспользуйте команду /premium для покупки или введите промокод: `/promo НАЗВАНИЕ_КОДА`",
         "promo_usage": "⌨️ *Использование промокода:* `/promo НАЗВАНИЕ_КОДА`",
         "promo_invalid": "❌ Такого промокода не существует или он введен неверно.",
         "promo_already_used": "❌ Вы уже использовали этот промокод!",
@@ -209,28 +205,28 @@ TEXTS = {
         "choose_language": "🌐 Choose language / Выберите язык / Tilni tanlang:",
         "language_set": "✅ Language changed to English!",
         "start": (
-            "👋 Hello, {name}! Welcome to *Xavfsizmi? Bot*!\n\n"
-            "🛡 I am here to safeguard your navigation over the internet.\n\n"
+            "👋 Hi, {name}!\n\n"
+            "🛡 *Xavfsizmi?* — your personal cybersecurity assistant.\n\n"
+            "Send me a link, file, or QR code — I'll check if it's safe.\n\n"
+            "━━━ *Commands* ━━━\n"
+            "/help — All commands\n"
+            "/breach — Check email/password leaks\n"
+            "/ask — Ask AI a question\n"
+            "/analyze — Analyze a suspicious message\n"
+            "/scammer — Check an account\n"
+            "/darkweb — Dark web search\n"
+            "/monitor — Email monitoring (Premium)\n"
+            "/phish — Phishing simulator\n"
+            "/referral — Invite friends\n"
+            "/top — Leaderboard\n"
+            "/tips — Daily security tips\n"
+            "/premium — Get Premium\n"
+            "/history — Check history\n"
+            "/language — Change language\n\n"
             "━━━━━━━━━━━━━━━━\n"
-            "⚙️ *WHAT CAN I DO?*\n\n"
-            "🔗 *URL Link Scanning*\n"
-            "└ Send any link → Deep multi-layer reputation checks\n\n"
-            "📱 *APK Android Scanning*\n"
-            "└ Upload any .APK (max 32MB) → VirusTotal malware sweep\n\n"
-            "📸 *QR Code Reading*\n"
-            "└ Submit a photo of any QR → Scan extracted URL\n\n"
-            "🔐 *Data Breach Tracking* (Premium/Referral)\n"
-            "└ /breach → Check if your email was leaked\n\n"
-            "🎣 *Phishing Simulator*\n"
-            "└ /phish → Test your friends' security awareness\n\n"
-            "🤖 *Secretary Mode* ⭐\n"
-            "└ Connect bot via Telegram Business → Auto-scans your incoming\n"
-            "  personal messages. Dangerous → alerts you. Safe → stays silent.\n"
-            "└ Enable: Telegram Settings → Business → Chatbots → This bot\n\n"
-            "━━━━━━━━━━━━━━━━\n"
-            "📊 *Daily limit:* {limit} free checks (URL + APK + QR combined)\n"
+            "📊 Daily limit: {limit} free checks\n"
             "⭐ Unlimited → /premium\n"
-            "🌐 Change language → /language"
+            "🤖 Secretary mode: Telegram → Business → Chatbots"
         ),
         "checking": "🔄 Scanning target destination...",
         "gsb_safe": "✅ *Google Safe Browsing:* Clean\n",
@@ -284,7 +280,6 @@ TEXTS = {
         "group_welcome": "🔰 *Xavfsizmi? group armor active!* Auto-purging links containing unsafe structures.",
         "group_malicious_removed": "🚨 *Malicious Link Extracted!*\n👤 Identity: {user}\n⚠️ Reason: Failed safety profile criteria.",
         "rate_limited": "⏳ Flood warning. Calm down your inputs.",
-        "breach_premium_required": "⭐ *Premium Feature!* Email breach scanning is restricted to Premium subscribers.\n\nUse /premium to upgrade or claim via a promotional code: `/promo CODE_NAME`",
         "promo_usage": "⌨️ *Promocode usage syntax:* `/promo CODE_NAME`",
         "promo_invalid": "❌ This promotional code does not exist or is structurally invalid.",
         "promo_already_used": "❌ You have already redeemed this promotional code!",
@@ -541,51 +536,6 @@ TEXTS["en"]["leaderboard_footer"] = "⭐ Top 3 get 30 days free Premium at the e
 
 
 # ─── OVERRIDE: SHORT START MESSAGE + HELP COMMAND ─────────────────────────────
-
-TEXTS["uz"]["start"] = (
-    "👋 Salom, *{name}*! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
-    "🛡 Shubhali havolani yuboring — chuqur tahlil + AI xulosasi\n"
-    "📄 Fayl yuboring (APK, PDF, DOC, ZIP, EXE...) — virusga tekshiraman\n"
-    "📸 QR kod rasmini yuboring — ichidagi URL ni tekshiraman\n\n"
-    "🤖 /ask — AI xavfsizlik yordamchisi\n"
-    "🔍 /analyze — shubhali xabarni tahlil qilish\n"
-    "🔐 /breach — email/parol sizganini tekshirish\n"
-    "📡 /monitor — emailni doimiy kuzatish (Premium)\n\n"
-    "📊 Kunlik limit: {limit} ta bepul tekshiruv\n"
-    "⭐ Cheksiz: /premium\n"
-    "📖 Barcha buyruqlar: /help\n\n"
-    "🌐 Tilni tanlang:"
-)
-
-TEXTS["ru"]["start"] = (
-    "👋 Привет, *{name}*! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
-    "🛡 Отправьте ссылку — глубокий анализ + вердикт AI\n"
-    "📄 Отправьте файл (APK, PDF, DOC, ZIP, EXE...) — проверю на вирусы\n"
-    "📸 Отправьте фото QR-кода — проверю ссылку внутри\n\n"
-    "🤖 /ask — AI помощник по безопасности\n"
-    "🔍 /analyze — анализ подозрительного сообщения\n"
-    "🔐 /breach — проверка утечки email/пароля\n"
-    "📡 /monitor — постоянный мониторинг email (Премиум)\n\n"
-    "📊 Дневной лимит: {limit} бесплатных проверок\n"
-    "⭐ Безлимит: /premium\n"
-    "📖 Все команды: /help\n\n"
-    "🌐 Выберите язык:"
-)
-
-TEXTS["en"]["start"] = (
-    "👋 Hello, *{name}*! Welcome to *Xavfsizmi? Bot*!\n\n"
-    "🛡 Send a suspicious link — deep analysis + AI verdict\n"
-    "📄 Send a file (APK, PDF, DOC, ZIP, EXE...) — I'll scan for malware\n"
-    "📸 Send a QR code photo — I'll scan the URL inside\n\n"
-    "🤖 /ask — AI security assistant\n"
-    "🔍 /analyze — analyze a suspicious message\n"
-    "🔐 /breach — check if email/password was leaked\n"
-    "📡 /monitor — continuous email monitoring (Premium)\n\n"
-    "📊 Daily limit: {limit} free checks\n"
-    "⭐ Unlimited: /premium\n"
-    "📖 All commands: /help\n\n"
-    "🌐 Choose language:"
-)
 
 # ─── HELP MESSAGE (detailed) ─────────────────────────────────────────────────
 
@@ -1548,54 +1498,78 @@ TEXTS["en"]["breach_all_clear"] = "No breaches or dark web mentions found."
 # ─── UPDATED WELCOME MESSAGE (with all features) ─────────────────────────────
 
 TEXTS["uz"]["start"] = (
-    "👋 Salom, *{name}*! *Xavfsizmi? Bot*ga xush kelibsiz!\n\n"
-    "🛡 *Nima qila olaman:*\n"
-    "🔗 Havola yuboring → Trust Score + AI xulosa + homoglyph aniqlash\n"
-    "📄 Fayl yuboring (APK/PDF/DOC/ZIP/EXE) → virus tekshiruvi\n"
-    "📸 QR kod rasmini yuboring → ichidagi URL tekshiruvi\n\n"
-    "🤖 /ask — AI xavfsizlik yordamchisi\n"
-    "🔍 /analyze — shubhali xabar/SMS tahlili\n"
-    "🔐 /breach — email + parol + dark web tekshiruvi\n"
-    "📡 /monitor — email doimiy kuzatuv (Premium)\n"
-    "🕸 /darkweb — dark web da borligini tekshirish\n"
-    "👤 /scammer — akkaunt skammer emasligini tekshirish\n\n"
+    "👋 Salom, *{name}*!\n\n"
+    "🛡 *Xavfsizmi?* — sizning kiberxavfsizlik yordamchingiz.\n\n"
+    "Menga havola, fayl yoki QR kod yuboring — xavfsizligini tekshiraman.\n\n"
+    "━━━ *Buyruqlar* ━━━\n"
+    "/help — Barcha buyruqlar\n"
+    "/breach — Email/parol tekshirish\n"
+    "/ask — AI ga savol berish\n"
+    "/analyze — Shubhali xabarni tahlil qilish\n"
+    "/scammer — Akkaunt tekshirish\n"
+    "/darkweb — Dark web tekshiruvi\n"
+    "/monitor — Email monitoring (Premium)\n"
+    "/phish — Fishing simulyatori\n"
+    "/referral — Do'stlarni taklif qilish\n"
+    "/top — Liderlar jadvali\n"
+    "/tips — Kunlik maslahatlar\n"
+    "/premium — Premium olish\n"
+    "/history — Tekshiruvlar tarixi\n"
+    "/language — Tilni o'zgartirish\n\n"
+    "━━━━━━━━━━━━━━━━\n"
     "📊 Kunlik limit: {limit} ta bepul tekshiruv\n"
-    "⭐ Cheksiz: /premium | 📖 /help\n\n"
-    "🌐 Tilni tanlang:"
+    "⭐ Cheksiz → /premium\n"
+    "🤖 Secretary rejimi: Telegram → Business → Chatbots"
 )
 
 TEXTS["ru"]["start"] = (
-    "👋 Привет, *{name}*! Добро пожаловать в *Xavfsizmi? Bot*!\n\n"
-    "🛡 *Что я умею:*\n"
-    "🔗 Отправьте ссылку → Trust Score + вердикт AI + обнаружение подмен\n"
-    "📄 Отправьте файл (APK/PDF/DOC/ZIP/EXE) → проверка на вирусы\n"
-    "📸 Отправьте фото QR-кода → проверка URL внутри\n\n"
-    "🤖 /ask — AI помощник по безопасности\n"
-    "🔍 /analyze — анализ подозрительного сообщения\n"
-    "🔐 /breach — проверка email + пароль + dark web\n"
-    "📡 /monitor — постоянный мониторинг email (Премиум)\n"
-    "🕸 /darkweb — проверка в базах dark web\n"
-    "👤 /scammer — проверка аккаунта на мошенничество\n\n"
-    "📊 Дневной лимит: {limit} бесплатных проверок\n"
-    "⭐ Безлимит: /premium | 📖 /help\n\n"
-    "🌐 Выберите язык:"
+    "👋 Привет, *{name}*!\n\n"
+    "🛡 *Xavfsizmi?* — ваш помощник по кибербезопасности.\n\n"
+    "Отправьте мне ссылку, файл или QR-код — проверю на безопасность.\n\n"
+    "━━━ *Команды* ━━━\n"
+    "/help — Все команды\n"
+    "/breach — Проверка email/пароля\n"
+    "/ask — Задать вопрос AI\n"
+    "/analyze — Анализ подозрительного сообщения\n"
+    "/scammer — Проверка аккаунта\n"
+    "/darkweb — Проверка в dark web\n"
+    "/monitor — Мониторинг email (Премиум)\n"
+    "/phish — Симулятор фишинга\n"
+    "/referral — Пригласить друзей\n"
+    "/top — Таблица лидеров\n"
+    "/tips — Ежедневные советы\n"
+    "/premium — Купить Премиум\n"
+    "/history — История проверок\n"
+    "/language — Сменить язык\n\n"
+    "━━━━━━━━━━━━━━━━\n"
+    "📊 Лимит: {limit} бесплатных проверок в день\n"
+    "⭐ Безлимит → /premium\n"
+    "🤖 Режим секретаря: Telegram → Business → Chatbots"
 )
 
 TEXTS["en"]["start"] = (
-    "👋 Hello, *{name}*! Welcome to *Xavfsizmi? Bot*!\n\n"
-    "🛡 *What I can do:*\n"
-    "🔗 Send a link → Trust Score + AI verdict + homoglyph detection\n"
-    "📄 Send a file (APK/PDF/DOC/ZIP/EXE) → malware scan\n"
-    "📸 Send QR code photo → scan URL inside\n\n"
-    "🤖 /ask — AI security assistant\n"
-    "🔍 /analyze — analyze suspicious message/SMS\n"
-    "🔐 /breach — email + password + dark web check\n"
-    "📡 /monitor — continuous email monitoring (Premium)\n"
-    "🕸 /darkweb — check dark web databases\n"
-    "👤 /scammer — check if account is a scammer\n\n"
+    "👋 Hi, *{name}*!\n\n"
+    "🛡 *Xavfsizmi?* — your cybersecurity assistant.\n\n"
+    "Send me a link, file, or QR code — I'll check if it's safe.\n\n"
+    "━━━ *Commands* ━━━\n"
+    "/help — All commands\n"
+    "/breach — Check email/password leaks\n"
+    "/ask — Ask AI a question\n"
+    "/analyze — Analyze a suspicious message\n"
+    "/scammer — Check an account\n"
+    "/darkweb — Dark web search\n"
+    "/monitor — Email monitoring (Premium)\n"
+    "/phish — Phishing simulator\n"
+    "/referral — Invite friends\n"
+    "/top — Leaderboard\n"
+    "/tips — Daily security tips\n"
+    "/premium — Get Premium\n"
+    "/history — Check history\n"
+    "/language — Change language\n\n"
+    "━━━━━━━━━━━━━━━━\n"
     "📊 Daily limit: {limit} free checks\n"
-    "⭐ Unlimited: /premium | 📖 /help\n\n"
-    "🌐 Choose language:"
+    "⭐ Unlimited → /premium\n"
+    "🤖 Secretary mode: Telegram → Business → Chatbots"
 )
 
 

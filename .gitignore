@@ -15,3 +15,5 @@ safelink.db-shm
 
 # Legacy / runtime data files
 rate_tracker.json
+# Live user data (auto-migrated into SQLite on first run). Never commit real user data.
+users.json

@@ -7,7 +7,6 @@ Group message handlers:
 Free tier groups: 20 checks/day. Premium groups: unlimited.
 """
 import re
-import logging
 import asyncio
 
 from telegram import Update
@@ -16,7 +15,6 @@ from telegram.ext import ContextTypes
 from database import (
     get_group_lang, increment_group_blocked,
     is_group_limit_reached, increment_group_checks,
-    GROUP_DAILY_FREE_LIMIT,
 )
 from languages import gt, at
 from checker import check_virustotal, check_google_safe_browsing

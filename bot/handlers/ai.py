@@ -11,10 +11,10 @@ import aiohttp
 from telegram import Update
 from telegram.ext import ContextTypes, ConversationHandler
 
-from config import GROQ_API_KEY
-from database import get_user_lang
-from languages import t
-from handlers.private_messages import require_subscription, react_to_message
+from bot.config import GROQ_API_KEY
+from bot.core.database import get_user_lang
+from bot.i18n import t
+from bot.handlers.scan import require_subscription, react_to_message
 
 # Conversation states
 WAITING_ASK_INPUT = 30

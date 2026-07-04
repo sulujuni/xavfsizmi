@@ -1,6 +1,6 @@
 import aiohttp
 from urllib.parse import urlparse
-from checker import check_alienvault, check_google_safe_browsing
+from bot.core.scanner import check_alienvault, check_google_safe_browsing
 
 async def get_domain_reputation(url: str) -> dict:
     """

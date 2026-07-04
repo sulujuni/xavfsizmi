@@ -23,13 +23,13 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 
-from database import (
+from bot.core.database import (
     get_user_lang, save_business_connection,
 )
-from languages import t
-from checker import check_virustotal, check_google_safe_browsing
-from apk_checker import scan_apk
-from qr_checker import extract_qr_url
+from bot.i18n import t
+from bot.core.scanner import check_virustotal, check_google_safe_browsing
+from bot.core.apk import scan_apk
+from bot.core.qr import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
 

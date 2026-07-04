@@ -13,15 +13,15 @@ import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from database import (
+from bot.core.database import (
     get_group_lang, increment_group_blocked,
     is_group_limit_reached, increment_group_checks,
     GROUP_DAILY_FREE_LIMIT,
 )
-from languages import gt, at
-from checker import check_virustotal, check_google_safe_browsing
-from apk_checker import scan_apk
-from qr_checker import extract_qr_url
+from bot.i18n import gt, at
+from bot.core.scanner import check_virustotal, check_google_safe_browsing
+from bot.core.apk import scan_apk
+from bot.core.qr import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
 

@@ -16,18 +16,18 @@ from telegram import (
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.error import TelegramError
 
-from config import (
+from bot.config import (
     ADMIN_ID,
     PERSONAL_1M_STARS, PERSONAL_3M_STARS,
     GROUP_1M_STARS, GROUP_3M_STARS,
 )
-from database import (
+from bot.core.database import (
     get_user_lang, is_premium, set_premium, get_premium_expiry,
     is_group_premium, set_group_premium, get_group_premium_expiry,
     create_promocode, redeem_promocode, load_db, save_db,
 )
-from languages import t
-from admin import is_admin
+from bot.i18n import t
+from bot.handlers.admin import is_admin
 
 # Paynet QR link
 PAYNET_QR_LINK = "https://app.paynet.uz/qr-online/00020101021140440012qr-online.uz01186r10poerJSNZJzxWmP0202115204531153038605802UZ5910AO'PAYNET'6008Tashkent610610002164280002uz0106PAYNET0208Toshkent80520012qr-online.uz03097120207070419marketing@paynet.uz63040D46"

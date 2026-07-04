@@ -13,13 +13,13 @@ from telegram import (
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 
-from config import ADMIN_ID, DAILY_FREE_LIMIT, CHANNEL_INVITE_LINK
-from database import (
+from bot.config import ADMIN_ID, DAILY_FREE_LIMIT, CHANNEL_INVITE_LINK
+from bot.core.database import (
     get_user_lang, set_user_lang, get_group_lang, set_group_lang,
     get_history, add_referral, get_referral_count, ensure_user_exists,
 )
-from languages import t, gt
-from admin import is_admin
+from bot.i18n import t, gt
+from bot.handlers.admin import is_admin
 
 REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
 
@@ -34,7 +34,7 @@ async def react_to_message(message):
 
 async def _require_sub(update, context):
     """Lazy import to avoid circular dependency."""
-    from handlers.private_messages import require_subscription
+    from bot.handlers.scan import require_subscription
     return await require_subscription(update, context)
 
 
@@ -174,7 +174,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Ask new users to subscribe to the required channel (private chat only)
     if update.effective_chat.type == "private":
-        from handlers.private_messages import is_user_subscribed
+        from bot.handlers.scan import is_user_subscribed
         if not await is_user_subscribed(context.application, user.id):
             sub_keyboard = [
                 [InlineKeyboardButton(t(lang, "sub_button"), url=CHANNEL_INVITE_LINK)],

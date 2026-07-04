@@ -23,17 +23,17 @@ from telegram.ext import ContextTypes, Application
 from telegram.error import TelegramError
 from telegram.constants import ChatMemberStatus
 
-from config import REQUIRED_CHANNEL_ID, CHANNEL_INVITE_LINK, DAILY_FREE_LIMIT
-from database import (
+from bot.config import REQUIRED_CHANNEL_ID, CHANNEL_INVITE_LINK, DAILY_FREE_LIMIT
+from bot.core.database import (
     get_user_lang, is_premium, get_user_checks, increment_user_checks,
     add_to_history, is_rate_limited, update_rate_limit, record_check,
 )
-from languages import t
-from checker import (
+from bot.i18n import t
+from bot.core.scanner import (
     check_virustotal, check_google_safe_browsing,
     check_alienvault, check_urlscan, check_url_with_domain_age,
 )
-from handlers.tools import (
+from bot.core.trust import (
     calculate_trust_score, trust_score_emoji,
     get_website_screenshot, check_typosquatting,
     is_short_url, expand_short_url,
@@ -42,9 +42,9 @@ from handlers.tools import (
     check_homoglyphs, format_homoglyph_warning,
     explain_permissions,
 )
-from apk_checker import scan_apk
-from file_scanner import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
-from qr_checker import extract_qr_url
+from bot.core.apk import scan_apk
+from bot.core.files import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
+from bot.core.qr import extract_qr_url
 
 URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
 REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
@@ -251,7 +251,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 
         # AI plain-language verdict
         try:
-            from handlers.ai import ai_link_verdict
+            from bot.handlers.ai import ai_link_verdict
             verdict = await ai_link_verdict(url, {
                 "trust_score": trust_score,
                 "vt_malicious": vt_res.get("malicious", 0),

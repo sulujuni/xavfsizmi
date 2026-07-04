@@ -23,7 +23,7 @@ import logging
 import threading
 from datetime import date, datetime, timedelta
 
-from cache import cache, URL_CACHE_TTL
+from bot.core.cache import cache, URL_CACHE_TTL
 
 logger = logging.getLogger("safelink.database")
 

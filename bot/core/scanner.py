@@ -3,8 +3,8 @@ import logging
 from datetime import datetime
 from urllib.parse import urlparse
 # config.py faylidan barcha API kalitlarini olamiz
-from config import VIRUSTOTAL_API_KEY, GOOGLE_SAFE_BROWSING_KEY, ALIENVAULT_API_KEY, URLSCAN_API_KEY
-from rate_tracker import track_api_call
+from bot.config import VIRUSTOTAL_API_KEY, GOOGLE_SAFE_BROWSING_KEY, ALIENVAULT_API_KEY, URLSCAN_API_KEY
+from bot.core.rate_limiter import track_api_call
  
 logging.basicConfig(level=logging.INFO)
  

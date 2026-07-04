@@ -10,7 +10,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 
-from config import ADMIN_ID
+from bot.config import ADMIN_ID
 
 logger = logging.getLogger(__name__)
 

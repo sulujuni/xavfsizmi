@@ -20,7 +20,7 @@ from datetime import datetime
 import httpx
 import aiohttp
 
-from config import URLSCAN_API_KEY, VIRUSTOTAL_API_KEY
+from bot.config import URLSCAN_API_KEY, VIRUSTOTAL_API_KEY
 
 # ─── POPULAR DOMAINS for typosquatting detection ──────────────────────────────
 

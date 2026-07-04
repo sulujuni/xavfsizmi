@@ -15,13 +15,13 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 
-from config import ADMIN_ID
-from database import (
+from bot.config import ADMIN_ID
+from bot.core.database import (
     get_stats, load_db, save_db, set_premium,
     get_premium_expiry, is_premium, get_user_lang,
     get_history, get_referral_count,
 )
-from cache import cache
+from bot.core.cache import cache
 
 
 def is_admin(user_id: int) -> bool:
@@ -297,7 +297,7 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text(f"⭐ User `{uid}` → +30 days Premium.", parse_mode="Markdown")
         try:
             user_lang = get_user_lang(uid)
-            from languages import t
+            from bot.i18n import t
             await context.bot.send_message(
                 chat_id=uid,
                 text=t(user_lang, "premium_success_with_days", days=30),
@@ -387,7 +387,7 @@ async def _admin_user_lookup(update: Update, context: ContextTypes.DEFAULT_TYPE,
 async def _admin_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Send the database file to admin."""
     import os
-    from database import DB_PATH
+    from bot.core.database import DB_PATH
 
     if os.path.exists(DB_PATH):
         await context.bot.send_document(
@@ -405,7 +405,7 @@ async def _admin_export(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def _build_dbinfo_text() -> str:
     """Build the database + cache status report (used by command and button)."""
     import os
-    from database import DB_PATH
+    from bot.core.database import DB_PATH
 
     stats = get_stats()
     db = load_db()
@@ -462,7 +462,7 @@ async def ratelimit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.effective_user.id):
         return
 
-    from rate_tracker import get_usage_dashboard
+    from bot.core.rate_limiter import get_usage_dashboard
     text = get_usage_dashboard()
     await update.message.reply_text(text, parse_mode="Markdown")
 

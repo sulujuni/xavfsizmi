@@ -4,7 +4,7 @@ Includes behavioral/sandbox analysis: permissions, network calls, file activity.
 """
 import aiohttp
 import asyncio
-from config import VIRUSTOTAL_API_KEY
+from bot.config import VIRUSTOTAL_API_KEY
 
 
 async def scan_apk(file_bytes: bytes, filename: str) -> dict:

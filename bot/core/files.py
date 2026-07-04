@@ -4,7 +4,7 @@ Scans any file type (PDF, DOC, ZIP, EXE, APK, etc.) up to 32 MB.
 """
 import aiohttp
 import asyncio
-from config import VIRUSTOTAL_API_KEY
+from bot.config import VIRUSTOTAL_API_KEY
 
 # Allowed file extensions and their friendly type names
 SCANNABLE_EXTENSIONS = {

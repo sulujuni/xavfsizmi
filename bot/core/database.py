@@ -36,9 +36,9 @@ RATE_LIMIT_SECONDS = 30
 CACHE_EXPIRE_HOURS = 24
 GROUP_DAILY_FREE_LIMIT = 20  # Groups get 20 free checks per day
 
-_rate_limit_cache = {}
 _conn = None
 _lock = threading.RLock()
+_json1_ok = None  # cached JSON1 capability probe
 
 
 
@@ -127,6 +127,25 @@ def _all_docs() -> dict:
     return out
 
 
+# SQL fragment matching user-id keys (all digits, non-empty). Group keys start
+# with "group_" and system keys ("reports", "promocodes") contain letters, so
+# they are naturally excluded.
+_USER_KEY_SQL = "key <> '' AND key NOT GLOB '*[^0-9]*'"
+
+
+def _json_extract_supported() -> bool:
+    """Detect whether this SQLite build supports the JSON1 extension."""
+    global _json1_ok
+    if _json1_ok is not None:
+        return _json1_ok
+    try:
+        _connect().execute("SELECT json_extract('{\"a\":1}', '$.a')").fetchone()
+        _json1_ok = True
+    except sqlite3.Error:
+        _json1_ok = False
+    return _json1_ok
+
+
 
 def _auto_migrate_json():
     """One-time import of a legacy users.json into the kv store if empty."""
@@ -196,6 +215,7 @@ def ensure_user_exists(user_id: int):
     user_key = str(user_id)
     if _get_doc(user_key) is None:
         _set_doc(user_key, {"date": str(date.today()), "checks": 0, "lang": "uz"})
+    record_daily_active(user_id)
 
 
 
@@ -221,6 +241,7 @@ def increment_user_checks(user_id: int):
         user["checks"] = 0
     user["checks"] = user.get("checks", 0) + 1
     _set_doc(user_key, user)
+    record_daily_active(user_id)
 
 
 # ─── LANGUAGE ─────────────────────────────────────────────────────────────────
@@ -261,7 +282,7 @@ def set_group_lang(chat_id: int, lang: str):
 
 def is_premium(user_id: int) -> bool:
     """Checks if a user has active premium status."""
-    from config import ADMIN_ID
+    from bot.config import ADMIN_ID
 
     user = _get_doc(str(user_id))
 
@@ -354,6 +375,47 @@ def add_report(user_id: int, url: str, reason: str = ""):
 # ─── STATS ────────────────────────────────────────────────────────────────────
 
 def get_stats() -> dict:
+    """Aggregate counts. Uses SQL (JSON1) to avoid loading the whole DB into
+    memory; falls back to a full scan when JSON1 is unavailable."""
+    if _json_extract_supported():
+        with _lock:
+            conn = _connect()
+            total_users = conn.execute(
+                f"SELECT COUNT(*) FROM kv WHERE {_USER_KEY_SQL}"
+            ).fetchone()[0]
+            # Only pull the two premium-related fields for user rows.
+            rows = conn.execute(
+                "SELECT json_extract(value, '$.premium_until'), "
+                "json_extract(value, '$.premium') "
+                f"FROM kv WHERE {_USER_KEY_SQL}"
+            ).fetchall()
+            reports_row = conn.execute(
+                "SELECT value FROM kv WHERE key = 'reports'"
+            ).fetchone()
+
+        now = datetime.now()
+        total_premium = 0
+        for expiry, premium_flag in rows:
+            if expiry:
+                try:
+                    if now < datetime.fromisoformat(expiry):
+                        total_premium += 1
+                        continue
+                except (ValueError, TypeError):
+                    pass
+            if premium_flag:
+                total_premium += 1
+
+        total_reports = 0
+        if reports_row and reports_row[0]:
+            try:
+                total_reports = len(json.loads(reports_row[0]))
+            except (ValueError, TypeError):
+                total_reports = 0
+
+        return {"total_users": total_users, "total_premium": total_premium, "total_reports": total_reports}
+
+    # Fallback: full in-memory scan.
     db = _all_docs()
     total_users = sum(1 for k in db.keys() if k.isdigit())
     total_premium = 0
@@ -402,6 +464,14 @@ def add_referral(user_id: int, referred_by: int) -> bool:
 
 
 def get_referral_count(user_id: int) -> int:
+    if _json_extract_supported():
+        with _lock:
+            row = _connect().execute(
+                "SELECT COUNT(*) FROM kv "
+                f"WHERE {_USER_KEY_SQL} AND json_extract(value, '$.referred_by') = ?",
+                (user_id,),
+            ).fetchone()
+        return row[0] if row else 0
     db = _all_docs()
     return sum(1 for k in db.keys() if k.isdigit() and db[k].get("referred_by") == user_id)
 
@@ -469,19 +539,31 @@ def get_cached_url(url: str):
         return None
 
 
-# ─── RATE LIMITING ────────────────────────────────────────────────────────────
+# ─── RATE LIMITING (backed by the shared cache layer) ────────────────────────
+# Stored in the Redis/memory cache so limits survive restarts and are shared
+# across multiple bot instances (webhook mode / horizontal scaling). The key
+# auto-expires after RATE_LIMIT_SECONDS via the cache TTL.
 
 def is_rate_limited(user_id: int) -> tuple:
-    now = datetime.now().timestamp()
-    last = _rate_limit_cache.get(user_id, 0)
-    elapsed = now - last
+    raw = cache.get(f"ratelimit:{user_id}")
+    if raw is None:
+        return False, 0
+    try:
+        last = float(raw)
+    except (ValueError, TypeError):
+        return False, 0
+    elapsed = datetime.now().timestamp() - last
     if elapsed < RATE_LIMIT_SECONDS:
         return True, int(RATE_LIMIT_SECONDS - elapsed)
     return False, 0
 
 
 def update_rate_limit(user_id: int):
-    _rate_limit_cache[user_id] = datetime.now().timestamp()
+    cache.set(
+        f"ratelimit:{user_id}",
+        str(datetime.now().timestamp()),
+        ttl=RATE_LIMIT_SECONDS,
+    )
 
 
 
@@ -732,3 +814,49 @@ def get_all_active_users() -> list:
     """Returns all real user IDs (for weekly reports)."""
     db = _all_docs()
     return [int(k) for k in db.keys() if k.isdigit()]
+
+
+# ─── ANALYTICS (daily active users trend) ────────────────────────────────────
+# Stored in a single "analytics" document as {"dau": {"YYYY-MM-DD": count}}.
+# The "analytics" key contains letters, so it is excluded from user-id scans.
+
+ANALYTICS_KEY = "analytics"
+_DAU_RETENTION_DAYS = 30
+
+
+def record_daily_active(user_id: int):
+    """Count a user as active today (deduplicated once per user per day).
+
+    Cheap: the per-user/day dedupe flag lives in the cache with a short TTL, so
+    only the first interaction of the day touches the SQLite analytics doc.
+    """
+    today = str(date.today())
+    seen_key = f"dau_seen:{today}:{user_id}"
+    if cache.get(seen_key) is not None:
+        return
+    cache.set(seen_key, "1", ttl=172800)  # remember for ~2 days
+
+    doc = _get_doc(ANALYTICS_KEY) or {}
+    dau = doc.get("dau", {})
+    dau[today] = dau.get(today, 0) + 1
+
+    # Keep only the most recent N days.
+    if len(dau) > _DAU_RETENTION_DAYS:
+        for old in sorted(dau.keys())[:-_DAU_RETENTION_DAYS]:
+            dau.pop(old, None)
+
+    doc["dau"] = dau
+    _set_doc(ANALYTICS_KEY, doc)
+
+
+def get_dau_trend(days: int = 7) -> list:
+    """Return [(date_str, count), ...] for the last `days` days (oldest first),
+    zero-filling any day with no recorded activity."""
+    doc = _get_doc(ANALYTICS_KEY) or {}
+    dau = doc.get("dau", {})
+    today = date.today()
+    out = []
+    for i in range(days - 1, -1, -1):
+        d = str(today - timedelta(days=i))
+        out.append((d, dau.get(d, 0)))
+    return out

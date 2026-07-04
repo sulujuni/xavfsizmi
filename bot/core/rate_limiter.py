@@ -64,7 +64,7 @@ def get_usage_dashboard() -> str:
     Generates a formatted dashboard string showing API usage vs limits.
     Used by admin /ratelimit command.
     """
-    from config import API_LIMITS
+    from bot.config import API_LIMITS
 
     usage = get_daily_usage()
     today = str(date.today())
@@ -104,7 +104,7 @@ def check_limit_warning(api_name: str) -> str:
     Check if an API is approaching its limit.
     Returns warning message or empty string.
     """
-    from config import API_LIMITS
+    from bot.config import API_LIMITS
 
     usage = get_daily_usage()
     used = usage.get(api_name, 0)
@@ -128,7 +128,7 @@ async def send_limit_warnings(application):
     Check all APIs and send warnings to admin if any are near limit.
     Called periodically by the scheduler.
     """
-    from config import API_LIMITS, ADMIN_ID
+    from bot.config import API_LIMITS, ADMIN_ID
     from telegram.error import TelegramError
 
     warnings = []

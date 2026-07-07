@@ -135,9 +135,14 @@ def main():
     app.add_handler(CommandHandler("top", top_command, filters=filters.ChatType.PRIVATE))
 
     # ── Breach Conversation Handler (private only) ──────────────────────────────
+    # All conversation state handlers use filters.UpdateType.MESSAGE to avoid
+    # matching business_message updates (where update.message is None).
+    _msg_text = filters.TEXT & ~filters.COMMAND & filters.UpdateType.MESSAGE
+    _msg_photo = filters.PHOTO & filters.UpdateType.MESSAGE
+
     breach_conv = ConversationHandler(
         entry_points=[CommandHandler("breach", breach_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_BREACH_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, breach_receive_input)]},
+        states={WAITING_BREACH_INPUT: [MessageHandler(_msg_text, breach_receive_input)]},
         fallbacks=[CommandHandler("cancel", breach_cancel)],
         per_user=True, per_chat=True,
     )
@@ -147,8 +152,8 @@ def main():
     receipt_conv = ConversationHandler(
         entry_points=[CommandHandler("receipt", paynet_receipt_command, filters=filters.ChatType.PRIVATE)],
         states={WAITING_PAYNET_RECEIPT: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, paynet_receipt_receive),
-            MessageHandler(filters.PHOTO, paynet_receipt_receive),
+            MessageHandler(_msg_text, paynet_receipt_receive),
+            MessageHandler(_msg_photo, paynet_receipt_receive),
         ]},
         fallbacks=[CommandHandler("cancel", paynet_receipt_cancel)],
         per_user=True, per_chat=True,
@@ -158,7 +163,7 @@ def main():
     # ── Scammer Conversation Handler (private only) ───────────────────────────
     scammer_conv = ConversationHandler(
         entry_points=[CommandHandler("scammer", scammer_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_SCAMMER_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, scammer_receive)]},
+        states={WAITING_SCAMMER_INPUT: [MessageHandler(_msg_text, scammer_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
@@ -167,7 +172,7 @@ def main():
     # ── Report Conversation Handler (private only) ──────────────────────────────
     report_conv = ConversationHandler(
         entry_points=[CommandHandler("report", report_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_REPORT_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, report_receive)]},
+        states={WAITING_REPORT_INPUT: [MessageHandler(_msg_text, report_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
@@ -176,7 +181,7 @@ def main():
     # ── Feedback Conversation Handler (private only) ──────────────────────────
     feedback_conv = ConversationHandler(
         entry_points=[CommandHandler("feedback", feedback_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_FEEDBACK_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, feedback_receive)]},
+        states={WAITING_FEEDBACK_INPUT: [MessageHandler(_msg_text, feedback_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
@@ -185,7 +190,7 @@ def main():
     # ── Dark Web Check Conversation Handler (private only) ────────────────────
     darkweb_conv = ConversationHandler(
         entry_points=[CommandHandler("darkweb", darkweb_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_DARKWEB_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, darkweb_receive)]},
+        states={WAITING_DARKWEB_INPUT: [MessageHandler(_msg_text, darkweb_receive)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )
@@ -194,7 +199,7 @@ def main():
     # ── AI Ask Conversation Handler (private only) ────────────────────────────
     ask_conv = ConversationHandler(
         entry_points=[CommandHandler("ask", ask_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_ASK_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_receive)]},
+        states={WAITING_ASK_INPUT: [MessageHandler(_msg_text, ask_receive)]},
         fallbacks=[CommandHandler("cancel", ai_cancel)],
         per_user=True, per_chat=True,
     )
@@ -203,7 +208,7 @@ def main():
     # ── AI Analyze Conversation Handler (private only) ────────────────────────
     analyze_conv = ConversationHandler(
         entry_points=[CommandHandler("analyze", analyze_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_ANALYZE_INPUT: [MessageHandler(filters.TEXT & ~filters.COMMAND, analyze_receive)]},
+        states={WAITING_ANALYZE_INPUT: [MessageHandler(_msg_text, analyze_receive)]},
         fallbacks=[CommandHandler("cancel", ai_cancel)],
         per_user=True, per_chat=True,
     )
@@ -212,7 +217,7 @@ def main():
     # ── Breach Monitor Conversation Handler (private only) ────────────────────
     monitor_conv = ConversationHandler(
         entry_points=[CommandHandler("monitor", monitor_command, filters=filters.ChatType.PRIVATE)],
-        states={WAITING_MONITOR_EMAIL: [MessageHandler(filters.TEXT & ~filters.COMMAND, monitor_receive_email)]},
+        states={WAITING_MONITOR_EMAIL: [MessageHandler(_msg_text, monitor_receive_email)]},
         fallbacks=[CommandHandler("cancel", cancel_conversation)],
         per_user=True, per_chat=True,
     )

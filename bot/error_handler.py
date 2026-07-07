@@ -1,25 +1,34 @@
 """
 Global error handler — catches all unhandled exceptions and reports them to admin.
-Also tracks API rate limit usage.
+Silently ignores transient network errors (connection drops, timeouts) which are
+normal in long-polling mode and auto-recover.
 """
 import logging
 import traceback
-from datetime import date, datetime
+from datetime import datetime
 
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.error import TelegramError
+from telegram.error import TelegramError, NetworkError, TimedOut
 
 from bot.config import ADMIN_ID
 
 logger = logging.getLogger(__name__)
 
+# Errors that are transient and auto-recover — don't spam admin with these.
+_IGNORED_ERRORS = (NetworkError, TimedOut, ConnectionError, OSError)
+
 
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     """
     Global error handler. Logs the error and sends details to the admin.
-    Registered via app.add_error_handler(error_handler).
+    Silently ignores transient network errors.
     """
+    # Skip transient network errors — they auto-recover and aren't actionable.
+    if isinstance(context.error, _IGNORED_ERRORS):
+        logger.warning("Transient error (ignored): %s", context.error)
+        return
+
     # Log the error
     logger.error("Exception while handling an update:", exc_info=context.error)
 

@@ -46,6 +46,9 @@ def calculate_trust_score(vt_res: dict, gsb_res: dict, alien_res: dict,
     """
     score = 100
 
+    if domain_age_days is None:
+        domain_age_days = 365
+
     # VirusTotal: each malicious engine = -8 points
     mal = vt_res.get("malicious", 0)
     score -= mal * 8

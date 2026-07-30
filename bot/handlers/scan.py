@@ -194,7 +194,8 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             check_urlscan(url),
         )
         domain_res = await check_url_with_domain_age(url)
-        domain_age = domain_res.get("age_days", 365) if domain_res else 365
+        raw_age = domain_res.get("age_days") if domain_res else None
+        domain_age = raw_age if raw_age is not None else 365
 
         # Calculate Trust Score
         trust_score = calculate_trust_score(vt_res, gsb_res, alien_res, uscan_res, domain_age)
@@ -441,7 +442,8 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             check_google_safe_browsing(url),
         )
         domain_res = await check_url_with_domain_age(url)
-        domain_age = domain_res.get("age_days", 365) if domain_res else 365
+        raw_age = domain_res.get("age_days") if domain_res else None
+        domain_age = raw_age if raw_age is not None else 365
 
         # Trust score for QR URLs too
         trust_score = calculate_trust_score(

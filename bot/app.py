@@ -66,7 +66,7 @@ from bot.handlers.ai import (
 )
 from bot.handlers.admin import (
     admin_command, admin_callback, broadcast_command,
-    ratelimit_command, dbinfo_command,
+    ratelimit_command, dbinfo_command, restart_command,
 )
 
 # ─── LOGGING ──────────────────────────────────────────────────────────────────
@@ -131,6 +131,7 @@ def main():
     app.add_handler(CommandHandler("history", history_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("ratelimit", ratelimit_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("dbinfo", dbinfo_command, filters=filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler("restart", restart_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("tips", tips_command, filters=filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler("top", top_command, filters=filters.ChatType.PRIVATE))
 

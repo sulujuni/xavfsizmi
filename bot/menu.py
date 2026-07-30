@@ -47,6 +47,7 @@ ADMIN_MENU_COMMANDS = {
         ("addpromo", "🔑 Promokod yaratish"),
         ("ratelimit", "📉 API limit dashboard"),
         ("dbinfo", "🗄 Database va cache holati"),
+        ("restart", "🔄 Botni qayta ishga tushirish"),
     ],
     "ru": [
         ("stats", "📊 Статистика бота"),
@@ -55,6 +56,7 @@ ADMIN_MENU_COMMANDS = {
         ("addpromo", "🔑 Создать промокод"),
         ("ratelimit", "📉 Лимиты API"),
         ("dbinfo", "🗄 Статус БД и кеша"),
+        ("restart", "🔄 Перезапустить бота"),
     ],
     "en": [
         ("stats", "📊 Bot statistics"),
@@ -63,6 +65,7 @@ ADMIN_MENU_COMMANDS = {
         ("addpromo", "🔑 Create promo code"),
         ("ratelimit", "📉 API rate limits"),
         ("dbinfo", "🗄 Database & cache status"),
+        ("restart", "🔄 Restart the bot"),
     ],
 }
 

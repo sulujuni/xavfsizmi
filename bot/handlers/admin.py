@@ -9,6 +9,9 @@ Admin Panel — comprehensive bot management:
 - Rate limit dashboard
 """
 import json
+import logging
+import os
+import sys
 from datetime import datetime, date, timedelta
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -16,6 +19,8 @@ from telegram.ext import ContextTypes
 from telegram.error import TelegramError
 
 from bot.config import ADMIN_ID
+
+logger = logging.getLogger(__name__)
 from bot.core.database import (
     get_stats, load_db, save_db, set_premium,
     get_premium_expiry, is_premium, get_user_lang,
@@ -164,6 +169,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`/admin export` — Bazani yuklab olish\n"
         "`/dbinfo` — Database va cache holati\n"
         "`/ratelimit` — API limitlar\n"
+        "`/restart` — Botni qayta ishga tushirish\n"
     )
 
     keyboard = [
@@ -182,6 +188,9 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         [
             InlineKeyboardButton("📊 Revenue", callback_data="admin_revenue"),
             InlineKeyboardButton("🗄 DB & Cache", callback_data="admin_dbinfo"),
+        ],
+        [
+            InlineKeyboardButton("🔄 Restart Bot", callback_data="admin_restart"),
         ],
     ]
 
@@ -310,6 +319,95 @@ async def admin_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         uid = int(action.replace("admin_ban_", ""))
         ban_user(uid)
         await query.edit_message_text(f"🚫 User `{uid}` banned.", parse_mode="Markdown")
+
+    elif action == "admin_restart":
+        # Ask for confirmation before restarting (avoids accidental restarts).
+        keyboard = [
+            [
+                InlineKeyboardButton("✅ Ha, restart", callback_data="admin_restart_confirm"),
+                InlineKeyboardButton("❌ Bekor qilish", callback_data="admin_restart_cancel"),
+            ],
+        ]
+        await query.edit_message_text(
+            "🔄 *Botni qayta ishga tushirish*\n\n"
+            "Bot to'liq qayta ishga tushiriladi va bir necha soniya "
+            "javob bermasligi mumkin.\n\n"
+            "Davom etamizmi?",
+            parse_mode="Markdown",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
+    elif action == "admin_restart_cancel":
+        await query.edit_message_text("❌ Restart bekor qilindi.")
+
+    elif action == "admin_restart_confirm":
+        await _admin_restart(update, context)
+
+
+# ─── Restart Bot ──────────────────────────────────────────────────────────────
+
+async def _admin_restart(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Restart the bot process by re-executing the current Python program.
+
+    ``os.execv`` replaces the running process image with a fresh one, so the
+    bot comes back up with the latest code/config while keeping the same PID.
+    """
+    query = update.callback_query
+
+    try:
+        await query.edit_message_text(
+            "🔄 Bot qayta ishga tushirilmoqda...\n\n"
+            "Bir necha soniyadan so'ng qaytadan ishga tushadi."
+        )
+    except Exception:
+        pass
+
+    # Confirm this update's offset so Telegram does NOT redeliver the restart
+    # callback after re-exec — otherwise the fresh process would receive the
+    # same "restart" press again and restart in an endless loop.
+    try:
+        await context.bot.get_updates(offset=update.update_id + 1, timeout=1)
+    except Exception as e:
+        logger.warning("Restart: could not confirm update offset: %s", e)
+
+    logger.warning("Admin %s requested a bot restart — re-executing process.", query.from_user.id)
+
+    # Flush logs/streams before the process image is replaced.
+    logging.shutdown()
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    # Replace the current process with a brand-new interpreter running the
+    # exact same command line. Preserves the working directory and env.
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+
+async def restart_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """/restart — admin-only command to restart the bot process directly."""
+    if not is_admin(update.effective_user.id):
+        return
+
+    try:
+        await update.message.reply_text(
+            "🔄 Bot qayta ishga tushirilmoqda...\n\n"
+            "Bir necha soniyadan so'ng qaytadan ishga tushadi."
+        )
+    except Exception:
+        pass
+
+    # Confirm the offset so this /restart command is not redelivered on reboot.
+    try:
+        await context.bot.get_updates(offset=update.update_id + 1, timeout=1)
+    except Exception as e:
+        logger.warning("Restart: could not confirm update offset: %s", e)
+
+    logger.warning("Admin %s requested a bot restart via /restart — re-executing process.", update.effective_user.id)
+
+    logging.shutdown()
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 # ─── User Lookup ──────────────────────────────────────────────────────────────

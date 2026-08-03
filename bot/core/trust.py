@@ -39,15 +39,19 @@ POPULAR_DOMAINS = [
 # ─── TRUST SCORE CALCULATOR ──────────────────────────────────────────────────
 
 def calculate_trust_score(vt_res: dict, gsb_res: dict, alien_res: dict,
-                          uscan_res: dict, domain_age_days: int) -> int:
+                          uscan_res: dict, domain_age_days: int | None) -> int:
     """
     Calculates a 0-100 trust score based on multiple signals.
     100 = completely safe, 0 = extremely dangerous.
+
+    Any numeric input may arrive as None when a provider answered but left the
+    field empty (e.g. WHOIS returned a record with no creation date). A missing
+    signal must not crash the scan — it is simply not counted.
     """
     score = 100
 
     # VirusTotal: each malicious engine = -8 points
-    mal = vt_res.get("malicious", 0)
+    mal = vt_res.get("malicious") or 0
     score -= mal * 8
 
     # Google Safe Browsing: dangerous = -30
@@ -55,20 +59,22 @@ def calculate_trust_score(vt_res: dict, gsb_res: dict, alien_res: dict,
         score -= 30
 
     # AlienVault: each pulse = -5
-    pulses = alien_res.get("pulses_count", 0)
+    pulses = alien_res.get("pulses_count") or 0
     score -= min(pulses * 5, 25)
 
     # URLScan: malicious verdict = -20
     if uscan_res.get("verdict") == "malicious":
         score -= 20
 
-    # Domain age: very new domains lose points
-    if domain_age_days < 7:
-        score -= 25
-    elif domain_age_days < 30:
-        score -= 15
-    elif domain_age_days < 90:
-        score -= 5
+    # Domain age: very new domains lose points. Unknown age (None) is neutral —
+    # we can't tell whether it's new, so we don't penalise it.
+    if domain_age_days is not None:
+        if domain_age_days < 7:
+            score -= 25
+        elif domain_age_days < 30:
+            score -= 15
+        elif domain_age_days < 90:
+            score -= 5
 
     return max(0, min(100, score))
 

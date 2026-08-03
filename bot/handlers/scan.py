@@ -282,7 +282,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception as e:
             logging.debug(f"Screenshot failed: {e}")
     except Exception as e:
-        logging.error(f"Havolani tekshirishda xatolik: {e}")
+        logging.error(f"Havolani tekshirishda xatolik: {e}", exc_info=True)
         await status_msg.edit_text("❌ Havolani tahlil qilish jarayonida xatolik yuz berdi.")
 
 
@@ -463,5 +463,5 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await status_msg.edit_text(report, parse_mode="Markdown")
     except Exception as e:
-        logging.error(f"QR error: {e}")
+        logging.error(f"QR error: {e}", exc_info=True)
         await update.message.reply_text(t(lang, "qr_scan_error"))

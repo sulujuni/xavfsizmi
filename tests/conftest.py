@@ -17,6 +17,15 @@ sys.path.insert(0, _REPO_ROOT)
 _TMP_DIR = tempfile.mkdtemp(prefix="xavf_tests_")
 os.environ["DB_PATH"] = os.path.join(_TMP_DIR, "test.db")
 
+# Blank the external API keys before bot.config runs, so the suite can never
+# reach a real provider. load_dotenv() does not override variables that are
+# already set, so this wins over the developer's .env — without it, a machine
+# that has real keys makes the "no key configured" tests hit the live API and
+# fail (and silently burns quota on every test run).
+for _key in ("VIRUSTOTAL_API_KEY", "GOOGLE_SAFE_BROWSING_KEY",
+             "URLSCAN_API_KEY", "ALIENVAULT_API_KEY", "GROQ_API_KEY"):
+    os.environ[_key] = ""
+
 import pytest  # noqa: E402
 
 from bot.core import database as db  # noqa: E402

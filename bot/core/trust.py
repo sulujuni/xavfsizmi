@@ -2,25 +2,17 @@
 Advanced security tool utilities:
 - Website screenshot (via urlscan.io)
 - Short URL expander
-- SSL certificate checker
-- Redirect chain tracker
 - Typosquatting detector
+- Homoglyph detector
 - Social media scam checker
-- Privacy score analyzer
+- Security headers + technology detection
+- Dark web mention lookup
 - Trust score calculator
 """
-import ssl
-import socket
-import re
-import asyncio
-import logging
 from urllib.parse import urlparse
-from datetime import datetime
 
 import httpx
 import aiohttp
-
-from bot.config import URLSCAN_API_KEY, VIRUSTOTAL_API_KEY
 
 # ─── POPULAR DOMAINS for typosquatting detection ──────────────────────────────
 
@@ -130,7 +122,7 @@ async def get_website_screenshot(url: str) -> str:
                             # Download image bytes and save temporarily
                             image_data = await resp.read()
                             if len(image_data) > 5000:  # Valid image should be > 5KB
-                                import tempfile, os
+                                import tempfile
                                 tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
                                 tmp.write(image_data)
                                 tmp.close()
@@ -199,66 +191,6 @@ async def expand_short_url(url: str) -> dict:
     }
 
 
-# ─── SSL CERTIFICATE CHECKER ─────────────────────────────────────────────────
-
-async def check_ssl_certificate(url: str) -> dict:
-    """
-    Checks SSL certificate of a domain.
-    Returns issuer, expiry, days_remaining, is_valid.
-    """
-    parsed = urlparse(url if url.startswith("http") else f"https://{url}")
-    hostname = parsed.netloc or parsed.path
-    hostname = hostname.split(":")[0]  # remove port
-
-    try:
-        # Run in executor since ssl is blocking
-        loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(None, _get_ssl_info, hostname)
-        return result
-    except Exception as e:
-        return {"valid": False, "error": str(e)}
-
-
-def _get_ssl_info(hostname: str) -> dict:
-    """Blocking function to get SSL certificate info."""
-    try:
-        context = ssl.create_default_context()
-        with socket.create_connection((hostname, 443), timeout=5) as sock:
-            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
-                cert = ssock.getpeercert()
-
-        # Parse cert info
-        issuer_parts = dict(x[0] for x in cert.get("issuer", []))
-        issuer = issuer_parts.get("organizationName", "Unknown")
-
-        # Expiry
-        not_after = cert.get("notAfter", "")
-        expiry_date = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z")
-        days_remaining = (expiry_date - datetime.now()).days
-
-        # Subject
-        subject_parts = dict(x[0] for x in cert.get("subject", []))
-        common_name = subject_parts.get("commonName", hostname)
-
-        return {
-            "valid": True,
-            "issuer": issuer,
-            "common_name": common_name,
-            "expiry": not_after,
-            "days_remaining": days_remaining,
-            "expired": days_remaining < 0,
-        }
-    except ssl.SSLCertVerificationError as e:
-        return {"valid": False, "error": f"SSL verification failed: {e}"}
-    except Exception as e:
-        return {"valid": False, "error": str(e)}
-
-
-# ─── REDIRECT CHAIN TRACKER ──────────────────────────────────────────────────
-
-async def get_redirect_chain(url: str) -> dict:
-    """Same as expand_short_url but works for any URL."""
-    return await expand_short_url(url)
 
 
 # ─── TYPOSQUATTING DETECTOR ───────────────────────────────────────────────────
@@ -372,140 +304,6 @@ async def check_social_account(username: str) -> dict:
             pass
 
     return results
-
-
-# ─── PRIVACY SCORE ANALYZER ──────────────────────────────────────────────────
-
-async def check_privacy_score(profile_url: str, lang: str = "uz") -> dict:
-    """
-    Checks basic public exposure of a social media profile.
-    Uses multiple signals: page accessibility, meta tags, visible text.
-    Avoids false positives from JavaScript/CSS code.
-    """
-    PRIVACY_TEXTS = {
-        "uz": {
-            "profile_public": "Profil hammaga ochiq (login talab qilinmaydi)",
-            "profile_private": "Profil yopiq yoki login talab qiladi",
-            "username_visible": "Username/nom ommaviy ko'rinadi",
-            "bio_has_contacts": "Bio/tavsifda aloqa ma'lumotlari bor",
-            "bio_clean": "Bio/tavsifda shaxsiy ma'lumot ko'rinmaydi",
-            "rec_private": "Profilni yopiq (private) rejimga o'tkazing",
-            "rec_remove_contacts": "Bio'dan telefon/email ni olib tashlang",
-            "rec_good": "Profilingiz yaxshi himoyalangan!",
-            "access_error": "Profilga kirish imkoni bo'lmadi",
-            "posts_public": "Postlar/kontentlar ommaviy",
-            "rec_limit_posts": "Postlar ko'rinishini faqat do'stlarga cheklang",
-        },
-        "ru": {
-            "profile_public": "Профиль публичный (вход не требуется)",
-            "profile_private": "Профиль закрыт или требует входа",
-            "username_visible": "Имя пользователя публично видно",
-            "bio_has_contacts": "В био есть контактные данные",
-            "bio_clean": "В био нет личных данных",
-            "rec_private": "Переключите профиль в приватный режим",
-            "rec_remove_contacts": "Уберите телефон/email из био",
-            "rec_good": "Ваш профиль хорошо защищён!",
-            "access_error": "Не удалось получить доступ к профилю",
-            "posts_public": "Публикации видны всем",
-            "rec_limit_posts": "Ограничьте видимость постов только для друзей",
-        },
-        "en": {
-            "profile_public": "Profile is public (no login required)",
-            "profile_private": "Profile is private or requires login",
-            "username_visible": "Username/name is publicly visible",
-            "bio_has_contacts": "Bio contains contact information",
-            "bio_clean": "Bio has no exposed personal data",
-            "rec_private": "Switch your profile to private mode",
-            "rec_remove_contacts": "Remove phone/email from your bio",
-            "rec_good": "Your profile is well-protected!",
-            "access_error": "Could not access profile",
-            "posts_public": "Posts/content are publicly visible",
-            "rec_limit_posts": "Limit post visibility to friends only",
-        },
-    }
-
-    pt = PRIVACY_TEXTS.get(lang, PRIVACY_TEXTS["en"])
-    score = 100
-    findings = []
-    recommendations = []
-
-    async with aiohttp.ClientSession() as session:
-        try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            }
-            async with session.get(
-                profile_url, headers=headers,
-                timeout=aiohttp.ClientTimeout(total=10),
-                allow_redirects=True,
-            ) as resp:
-                final_url = str(resp.url)
-                if resp.status != 200:
-                    return {"score": -1, "error": pt["access_error"]}
-                html = await resp.text()
-        except Exception:
-            return {"score": -1, "error": pt["access_error"]}
-
-    # ── Check 1: Is profile publicly accessible? ──────────────────────────────
-    # If we got a 200 and the page has real content (not a login redirect)
-    login_indicators = ["login", "sign in", "log in", "accounts/login", "kirish"]
-    is_login_page = any(indicator in html.lower()[:5000] for indicator in login_indicators)
-    # Also check for redirect to login
-    is_redirected_to_login = "login" in final_url.lower() or "accounts" in final_url.lower()
-
-    if is_login_page or is_redirected_to_login:
-        # Profile is likely private
-        score -= 0  # No penalty for private
-        findings.append(pt["profile_private"])
-    else:
-        # Profile is public
-        score -= 20
-        findings.append(pt["profile_public"])
-        recommendations.append(pt["rec_private"])
-
-    # ── Check 2: Extract ONLY visible text content (not JavaScript/CSS) ───────
-    # Remove script and style tags
-    import re as _re
-    clean_html = _re.sub(r'<script[^>]*>.*?</script>', '', html, flags=_re.DOTALL | _re.IGNORECASE)
-    clean_html = _re.sub(r'<style[^>]*>.*?</style>', '', clean_html, flags=_re.DOTALL | _re.IGNORECASE)
-    # Remove all HTML tags to get just text
-    visible_text = _re.sub(r'<[^>]+>', ' ', clean_html)
-    # Only look at first 3000 chars of visible text (bio area)
-    visible_text = visible_text[:3000]
-
-    # ── Check 3: Contact info in visible bio text ─────────────────────────────
-    # Real email pattern (not in URLs/code)
-    emails_in_text = _re.findall(r'\b[A-Za-z0-9._%+-]+@(?:gmail|yahoo|mail|outlook|hotmail|icloud)\.[a-z]{2,}\b', visible_text)
-    # Real phone pattern (starts with + or country code, not random numbers)
-    phones_in_text = _re.findall(r'[\+]?[0-9]{1,3}[-\s]?[(]?[0-9]{2,3}[)]?[-\s]?[0-9]{3}[-\s]?[0-9]{2}[-\s]?[0-9]{2}', visible_text)
-
-    if emails_in_text or phones_in_text:
-        score -= 25
-        findings.append(pt["bio_has_contacts"])
-        recommendations.append(pt["rec_remove_contacts"])
-    else:
-        findings.append(pt["bio_clean"])
-
-    # ── Check 4: Are posts/content visible? ───────────────────────────────────
-    # Check for content indicators (images, posts, media counts)
-    content_indicators = ["data-media-count", "edge_owner_to_timeline", "posts", "postlar", "публикации"]
-    has_public_content = any(ind in html.lower() for ind in content_indicators)
-
-    if has_public_content and not is_login_page:
-        score -= 15
-        findings.append(pt["posts_public"])
-        recommendations.append(pt["rec_limit_posts"])
-
-    # ── Final ─────────────────────────────────────────────────────────────────
-    if not recommendations:
-        recommendations.append(pt["rec_good"])
-
-    return {
-        "score": max(0, min(100, score)),
-        "findings": findings,
-        "recommendations": recommendations,
-        "url": profile_url,
-    }
 
 
 

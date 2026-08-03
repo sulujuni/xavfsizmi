@@ -18,6 +18,12 @@ GROQ_API_KEY         = os.getenv("GROQ_API_KEY", "")
 DAILY_FREE_LIMIT = 5
 ADMIN_ID         = int(os.getenv("ADMIN_ID", "0"))
 
+# How many scans a brand-new user may run before the channel subscription is
+# enforced. Asking someone to join a channel before they have seen the bot do
+# anything is the first thing every new user hits, and the cheapest place to
+# lose them. Set to 0 to require the subscription immediately.
+FREE_SCANS_BEFORE_SUB = int(os.getenv("FREE_SCANS_BEFORE_SUB", "3"))
+
 # ─── WEBHOOK SETTINGS ─────────────────────────────────────────────────────────
 WEBHOOK_URL      = os.getenv("WEBHOOK_URL", "")  # e.g. https://yourapp.railway.app
 WEBHOOK_PORT     = int(os.getenv("PORT", "8443"))

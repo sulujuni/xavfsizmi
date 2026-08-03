@@ -101,3 +101,33 @@ def test_dau_dedupes_per_user_per_day():
     trend = db.get_dau_trend(7)
     assert len(trend) == 7
     assert trend[-1][1] == 2
+
+
+# ─── Lifetime scan counter (subscription trial window) ───────────────────────
+
+def test_total_checks_accumulates_across_days():
+    """The daily counter resets; the lifetime one must not, otherwise a user
+    gets a fresh batch of free scans every day and never hits the gate."""
+    db.increment_user_checks(7001)
+    db.increment_user_checks(7001)
+    assert db.get_user_checks(7001) == 2
+    assert db.get_user_total_checks(7001) == 2
+
+    # Simulate the next day: the stored date is what triggers the daily reset.
+    user = db._get_doc("7001")
+    user["date"] = str(datetime.now().date() - timedelta(days=1))
+    db._set_doc("7001", user)
+
+    db.increment_user_checks(7001)
+    assert db.get_user_checks(7001) == 1        # daily counter restarted
+    assert db.get_user_total_checks(7001) == 3  # lifetime kept counting
+
+
+def test_total_checks_defaults_to_daily_count_for_legacy_records():
+    """Records written before total_checks existed must not read as brand new."""
+    db._set_doc("7002", {"date": str(datetime.now().date()), "checks": 4, "lang": "uz"})
+    assert db.get_user_total_checks(7002) == 4
+
+
+def test_total_checks_is_zero_for_unknown_user():
+    assert db.get_user_total_checks(7003) == 0

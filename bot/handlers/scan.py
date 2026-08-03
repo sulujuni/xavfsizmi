@@ -23,10 +23,14 @@ from telegram.ext import ContextTypes, Application
 from telegram.error import TelegramError
 from telegram.constants import ChatMemberStatus
 
-from bot.config import REQUIRED_CHANNEL_ID, CHANNEL_INVITE_LINK, DAILY_FREE_LIMIT
+from bot.config import (
+    REQUIRED_CHANNEL_ID, CHANNEL_INVITE_LINK, DAILY_FREE_LIMIT,
+    FREE_SCANS_BEFORE_SUB,
+)
 from bot.core.database import (
     get_user_lang, is_premium, get_user_checks, increment_user_checks,
-    add_to_history, is_rate_limited, update_rate_limit, record_check,
+    get_user_total_checks, add_to_history, is_rate_limited, update_rate_limit,
+    record_check,
 )
 from bot.i18n import t
 from bot.core.scanner import (
@@ -113,12 +117,18 @@ async def require_subscription(update: Update, context: ContextTypes.DEFAULT_TYP
     if await is_user_subscribed(context.application, user.id):
         return True
 
+    # Let a new user actually see the bot work before asking them to join the
+    # channel. Only once the free scans are used up does the gate close.
+    used = get_user_total_checks(user.id)
+    if used < FREE_SCANS_BEFORE_SUB:
+        return True
+
     keyboard = [
         [InlineKeyboardButton(t(lang, "sub_button"), url=CHANNEL_INVITE_LINK)],
         [InlineKeyboardButton(t(lang, "sub_check_btn"), callback_data="check_subscription")],
     ]
     await update.message.reply_text(
-        text=t(lang, "sub_required"),
+        text=t(lang, "sub_required_after_trial").format(count=used),
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
     )

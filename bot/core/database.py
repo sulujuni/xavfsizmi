@@ -230,6 +230,20 @@ def get_user_checks(user_id: int) -> int:
     return user.get("checks", 0)
 
 
+def get_user_total_checks(user_id: int) -> int:
+    """Lifetime scan count, unlike get_user_checks which resets each day.
+
+    Records created before this counter existed have no total_checks key; they
+    fall back to today's count so an existing user is never treated as brand new.
+    """
+    user = _get_doc(str(user_id))
+    if user is None:
+        return 0
+    if "total_checks" in user:
+        return user["total_checks"]
+    return user.get("checks", 0)
+
+
 def increment_user_checks(user_id: int):
     today = str(date.today())
     user_key = str(user_id)
@@ -240,6 +254,9 @@ def increment_user_checks(user_id: int):
         user["date"] = today
         user["checks"] = 0
     user["checks"] = user.get("checks", 0) + 1
+    # Never reset — the subscription gate needs to know how much of the bot a
+    # user has already seen, not how much they saw today.
+    user["total_checks"] = user.get("total_checks", user["checks"] - 1) + 1
     _set_doc(user_key, user)
     record_daily_active(user_id)
 

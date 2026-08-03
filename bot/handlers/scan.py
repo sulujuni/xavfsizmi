@@ -50,8 +50,30 @@ from bot.core.apk import scan_apk
 from bot.core.files import scan_file, get_file_type, is_scannable, MAX_FILE_SIZE
 from bot.core.qr import extract_qr_url
 
-URL_REGEX = re.compile(r'https?://\S+|www\.\S+')
+# Phishing links are usually pasted without a scheme ("uzcard-bonus.top",
+# "t.me/xyz"), so matching only http(s):// and www. missed the exact input this
+# bot exists for — and the caller then replied with the welcome text, which
+# reads as the bot ignoring you.
+#
+# A bare domain is only accepted when it ends in a known TLD; without that,
+# ordinary Uzbek text ("rahmat.men yozdim") would be scanned as a URL.
+_TLDS = (
+    "uz|com|net|org|ru|info|biz|io|co|me|tv|cc|app|dev|page|link|site|online|"
+    "shop|store|club|space|website|live|life|world|today|click|icu|vip|fun|"
+    "top|xyz|pw|tk|ml|ga|cf|gq|su|kz|kg|tj|tm|az|ua|by|tr|ir|cn|in|pk"
+)
+URL_REGEX = re.compile(
+    r'https?://\S+'
+    r'|www\.\S+'
+    r'|\b(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+(?:' + _TLDS + r')\b(?:/\S*)?',
+    re.IGNORECASE,
+)
 REACTIONS = ["❤", "👍", "🔥", "🎉", "⚡", "👏", "🤩", "💯"]
+
+
+def normalize_url(raw: str) -> str:
+    """Give a bare domain a scheme so the scanners receive a parseable URL."""
+    return raw if re.match(r'^https?://', raw, re.IGNORECASE) else f"https://{raw}"
 
 
 # ─── Helper: react to every message ──────────────────────────────────────────
@@ -172,13 +194,12 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     # Search for URLs in the message
     url_match = URL_REGEX.search(text)
     if not url_match:
-        await update.message.reply_text(
-            t(lang, "start", name=user.first_name, limit=DAILY_FREE_LIMIT),
-            parse_mode="Markdown",
-        )
+        # Replying with the full /start text made an unrecognised message look
+        # like the bot had ignored it. Say what is actually expected instead.
+        await update.message.reply_text(t(lang, "send_link_hint"))
         return
 
-    url = url_match.group(0)
+    url = normalize_url(url_match.group(0))
 
     # Daily limit check (shared across URL/APK/QR)
     if not check_and_consume_limit(user.id):

@@ -235,7 +235,11 @@ async def get_domain_age(url: str) -> dict:
     mistakenly treat an unknown domain as an established (safe) one.
     """
     domain = urlparse(url).netloc
-    async with httpx.AsyncClient() as client:
+    # rdap.org is a router: it answers 302 to the registry that actually holds
+    # the domain (e.g. rdap.verisign.com for .com). Without following that
+    # redirect every lookup returns 302, never 200, and the age is always
+    # unknown — which made this check dead for every domain.
+    async with httpx.AsyncClient(follow_redirects=True) as client:
         try:
             res = await _request_with_retry(
                 client, "GET", f"https://rdap.org/domain/{domain}", timeout=5

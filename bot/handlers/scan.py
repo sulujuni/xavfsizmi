@@ -229,8 +229,10 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         report += f"👽 *AlienVault OTX:* `{alien_res.get('pulses_count', 0)}` {t(lang, 'threat_groups')}\n"
         report += f"📸 *URLScan.io:* `{str(uscan_res.get('verdict', 'unknown')).upper()}` ({t(lang, 'score')}: {uscan_res.get('score', 0)}/100)\n"
 
-        if domain_res and "age_days" in domain_res:
-            age = domain_res.get("age_days", 0)
+        # age_days is None when the registry lookup failed — the key is present
+        # either way, so it must be checked by value, not with `in`.
+        age = domain_res.get("age_days") if domain_res else None
+        if age is not None:
             report += f"📅 *{t(lang, 'domain_age_label')}:* `{age} {t(lang, 'days')}` ({domain_res.get('created', 'N/A')})\n"
             if age < 30:
                 report += f"⚠️ *{t(lang, 'new_domain_warning')}*\n"

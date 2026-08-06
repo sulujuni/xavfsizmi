@@ -15,3 +15,11 @@ safelink.db-shm
 
 # Legacy / runtime data files
 rate_tracker.json
+data/
+dump.rdb
+
+# Logs. httpx logs every Telegram request at INFO, and the bot token is part of
+# the request URL — these files contain live credentials and must never be
+# committed.
+*.log
+

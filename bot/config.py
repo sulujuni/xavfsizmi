@@ -25,7 +25,19 @@ ADMIN_ID         = int(os.getenv("ADMIN_ID", "0"))
 FREE_SCANS_BEFORE_SUB = int(os.getenv("FREE_SCANS_BEFORE_SUB", "3"))
 
 # ─── WEBHOOK SETTINGS ─────────────────────────────────────────────────────────
-WEBHOOK_URL      = os.getenv("WEBHOOK_URL", "")  # e.g. https://yourapp.railway.app
+# WEBHOOK_URL is the public HTTPS base URL Telegram calls, e.g.
+# https://yourapp.railway.app. Railway injects RAILWAY_PUBLIC_DOMAIN for any
+# service with a generated domain, so falling back to it means the generated
+# domain does not have to be copied into the variables by hand.
+def _public_url() -> str:
+    explicit = os.getenv("WEBHOOK_URL", "").strip()
+    if explicit:
+        return explicit
+    domain = os.getenv("RAILWAY_PUBLIC_DOMAIN", "").strip()
+    return f"https://{domain}" if domain else ""
+
+
+WEBHOOK_URL      = _public_url()
 WEBHOOK_PORT     = int(os.getenv("PORT", "8443"))
 USE_WEBHOOK      = os.getenv("USE_WEBHOOK", "false").lower() == "true"
 

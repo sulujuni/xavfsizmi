@@ -32,6 +32,33 @@ DB_PATH = os.getenv("DB_PATH") or ("/data/safelink.db" if os.path.exists("/data"
 # Backward-compatible alias (old code referenced DB_FILE)
 DB_FILE = DB_PATH
 
+def _is_on_mounted_volume(path: str) -> bool:
+    """True when path sits on a different filesystem than the container root.
+
+    The image itself creates /data as an ordinary directory so a mounted volume
+    inherits the right ownership. That makes "does /data exist" useless as a
+    persistence check — an unmounted /data looks identical. A real volume is a
+    separate filesystem, so comparing device ids is what actually distinguishes
+    them.
+    """
+    try:
+        directory = os.path.dirname(os.path.abspath(path)) or "/"
+        return os.stat(directory).st_dev != os.stat("/").st_dev
+    except OSError:
+        return False
+
+
+# A container filesystem is wiped on every redeploy. If we are running on a
+# hosting platform and the database is not on a mounted volume, every user,
+# premium subscription and scan record silently disappears on the next deploy —
+# so say so loudly at startup rather than discovering it after the fact.
+if os.getenv("RAILWAY_ENVIRONMENT") and not _is_on_mounted_volume(DB_PATH):
+    logger.warning(
+        "SQLite is at %s, which is ephemeral container storage — all data will be "
+        "LOST on the next deploy. Attach a volume and mount it at /data.",
+        os.path.abspath(DB_PATH),
+    )
+
 RATE_LIMIT_SECONDS = 30
 CACHE_EXPIRE_HOURS = 24
 GROUP_DAILY_FREE_LIMIT = 20  # Groups get 20 free checks per day

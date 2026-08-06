@@ -1,4 +1,7 @@
-python-telegram-bot>=21.3
+# Pinned to the versions the bot is verified running on. An open `>=` range
+# lets each image rebuild pull a different release, so a deploy could ship a
+# library version that was never run against this code.
+python-telegram-bot==22.7
 aiohttp==3.9.1
 httpx==0.27.0
 opencv-python-headless==4.8.1.78
@@ -7,4 +10,4 @@ apscheduler==3.10.4
 numpy==1.26.4
 python-whois==0.8.0
 python-dotenv==1.0.0
-redis>=5.0.0
+redis==8.0.0

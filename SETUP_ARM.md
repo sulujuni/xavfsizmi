@@ -23,13 +23,14 @@ All these files must be in the same folder:
 In the same folder as the files above, create a new file called `.env` with this content:
 
 ```
-BOT_TOKEN=8928012881:AAEIlvEGVXKjFCr6llPAK7V0-WrxZdmFq7Q
-VIRUSTOTAL_API_KEY=631a36405228d4ee3e67986dc492c97883094aa807bc6a2308c2149b0c2170aa
-GOOGLE_SAFE_BROWSING_KEY=AIzaSyAKPDyfRRuOU3a8S3XPHBJK7km9UX5jCTg
-ADMIN_ID=6571677961
+BOT_TOKEN=<token from @BotFather>
+VIRUSTOTAL_API_KEY=<key from virustotal.com/gui/my-apikey>
+GOOGLE_SAFE_BROWSING_KEY=<key from console.cloud.google.com>
+ADMIN_ID=<your numeric Telegram user id>
 ```
 
-Replace the values with your actual keys.
+Replace the placeholders with your actual keys. Never commit the filled-in
+values — `.env` is in `.gitignore` precisely so they stay out of the repo.
 
 ---
 

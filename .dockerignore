@@ -1,0 +1,39 @@
+# Secrets — must never be baked into an image layer.
+.env
+.env.*
+!.env.example
+
+# Local virtualenv: Linux-specific binaries, and pip installs deps in the image.
+venv/
+.venv/
+.venv-test/
+
+# VCS and history
+.git/
+.gitignore
+
+# Python bytecode / test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Runtime state from the host — the live DB must not ship inside the image,
+# it belongs on the mounted volume at /data.
+safelink.db
+*.db
+*.db-wal
+*.db-shm
+dump.rdb
+rate_tracker.json
+data/
+*.log
+
+# Tests are not needed at runtime
+tests/
+
+# Editor/agent local state
+.idea/
+.vscode/
+.claude/

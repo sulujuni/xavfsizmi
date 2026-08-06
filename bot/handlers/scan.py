@@ -30,7 +30,7 @@ from bot.config import (
 from bot.core.database import (
     get_user_lang, is_premium, get_user_checks, increment_user_checks,
     get_user_total_checks, add_to_history, is_rate_limited, update_rate_limit,
-    record_check,
+    record_check, log_event,
 )
 from bot.i18n import t
 from bot.core.scanner import (
@@ -203,6 +203,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
 
     # Daily limit check (shared across URL/APK/QR)
     if not check_and_consume_limit(user.id):
+        log_event(user.id, "limit_hit", {"type": "url"})
         await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
         return
 
@@ -235,6 +236,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
         status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user.id, url, status_str)
         record_check(user.id, is_dangerous)
+        log_event(user.id, "scan_done", {"type": "url", "verdict": "dangerous" if is_dangerous else "safe"})
 
         # Check typosquatting
         typo_result = check_typosquatting(url)
@@ -316,6 +318,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
             logging.debug(f"Screenshot failed: {e}")
     except Exception as e:
         logging.error(f"Havolani tekshirishda xatolik: {e}", exc_info=True)
+        log_event(user.id, "error_shown", {"type": "url_scan_error"})
         await status_msg.edit_text("❌ Havolani tahlil qilish jarayonida xatolik yuz berdi.")
 
 
@@ -333,6 +336,7 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Check if file type is scannable
     file_type = get_file_type(file_name)
     if not file_type:
+        log_event(user_id, "error_shown", {"type": "file_type_unsupported"})
         await update.message.reply_text(t(lang, "file_type_unsupported"))
         return
 
@@ -354,11 +358,13 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Daily limit check (shared across URL/file/QR)
     if not check_and_consume_limit(user_id):
+        log_event(user_id, "limit_hit", {"type": "apk" if is_apk else "file"})
         await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
         return
 
     # Max size check (32 MB)
     if doc.file_size > MAX_FILE_SIZE:
+        log_event(user_id, "error_shown", {"type": "file_too_large"})
         await update.message.reply_text(t(lang, "too_large"))
         return
 
@@ -411,13 +417,20 @@ async def handle_apk(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 report += f"\n🌐 *{t(lang, 'network_calls_label')}:* {len(result['network_calls'])}\n"
 
             record_check(user_id, is_dangerous)
+            log_event(user_id, "scan_done", {
+                "type": "apk" if is_apk else "file",
+                "verdict": "dangerous" if is_dangerous else "safe",
+            })
             await status_msg.edit_text(report, parse_mode="Markdown")
         elif result.get("timeout"):
+            log_event(user_id, "error_shown", {"type": "file_timeout"})
             await status_msg.edit_text(t(lang, "file_timeout"))
         else:
+            log_event(user_id, "error_shown", {"type": "file_scan_error"})
             await status_msg.edit_text(t(lang, "file_scan_error"))
     except Exception as e:
         logging.error(f"File scan error: {e}")
+        log_event(user_id, "error_shown", {"type": "file_scan_error"})
         await status_msg.edit_text(t(lang, "file_scan_error"))
 
 
@@ -448,6 +461,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Daily limit check (shared across URL/APK/QR)
     if not check_and_consume_limit(user_id):
+        log_event(user_id, "limit_hit", {"type": "qr"})
         await update.message.reply_text(t(lang, "limit_reached", limit=DAILY_FREE_LIMIT))
         return
 
@@ -458,6 +472,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url = extract_qr_url(bytes(photo_bytes))
 
         if not url:
+            log_event(user_id, "error_shown", {"type": "qr_not_found"})
             await update.message.reply_text(
                 "🔍 Ushbu rasmdan hech qanday QR-kod yoki havola topilmadi."
             )
@@ -487,6 +502,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status_str = f"{'🔴' if is_dangerous else '🟢'} {trust_score}/100"
         add_to_history(user_id, url, status_str)
         record_check(user_id, is_dangerous)
+        log_event(user_id, "scan_done", {"type": "qr", "verdict": "dangerous" if is_dangerous else "safe"})
 
         report = f"🛡 *QR-kod ichidagi havola hisoboti:*\n\n"
         report += f"🔗 `{url}`\n\n"
@@ -497,4 +513,5 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await status_msg.edit_text(report, parse_mode="Markdown")
     except Exception as e:
         logging.error(f"QR error: {e}", exc_info=True)
+        log_event(user_id, "error_shown", {"type": "qr_scan_error"})
         await update.message.reply_text(t(lang, "qr_scan_error"))

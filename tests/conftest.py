@@ -39,6 +39,7 @@ def reset_state():
     with db._lock:
         conn = db._connect()
         conn.execute("DELETE FROM kv")
+        conn.execute("DELETE FROM events")
         conn.commit()
     cache._mem.clear()
     cache._stats = {"hits": 0, "misses": 0, "errors": 0}

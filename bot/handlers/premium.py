@@ -24,7 +24,7 @@ from bot.config import (
 from bot.core.database import (
     get_user_lang, is_premium, set_premium, get_premium_expiry,
     is_group_premium, set_group_premium, get_group_premium_expiry,
-    create_promocode, redeem_promocode, load_db, save_db,
+    create_promocode, redeem_promocode, load_db, save_db, log_event,
 )
 from bot.i18n import t
 from bot.handlers.admin import is_admin
@@ -51,7 +51,7 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = get_user_lang(user_id)
     is_group_chat = update.effective_chat.type in ["group", "supergroup"]
 
-    # Admin toggle: /premium off or /premium on
+    # Admin toggle: /premium off or /premium on (not a real "view" — skip logging)
     if is_admin(user_id) and context.args:
         arg = context.args[0].lower()
         if arg == "off":
@@ -67,6 +67,8 @@ async def premium_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             set_premium(user_id, days=9999)
             await update.message.reply_text(t(lang, "admin_premium_on"))
             return
+
+    log_event(user_id, "premium_viewed", {"chat_type": "group" if is_group_chat else "private"})
 
     if is_group_chat:
         # Group premium — only admins can buy
@@ -341,6 +343,7 @@ async def admin_payment_callback(update: Update, context: ContextTypes.DEFAULT_T
             set_premium(user_id, days=days)
         else:
             set_premium(user_id, days=days)
+        log_event(user_id, "premium_purchased", {"method": "paynet", "plan": plan_type, "days": days})
 
         # Notify user
         user_lang = get_user_lang(user_id)
@@ -403,18 +406,21 @@ async def payment_success(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             group_chat_id = int(parts[2])
             set_group_premium(group_chat_id, days=days)
+            log_event(user_id, "premium_purchased", {"method": "stars", "plan": "group", "days": days})
             await update.message.reply_text(
                 t(lang, "group_premium_success", days=days),
                 parse_mode="Markdown",
             )
         except (ValueError, IndexError):
             set_premium(user_id, days=days)
+            log_event(user_id, "premium_purchased", {"method": "stars", "plan": "personal", "days": days})
             await update.message.reply_text(
                 t(lang, "premium_success_with_days", days=days),
                 parse_mode="Markdown",
             )
     else:
         set_premium(user_id, days=days)
+        log_event(user_id, "premium_purchased", {"method": "stars", "plan": "personal", "days": days})
         try:
             await update.message.set_reaction([ReactionTypeEmoji(emoji="🎉")])
         except TelegramError:

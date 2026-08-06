@@ -1,5 +1,6 @@
 """Tests for core database logic: promo codes, premium expiry, rate limiting,
 referrals, stats, and the DAU analytics trend."""
+import sqlite3
 from datetime import datetime, timedelta
 
 from bot.core import database as db
@@ -57,6 +58,57 @@ def test_set_premium_extends_existing():
     db.set_premium(2003, days=10)
     second = datetime.fromisoformat(db.get_premium_expiry(2003))
     assert second > first
+
+
+# ─── Funnel events ───────────────────────────────────────────────────────────
+
+def test_log_event_is_recorded_and_readable():
+    db.log_event(3001, "scan_done", {"type": "url", "verdict": "safe"})
+    events = db.get_recent_events(event_type="scan_done")
+    assert len(events) == 1
+    assert events[0]["user_id"] == "3001"
+    assert events[0]["context"] == {"type": "url", "verdict": "safe"}
+
+
+def test_log_event_never_raises_on_backend_failure(monkeypatch):
+    def _boom(*args, **kwargs):
+        raise sqlite3.OperationalError("simulated failure")
+
+    monkeypatch.setattr(db, "_connect", _boom)
+    # Must not raise — instrumentation failures can never break the bot.
+    db.log_event(3002, "error_shown", {"type": "url_scan_error"})
+
+
+def test_log_event_context_excludes_pii():
+    """Callers must only pass categorical fields (type/verdict), never raw
+    URLs, emails, or filenames — this test locks in that contract for the
+    values actually used by the scan handlers."""
+    url = "https://phishing-example.uz/login?user=victim"
+    email = "victim@example.com"
+    db.log_event(3003, "scan_done", {"type": "url", "verdict": "dangerous"})
+
+    events = db.get_recent_events(event_type="scan_done")
+    stored = events[0]["context"]
+    assert url not in str(stored)
+    assert email not in str(stored)
+    assert set(stored.keys()) <= {"type", "verdict"}
+
+
+def test_ensure_user_exists_logs_first_start_once():
+    db.ensure_user_exists(3004)
+    db.ensure_user_exists(3004)  # second call: existing user, no duplicate event
+    events = db.get_recent_events(event_type="first_start")
+    matching = [e for e in events if e["user_id"] == "3004"]
+    assert len(matching) == 1
+
+
+def test_add_referral_logs_referral_joined():
+    ok = db.add_referral(3005, referred_by=3006)
+    assert ok is True
+    events = db.get_recent_events(event_type="referral_joined")
+    matching = [e for e in events if e["user_id"] == "3005"]
+    assert len(matching) == 1
+    assert matching[0]["context"]["referred_by"] == 3006
 
 
 # ─── Rate limiting (cache-backed) ────────────────────────────────────────────

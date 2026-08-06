@@ -21,7 +21,7 @@ import json
 import sqlite3
 import logging
 import threading
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from bot.core.cache import cache, URL_CACHE_TTL
 
@@ -59,6 +59,15 @@ def _connect() -> sqlite3.Connection:
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=NORMAL")
         conn.execute("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS events ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "user_id TEXT NOT NULL, "
+            "event_type TEXT NOT NULL, "
+            "ts TEXT NOT NULL, "
+            "context TEXT)"
+        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_events_type_ts ON events(event_type, ts)")
         conn.commit()
         _conn = conn
         _auto_migrate_json()
@@ -215,6 +224,7 @@ def ensure_user_exists(user_id: int):
     user_key = str(user_id)
     if _get_doc(user_key) is None:
         _set_doc(user_key, {"date": str(date.today()), "checks": 0, "lang": "uz"})
+        log_event(user_id, "first_start")
     record_daily_active(user_id)
 
 
@@ -477,6 +487,7 @@ def add_referral(user_id: int, referred_by: int) -> bool:
         referrer = {"date": str(date.today()), "checks": 0, "lang": "uz"}
     referrer["referral_credits"] = referrer.get("referral_credits", 0) + 1
     _set_doc(referrer_key, referrer)
+    log_event(user_id, "referral_joined", {"referred_by": referred_by})
     return True
 
 
@@ -876,4 +887,56 @@ def get_dau_trend(days: int = 7) -> list:
     for i in range(days - 1, -1, -1):
         d = str(today - timedelta(days=i))
         out.append((d, dau.get(d, 0)))
+    return out
+
+
+# ─── CONVERSION FUNNEL EVENTS ─────────────────────────────────────────────────
+# A dedicated append-only table (not the kv doc store) so a busy funnel doesn't
+# force rewriting a growing JSON blob on every write. `context` must never hold
+# PII (URLs, emails, filenames) — only categorical fields like scan type or
+# verdict, since this data feeds product analytics, not support/debugging.
+#
+# Recognized event_type values: first_start, scan_done, limit_hit,
+# premium_viewed, premium_purchased, referral_joined, error_shown.
+
+def log_event(user_id: int, event_type: str, context: dict = None):
+    """Record a funnel event. Never raises — failures are logged and swallowed
+    so instrumentation can never take the bot down or slow a user-facing reply.
+    """
+    try:
+        conn = _connect()
+        with _lock:
+            conn.execute(
+                "INSERT INTO events (user_id, event_type, ts, context) VALUES (?, ?, ?, ?)",
+                (str(user_id), event_type, datetime.now(timezone.utc).isoformat(), json.dumps(context or {})),
+            )
+            conn.commit()
+    except Exception:
+        logger.exception("log_event(%s, %s) failed", user_id, event_type)
+
+
+def get_recent_events(event_type: str = None, limit: int = 100) -> list:
+    """Return recent events (newest first), optionally filtered by type.
+    Intended for debugging/verification, not for production analytics queries."""
+    with _lock:
+        conn = _connect()
+        if event_type:
+            cur = conn.execute(
+                "SELECT user_id, event_type, ts, context FROM events "
+                "WHERE event_type = ? ORDER BY id DESC LIMIT ?",
+                (event_type, limit),
+            )
+        else:
+            cur = conn.execute(
+                "SELECT user_id, event_type, ts, context FROM events ORDER BY id DESC LIMIT ?",
+                (limit,),
+            )
+        rows = cur.fetchall()
+    out = []
+    for user_id, etype, ts, context_raw in rows:
+        try:
+            context = json.loads(context_raw) if context_raw else {}
+        except (ValueError, TypeError):
+            context = {}
+        out.append({"user_id": user_id, "event_type": etype, "ts": ts, "context": context})
     return out

@@ -1597,13 +1597,26 @@ TEXTS["uz"]["admin_premium_on"] = "🔒 Admin Premium qayta yoqildi."
 TEXTS["ru"]["admin_premium_on"] = "🔒 Admin Premium восстановлен."
 TEXTS["en"]["admin_premium_on"] = "🔒 Admin Premium restored."
 
-TEXTS["uz"]["api_error"] = "⚠️ API xatoligi: {error}"
-TEXTS["ru"]["api_error"] = "⚠️ Ошибка API: {error}"
-TEXTS["en"]["api_error"] = "⚠️ API error: {error}"
+TEXTS["uz"]["api_error"] = "⚠️ Tekshirish xizmati hozir ishlamayapti. Keyinroq qayta urinib ko'ring."
+TEXTS["ru"]["api_error"] = "⚠️ Сервис проверки сейчас недоступен. Попробуйте позже."
+TEXTS["en"]["api_error"] = "⚠️ The check service is currently unavailable. Please try again later."
 
 TEXTS["uz"]["qr_scan_error"] = "❌ QR-kodni tahlil qilib o'qishda xatolik yuz berdi."
 TEXTS["ru"]["qr_scan_error"] = "❌ Ошибка при чтении QR-кода."
 TEXTS["en"]["qr_scan_error"] = "❌ Error reading QR code."
+
+# Telegram Stars invoice — title/description shown on the native payment sheet.
+TEXTS["uz"]["invoice_title_personal"] = "Shaxsiy Premium"
+TEXTS["ru"]["invoice_title_personal"] = "Личный Премиум"
+TEXTS["en"]["invoice_title_personal"] = "Personal Premium"
+
+TEXTS["uz"]["invoice_title_group"] = "Guruh Premium"
+TEXTS["ru"]["invoice_title_group"] = "Групповой Премиум"
+TEXTS["en"]["invoice_title_group"] = "Group Premium"
+
+TEXTS["uz"]["invoice_description"] = "{days} kunlik Premium obuna"
+TEXTS["ru"]["invoice_description"] = "Премиум-подписка на {days} дней"
+TEXTS["en"]["invoice_description"] = "{days}-day Premium subscription"
 
 TEXTS["uz"]["tips_header"] = "💡 *Kunlik Maslahatlar:* {status}"
 TEXTS["ru"]["tips_header"] = "💡 *Ежедневные Советы:* {status}"

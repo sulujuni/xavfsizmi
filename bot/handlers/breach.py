@@ -5,6 +5,7 @@ User sends email → checks breaches + dark web mentions
 User sends password → checks HaveIBeenPwned (k-anonymity, safe)
 """
 import hashlib
+import logging
 from telegram import (
     Update,
     InlineKeyboardButton,
@@ -85,7 +86,8 @@ async def breach_receive_input(update: Update, context: ContextTypes.DEFAULT_TYP
         if not has_premium:
             consume_referral_credit(user.id)
     except Exception as e:
-        await status_msg.edit_text(t(lang, "api_error", error=str(e)[:100]))
+        logging.error(f"Breach check failed: {e}", exc_info=True)
+        await status_msg.edit_text(t(lang, "api_error"))
 
     return ConversationHandler.END
 

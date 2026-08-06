@@ -204,13 +204,15 @@ async def payment_gateway_callback(update: Update, context: ContextTypes.DEFAULT
 
     # ── Stars Payment ─────────────────────────────────────────────────────────
     if query.data in STARS_PLANS:
-        amount, days, title, plan_type = STARS_PLANS[query.data]
+        amount, days, _title, plan_type = STARS_PLANS[query.data]
         payload = f"{plan_type}_{days}d_{chat_id}"
+        title = t(lang, "invoice_title_group" if plan_type == "group" else "invoice_title_personal")
+        description = t(lang, "invoice_description", days=days)
 
         await context.bot.send_invoice(
             chat_id=user.id if plan_type == "group" else chat_id,
             title=title,
-            description=f"{days}-day Premium subscription",
+            description=description,
             payload=payload,
             provider_token="",
             currency="XTR",

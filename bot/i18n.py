@@ -1228,9 +1228,13 @@ TEXTS["uz"]["file_timeout"] = "⏳ VirusTotal javob bermadi. Keyinroq urinib ko'
 TEXTS["ru"]["file_timeout"] = "⏳ VirusTotal не ответил. Попробуйте позже."
 TEXTS["en"]["file_timeout"] = "⏳ VirusTotal timed out. Try again later."
 
-TEXTS["uz"]["file_scan_error"] = "❌ Faylni tekshirishda xatolik yuz berdi."
-TEXTS["ru"]["file_scan_error"] = "❌ Ошибка при проверке файла."
-TEXTS["en"]["file_scan_error"] = "❌ An error occurred while scanning the file."
+TEXTS["uz"]["file_scan_error"] = "❌ Faylni tekshirishda xatolik yuz berdi. Keyinroq urinib ko'ring."
+TEXTS["ru"]["file_scan_error"] = "❌ Ошибка при проверке файла. Попробуйте позже."
+TEXTS["en"]["file_scan_error"] = "❌ An error occurred while scanning the file. Try again later."
+
+TEXTS["uz"]["url_scan_error"] = "❌ Havolani tahlil qilishda xatolik yuz berdi. Keyinroq urinib ko'ring."
+TEXTS["ru"]["url_scan_error"] = "❌ Ошибка при анализе ссылки. Попробуйте позже."
+TEXTS["en"]["url_scan_error"] = "❌ An error occurred while analyzing the link. Try again later."
 
 # ─── BREACH MONITOR (premium) ─────────────────────────────────────────────────
 
@@ -1601,9 +1605,9 @@ TEXTS["uz"]["api_error"] = "⚠️ Tekshirish xizmati hozir ishlamayapti. Keyinr
 TEXTS["ru"]["api_error"] = "⚠️ Сервис проверки сейчас недоступен. Попробуйте позже."
 TEXTS["en"]["api_error"] = "⚠️ The check service is currently unavailable. Please try again later."
 
-TEXTS["uz"]["qr_scan_error"] = "❌ QR-kodni tahlil qilib o'qishda xatolik yuz berdi."
-TEXTS["ru"]["qr_scan_error"] = "❌ Ошибка при чтении QR-кода."
-TEXTS["en"]["qr_scan_error"] = "❌ Error reading QR code."
+TEXTS["uz"]["qr_scan_error"] = "❌ QR-kodni tahlil qilib o'qishda xatolik yuz berdi. Keyinroq urinib ko'ring."
+TEXTS["ru"]["qr_scan_error"] = "❌ Ошибка при чтении QR-кода. Попробуйте позже."
+TEXTS["en"]["qr_scan_error"] = "❌ Error reading QR code. Try again later."
 
 # Telegram Stars invoice — title/description shown on the native payment sheet.
 TEXTS["uz"]["invoice_title_personal"] = "Shaxsiy Premium"

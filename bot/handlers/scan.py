@@ -319,7 +319,7 @@ async def handle_private_message(update: Update, context: ContextTypes.DEFAULT_T
     except Exception as e:
         logging.error(f"Havolani tekshirishda xatolik: {e}", exc_info=True)
         log_event(user.id, "error_shown", {"type": "url_scan_error"})
-        await status_msg.edit_text("❌ Havolani tahlil qilish jarayonida xatolik yuz berdi.")
+        await status_msg.edit_text(t(lang, "url_scan_error"))
 
 
 # ─── Document handler (private) — scans ALL file types ───────────────────────

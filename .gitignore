@@ -1,0 +1,17 @@
+__pycache__/
+
+# Environment
+.env
+.venv/
+.venv-test/
+venv/
+
+# SQLite database (Phase 2) — runtime data, not source
+safelink.db
+safelink.db-wal
+safelink.db-shm
+*.db-wal
+*.db-shm
+
+# Legacy / runtime data files
+rate_tracker.json
